@@ -1,0 +1,35 @@
+cost_func compliance # compliance / VonMises / volume
+ALM 1 # 1 if Augmented Lagrangian method is used, 0 if not.
+uzawa 0 # 1 if Uzawa method is used, 0 if not
+ALM_slack_variable 0 # here is always 0
+ALM_lagrangian_multiplicator 0.1 # first value of lagrangian multiplicator if ALM = 1, sugestion for VonMises cost func with volume constraint = 0.01, 0.1 for volume cost function and VonMises constraint
+ALM_penalty_parameter 1 # first value of penalty parameter if ALM = 1, sigection for VonMises = 0.01
+ALM_penalty_coef_multiplicator 1.1 # first value of penalty coefficient mutiplicator if ALM = 1, sugestion for VonMises = 1.1
+ALM_penalty_limit 100 # value of penalty coefficient mutiplicator limit if ALM = 1, sugestion for VonMises = 3
+constraint volume # volume / VonMises
+target_constraint 1.2 # value of the target constraint, or value of lagrangian
+type_constraint equal # only "equal constraint" is implemented here
+descent_direction_Riesz 1 # 1 if descent direction is extended with Riez Theorem and CutFEM, else 0
+tol_cost_func 0.00000001 # value of the tolerance for stopped condition
+p_const 6 # value on the p parameter (the powered of the cost function) if the cost function is Von Mises
+max_incr 5 # Value of the maximum iteration
+lx 2 # mesure of the x direction area
+ly 1 # mesure of the y direction area
+lz 0 # if 3D mesure of the z direction area
+h 0.01 # value of mesh size
+young_modulus 210000 # value of the Young modulus of the material GPa, 210000 MPa
+elasticity_limit 3 # value to normalized Von Mises function, if the cost funciton is Von Mises
+poisson 0.33 # value of the Poisson parameter
+strenght 10 # 0.1GPa and 100MPa for 2D 
+adapt_time_step 0 # not working know here (just a lack of adapt time step function)
+dt 0.001 #0.002 #0.0001 for min volume with VonMises constraint
+vel_normalization 1 # 1 if you want to normalize the velocity field, 0 if not.
+j_max 3 # number of advection iteration
+extend_velocity 1 # 1 if you want to extend properly the velocity in the whole domain
+alpha_reg_velocity 0.001  # value of regularization parameter for gradient part in the normalization of the velocity field
+step_reinit 1 # number of iteration to solve the correction problem in the reinitialization method
+freq_reinit 1 # choose for each number of iteration HJ would you reinitialize the ls function (ie: for 1 it's each time)
+l_reinit 3
+cutFEM 0 # 1 if you want to solve with cutFEM and 0 if you want to solve with erzatz method
+eta 0.001 # scale of the smoothing in the heaviside funtion for Erzatz method
+cut_fem_advection 1 # 1 if you want to solve advection with CutFEM stabilization, 0 is not
