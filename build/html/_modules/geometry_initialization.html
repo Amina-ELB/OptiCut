@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>geometry_initialization &mdash; OptiCut 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bfa8c73d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OptiCut
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo_optim.html">Shape optimization method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem.html">CutFEM for Immersed geometry discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OptiCut</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">geometry_initialization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for geometry_initialization</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+
+
+<span class="c1">###################################</span>
+<span class="c1">####  Level set&#39;s definition   ####</span>
+<span class="c1">###################################</span>
+<div class="viewcode-block" id="circle">
+<a class="viewcode-back" href="../geometry_init.html#geometry_initialization.circle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">circle</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the signed distance from a point to a circle.</span>
+
+<span class="sd">    This function calculates the signed distance from a point `x = (x_0, x_1)` to a circle </span>
+<span class="sd">    centered at `(1, 0.5)` with radius `0.3`. The function returns a negative value if </span>
+<span class="sd">    the point is inside the circle and a positive value if it is outside.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \text{distance}(x) = -\left(\sqrt{(x_0 - 1)^2 + (x_1 - 0.5)^2} - 0.3\right)</span>
+
+<span class="sd">    :param tuple x: A tuple representing the point coordinates (x_0, x_1).</span>
+<span class="sd">    :returns: The signed distance from the point to the circle.</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.3</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="level_set">
+<a class="viewcode-back" href="../geometry_init.html#geometry_initialization.level_set">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">level_set</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes a 2D level set function based on cosine functions.</span>
+
+<span class="sd">    This function returns a level set value based on a combination of cosine functions </span>
+<span class="sd">    depending on the coordinates of the input point `x = (x_0, x_1)` and a parameter `lx`.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \text{level set}(x) = -\cos\left(\frac{6\pi x_0}{l_x}\right)\cos(4\pi x_1) - 0.6</span>
+
+<span class="sd">    :param tuple x: A tuple representing the point coordinates (x_0, x_1).</span>
+<span class="sd">    :param parameters: The parameters object containing the domain length `lx`.</span>
+<span class="sd">    :type parameters: object with attribute `lx`.</span>
+<span class="sd">    :returns: The computed level set value.</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">6.0</span><span class="o">/</span><span class="n">parameters</span><span class="o">.</span><span class="n">lx</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">4.0</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span><span class="mf">0.6</span>
+    <span class="k">return</span> <span class="n">res</span><span class="o">/</span><span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="level_set_3D">
+<a class="viewcode-back" href="../geometry_init.html#geometry_initialization.level_set_3D">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">level_set_3D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes a 3D level set function based on cosine functions.</span>
+
+<span class="sd">    This function returns a level set value based on a combination of cosine functions </span>
+<span class="sd">    depending on the coordinates of the input point `x = (x_0, x_1, x_2)` and a parameter `lx`, &#39;ly&#39; and &#39;lz&#39;, the dimensions of the box containing :math:`\Omega`.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \text{level set}(x) = -\cos\left(\frac{6\pi x_0}{l_x}\right)\cos(4\pi x_1)\cos(4\pi x_2)  - 0.6</span>
+
+<span class="sd">    :param tuple x: A tuple representing the point coordinates (x_0, x_1, x_2).</span>
+<span class="sd">    :param parameters: The parameters object containing the domain length `lx`, &#39;ly&#39; and &#39;lz&#39;.</span>
+<span class="sd">    :type parameters: object with attribute `lx`.</span>
+<span class="sd">    :returns: The computed level set value.</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">6.0</span><span class="o">/</span><span class="n">parameters</span><span class="o">.</span><span class="n">lx</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">4.0</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span><span class="mf">0.6</span>
+    <span class="k">return</span> <span class="n">res</span><span class="o">/</span><span class="mi">2</span></div>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">level_set_L_shape</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the level set for an L-shaped domain.</span>
+
+<span class="sd">    This function computes the level set for a geometric shape consisting of a series of </span>
+<span class="sd">    overlapping circles. The L-shape is represented by a set of level sets for these </span>
+<span class="sd">    circles, and the function uses the `ufl.max_value` and `ufl.sqrt` functions to </span>
+<span class="sd">    compute the level set values for a given point `x` in the domain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : tuple of float</span>
+<span class="sd">        A tuple containing the coordinates (x[0], x[1]) of the point where the level set </span>
+<span class="sd">        is evaluated. The point is expected to be in 2D space.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The computed level set value at the point `x`. The value represents the distance </span>
+<span class="sd">        from the point `x` to the nearest boundary of the L-shaped domain formed by the </span>
+<span class="sd">        overlapping circles. A negative value indicates the point is inside the domain, </span>
+<span class="sd">        and a positive value indicates the point is outside the domain.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function uses a series of circles with radius `r_cercle` and an adjusted radius </span>
+<span class="sd">    `r_cercle_modif` to form the shape. The level set is computed by iteratively </span>
+<span class="sd">    taking the maximum of the distances to the circle boundaries.</span>
+
+<span class="sd">    The function is designed to work with the `ufl` module, typically used in finite </span>
+<span class="sd">    element methods for computational geometry and simulations.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; x = (1.0, 2.0)</span>
+<span class="sd">    &gt;&gt;&gt; level_set_L_shape(x)</span>
+<span class="sd">    -0.0037388523762586055</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    ufl.max_value, ufl.sqrt</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r_cercle</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">r_cercle_modif</span> <span class="o">=</span> <span class="mf">0.06</span>
+    <span class="n">d0</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">),</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">),</span><span class="n">d0</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">12</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d3</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d3</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mf">0.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d4</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d7</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d5</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d8</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d7</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">12</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d9</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d8</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">16</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    
+    <span class="n">d10</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d9</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mf">0.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="c1">#d11 = ufl.max_value(d10,-(ufl.sqrt((x[0]- 4*r_cercle)**2 + (x[1] - 8*r_cercle)**2) - r_cercle_modif))</span>
+    <span class="n">d12</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d10</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d13</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d12</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">12</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d14</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d13</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mf">1.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+
+    <span class="n">d15</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d14</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mf">0.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">12</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d16</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d15</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">12</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d17</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d16</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">12</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d18</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d17</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d19</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d18</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    
+    <span class="n">d20</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d19</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">16</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d21</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d20</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">16</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">0</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d22</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d21</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">16</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d23</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d22</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">16</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="n">d24</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">max_value</span><span class="p">(</span><span class="n">d23</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="mf">0.</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">16</span><span class="o">*</span><span class="n">r_cercle</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">r_cercle_modif</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">d24</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, ONERA and MINES PARIS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
