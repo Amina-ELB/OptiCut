@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>almMethod &mdash; OptiCut 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bfa8c73d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OptiCut
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo_optim.html">Shape optimization method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem.html">CutFEM for Immersed geometry discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OptiCut</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">almMethod</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for almMethod</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+
+<div class="viewcode-block" id="maj_param_constraint_optim_slack">
+<a class="viewcode-back" href="../almMethod.html#almMethod.maj_param_constraint_optim_slack">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">maj_param_constraint_optim_slack</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Update the slack parameter for inequality constraint, as the following equation:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">            s^{n+1} = \text{max}(0,-( \frac{\lambda_{ALM}^{n}}{\mu_{ALM}^{n}}+C(\Omega^{n}) ) )</span>
+<span class="sd">        </span>
+<span class="sd">                </span>
+<span class="sd">    :param Parameter parameters: The parameter object.</span>
+<span class="sd">    :param float rest_constraint: The value of :math:`C(\Omega^{n})`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">type_constraint</span> <span class="o">==</span> <span class="s1">&#39;inequality&#39;</span><span class="p">:</span>
+            <span class="c1"># 1// update of slack parameter:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_slack_variable</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span><span class="o">/</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rest_constraint</span><span class="p">)))</span></div>
+
+            
+
+<div class="viewcode-block" id="maj_param_constraint_optim">
+<a class="viewcode-back" href="../almMethod.html#almMethod.maj_param_constraint_optim">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">maj_param_constraint_optim</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Update the Augmented Lagrangian parameters of the Parameter object.</span>
+
+<span class="sd">        1. *Update the Lagrange multiplier :* </span>
+<span class="sd">        </span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">                \lambda_{ALM}^{n+1} = \lambda_{ALM}^{n} + \mu_{ALM}^{n}(C(\Omega^{n}) + s^{n+1})</span>
+
+
+<span class="sd">        2. *Update the Lagrange penalty parameter :*</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \mu_{ALM}^{n+1} = \text{min}(\overline{\mu},c \mu_{ALM}^{n})</span>
+
+<span class="sd">            </span>
+
+<span class="sd">        where :math:`\overline{\mu}` is the limit of the penalty parameter and :math:`c` is the penalty multiplier coefficient.</span>
+
+<span class="sd">           </span>
+<span class="sd">        :param Parameter parameters: The parameter object.</span>
+<span class="sd">        :param float rest_constraint: The value of :math:`C(\Omega)`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># 1// update of lagrangian mutiplicator</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span> <span class="o">+</span> \
+            <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span><span class="o">*</span><span class="p">(</span><span class="n">rest_constraint</span> <span class="o">+</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_slack_variable</span><span class="p">)</span>
+        <span class="c1"># 2// update of penalization parameter</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_limit</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_coef_multiplicator</span><span class="o">*</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="init_param_constraint_optim">
+<a class="viewcode-back" href="../almMethod.html#almMethod.init_param_constraint_optim">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_param_constraint_optim</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">cost</span><span class="p">,</span><span class="n">denom</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialized the Augmented Lagrangian parameters:</span>
+
+<span class="sd">        1. *Initialization of the Lagrange multiplier :*</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">                \lambda_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}</span>
+
+<span class="sd">        with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}` </span>
+<span class="sd">        </span>
+<span class="sd">        2. *Initialization of the Lagrange penalty parameter :*</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">                \mu_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}</span>
+
+<span class="sd">        with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}` </span>
+<span class="sd">        </span>
+<span class="sd">        3. *Initialization of the penalty limit :*</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">                \overline{\mu}_{ALM}^{0} = \text{denom}*\frac{10^{k}C(\Omega^{0})}{D}</span>
+
+<span class="sd">        with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}` </span>
+
+<span class="sd">        </span>
+<span class="sd">        .. note::</span>
+<span class="sd">            The set of simulations we conducted allowed us to determine a value for D of approximately 100.</span>
+
+
+<span class="sd">        :param Parameter parameters: The parameter object.</span>
+<span class="sd">        :param float cost: The cost value :math:`J(\Omega^{0})` at the initialization.</span>
+<span class="sd">        :param float denom: The D value, with a default value of :math:`100`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="n">cost_power</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span><span class="o">.</span><span class="n">log10</span><span class="p">())</span>  
+    <span class="n">cost_decimal</span> <span class="o">=</span>  <span class="nb">float</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">**</span> <span class="n">cost_power</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span> <span class="o">=</span> <span class="p">(</span><span class="n">cost_decimal</span><span class="o">*</span><span class="n">constraint</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">denom</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span> <span class="o">=</span> <span class="p">(</span><span class="n">cost_decimal</span><span class="o">*</span><span class="n">constraint</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">denom</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_limit</span> <span class="o">=</span> <span class="mi">1000</span><span class="o">*</span><span class="p">(</span><span class="n">cost_decimal</span><span class="o">*</span><span class="n">constraint</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">denom</span><span class="p">)</span></div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, ONERA and MINES PARIS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

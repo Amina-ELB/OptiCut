@@ -1,0 +1,884 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cutfem_method &mdash; OptiCut 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bfa8c73d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OptiCut
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo_optim.html">Shape optimization method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem.html">CutFEM for Immersed geometry discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OptiCut</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cutfem_method</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cutfem_method</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ufl</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">FacetNormal</span><span class="p">,</span> <span class="n">Measure</span><span class="p">,</span> <span class="n">SpatialCoordinate</span><span class="p">,</span> <span class="n">TestFunction</span><span class="p">,</span> <span class="n">TrialFunction</span><span class="p">,</span> 
+                 <span class="n">div</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">inner</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">dc</span><span class="p">,</span> <span class="n">dS</span><span class="p">,</span> <span class="n">FacetNormal</span><span class="p">,</span> <span class="n">CellDiameter</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="n">jump</span><span class="p">)</span>
+
+<span class="c1">###</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">cutfemx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">cpp</span> <span class="k">as</span> <span class="n">_dolfinxcpp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">fem</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="n">mesh</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">collections</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">la</span>
+
+<span class="c1">#  from dolfinx.cpp.la.petsc import create_vector # error 4 </span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.cpp.fem</span><span class="w"> </span><span class="kn">import</span> <span class="n">pack_coefficients</span> <span class="k">as</span> <span class="n">dolfinx_pack_coefficients</span>
+<span class="c1"># from dolfinx.fem.forms import form_types# error 5 </span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.fem.assemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">pack_constants</span> <span class="k">as</span> <span class="n">dolfinx_pack_constants</span>
+<span class="c1"># from dolfinx.fem.bcs import DirichletBCMetaClass # error 6 </span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.fem.function</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">FunctionSpace</span>
+<span class="c1">###</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">fem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">locate_entities</span><span class="p">,</span> <span class="n">meshtags</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">PETSc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py.PETSc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarType</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="c1">#from mecanics_problem import *</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">locate_entities</span><span class="p">,</span> <span class="n">meshtags</span><span class="p">,</span> <span class="n">locate_entities_boundary</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.level_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">locate_entities</span><span class="p">,</span> <span class="n">cut_entities</span><span class="p">,</span> <span class="n">ghost_penalty_facets</span><span class="p">,</span> <span class="n">facet_topology</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.level_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_normal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_cut_mesh</span><span class="p">,</span> <span class="n">create_cut_cells_mesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.quadrature</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_quadrature</span><span class="p">,</span> <span class="n">physical_points</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.fem</span><span class="w"> </span><span class="kn">import</span> <span class="n">cut_form</span><span class="p">,</span> <span class="n">cut_function</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.petsc</span><span class="w"> </span><span class="kn">import</span> <span class="n">assemble_vector</span><span class="p">,</span> <span class="n">assemble_matrix</span><span class="p">,</span> <span class="n">deactivate</span><span class="p">,</span> <span class="n">locate_dofs</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mechanics_tool</span>
+
+<div class="viewcode-block" id="CutFemMethod">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CutFemMethod</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;This is the CutFEM class.</span>
+
+<span class="sd">    Some details about the initialization of linear elasticity problem with CutFEM method.</span>
+
+<span class="sd">    Definition of Primal problem</span>
+<span class="sd">    =================================================</span>
+
+<span class="sd">    Linear elasticity problem is given by: </span>
+<span class="sd">    Find :math:`u:\Omega \rightarrow \mathbb{R}^{d}`</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">            \begin{align}</span>
+<span class="sd">            \begin{cases}</span>
+<span class="sd">                -\text{div}( \sigma(u)) &amp; \!\!\!\!=0 \text{ in }\Omega\\</span>
+<span class="sd">                u&amp; \!\!\!\!=0\text{ on }\Gamma_{D}\\</span>
+<span class="sd">                \sigma(u)\cdot n &amp; \!\!\!\!=g\text{ on }\Gamma_{N}</span>
+<span class="sd">            \end{cases}</span>
+<span class="sd">            \end{align}</span>
+
+
+<span class="sd">    Where :math:`d` the dimension of the problem.</span>
+<span class="sd">    *We assume small deformations and zero volumetric forces.* </span>
+<span class="sd">        </span>
+<span class="sd">    This yields to the following weak formulation: </span>
+<span class="sd">    Find :math:`u \in V`, such that for all :math:`v \in V` we have</span>
+
+
+<span class="sd">    .. _bilinearFormCutfem:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        a\left(u,v\right)=l\left(v\right)</span>
+
+<span class="sd">    with:</span>
+
+<span class="sd">    .. _bilinearFormCutfemDetails:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \begin{align} </span>
+<span class="sd">        a\left(u,v\right) &amp;= 2\mu\left(\varepsilon(u),\varepsilon(v)\right)_{L^{2}(\Omega)} + \lambda\left(\nabla\cdot u,\nabla\cdot v\right)_{L^{2}(\Omega)} \\</span>
+<span class="sd">        l\left(v\right) &amp;= \left(g,v\right)_{L^{2}\left(\Gamma_{N}\right)},</span>
+<span class="sd">        \end{align}</span>
+
+<span class="sd">    .. _bilinearFormCutfemCode:</span>
+
+<span class="sd">    Bilinear form (primal):</span>
+<span class="sd">    -------------------------------</span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        import ufl</span>
+
+<span class="sd">        u =ufl.TrialFunction(self.space_displacement)</span>
+<span class="sd">        v =ufl.TestFunction(self.space_displacement)</span>
+
+<span class="sd">        self.gamma = 1e-5*(self.lame_mu + self.lame_lambda)</span>
+
+<span class="sd">        self.h = CellDiameter(self.mesh)</span>
+
+<span class="sd">        self.bc = bc</span>
+
+<span class="sd">        self.a_primal =  2.0*self.lame_mu  * ufl.inner(mecanics_tool.strain(u), mecanics_tool.strain(v)) * self.dxq \</span>
+<span class="sd">            + self.lame_lambda *  ufl.inner(ufl.nabla_div(u), ufl.nabla_div(v)) * self.dxq</span>
+<span class="sd">        # Stabilization:</span>
+<span class="sd">        self.a_primal += avg(self.gamma) * avg(self.h)**3*ufl.inner(ufl.jump(ufl.grad(u),self.n),\</span>
+<span class="sd">            ufl.jump(ufl.grad(v),self.n))*self.dS(0)</span>
+<span class="sd">            </span>
+<span class="sd">    .. _linearForm:</span>
+
+<span class="sd">    Linear form (primal):</span>
+<span class="sd">    --------------------------</span>
+<span class="sd">        </span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        self.L_primal = ufl.dot(self.shift,v) * self.ds(2)</span>
+
+
+<span class="sd">    Definition of Dual problem</span>
+<span class="sd">    =================================================</span>
+
+<span class="sd">    Some details about the initialization of adjoint problem with CutFEM.</span>
+
+<span class="sd">    .. _bilinearFormDual:</span>
+<span class="sd">            </span>
+<span class="sd">    Bilinear form (dual):</span>
+<span class="sd">    ------------------------</span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        import ufl</span>
+
+<span class="sd">        u =ufl.TrialFunction(self.space_displacement)</span>
+<span class="sd">        v =ufl.TestFunction(self.space_displacement)</span>
+
+<span class="sd">        self.gamma = 1e-5*(self.lame_mu + self.lame_lambda)</span>
+
+<span class="sd">        self.h = CellDiameter(self.mesh)</span>
+
+<span class="sd">        self.bc = bc</span>
+
+<span class="sd">        self.a_adjoint =  2.0*self.lame_mu  * ufl.inner(mecanics_tool.strain(u), mecanics_tool.strain(v)) * self.dxq \</span>
+<span class="sd">            + self.lame_lambda *  ufl.inner(ufl.nabla_div(u), ufl.nabla_div(v)) * self.dxq</span>
+<span class="sd">        # Stabilization:</span>
+<span class="sd">        self.a_adjoint += avg(self.gamma) * avg(self.h)**3*ufl.inner(ufl.jump(ufl.grad(u),self.n),\</span>
+<span class="sd">            ufl.jump(ufl.grad(v),self.n))*self.dS(0)</span>
+
+
+<span class="sd">    .. _linearFormLpnorm:</span>
+
+<span class="sd">    Linear form (dual):</span>
+<span class="sd">    ---------------------------</span>
+
+<span class="sd">    The dual operator is compute using the automatic differentiation :</span>
+
+<span class="sd">       </span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        ## Exemple for Lp nom of VonMises constraint minimization:</span>
+
+<span class="sd">        self.J = ((mechanics_tool.von_mises(self.uh,self.lame_mu,self.lame_lambda,self.dim)/parameters.elasticity_limit)**self.p_const)*self.dxq</span>
+
+<span class="sd">        self.L_adj = ufl.derivative(self.J,self.uh,v_adj)</span>
+
+
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">level_set_space</span><span class="p">,</span> <span class="n">space_displacement</span><span class="p">,</span><span class="n">ds</span><span class="p">,</span> <span class="n">bc</span><span class="p">,</span> <span class="n">bc_velocity</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">level_set_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">function_space</span><span class="o">.</span><span class="n">mesh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span> <span class="o">=</span> <span class="n">space_displacement</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutFEM</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">cutFEM</span>
+
+        <span class="n">lame_mu</span><span class="p">,</span><span class="n">lame_lambda</span> <span class="o">=</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">lame_compute</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">young_modulus</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">poisson</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span> <span class="o">=</span> <span class="n">level_set_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_func</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">cost_func</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span> <span class="o">=</span> <span class="n">lame_mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">=</span> <span class="n">lame_lambda</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">dim</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bc_velocity</span> <span class="o">=</span> <span class="n">bc_velocity</span>
+
+        <span class="c1">################</span>
+        <span class="c1">#Mecanic Problem</span>
+        <span class="c1">################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tdim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> 
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+
+        <span class="n">V_DG</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;DG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">V_DG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">FacetNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dof_coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="o">.</span><span class="n">tabulate_dof_coordinates</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_cells</span> <span class="o">=</span> <span class="n">cut_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof_coordinates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_mesh</span> <span class="o">=</span> <span class="n">create_cut_mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_cells</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_cells</span> <span class="o">=</span> <span class="n">cut_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof_coordinates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tdim</span><span class="p">,</span> <span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_mesh</span> <span class="o">=</span> <span class="n">create_cut_cells_mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_cells</span><span class="p">)</span>
+
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gp_ids</span> <span class="o">=</span>  <span class="n">ghost_penalty_facets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gp_topo</span> <span class="o">=</span> <span class="n">facet_topology</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_ids</span><span class="p">)</span>
+                    
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span><span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span><span class="p">)],</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx_rt</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dC&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dS</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dS&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_topo</span><span class="p">)],</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx_rt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dsq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx_rt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+       
+        <span class="n">u</span> <span class="o">=</span><span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span><span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ph</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma_N</span> <span class="o">=</span> <span class="mf">1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bc</span> <span class="o">=</span> <span class="n">bc</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span> <span class="o">=</span>  <span class="mf">2.0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span>  <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span> \
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">*</span>  <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span>
+        <span class="c1">#Stabilization:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span> <span class="o">+=</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">u</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>\
+            <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dS</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_primal</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_primal</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_primal</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_primal</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_primal</span><span class="p">,</span> <span class="n">bcs</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span><span class="o">.</span><span class="n">assemblyBegin</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">Mat</span><span class="o">.</span><span class="n">AssemblyType</span><span class="o">.</span><span class="n">FINAL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span><span class="o">.</span><span class="n">assemblyEnd</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">Mat</span><span class="o">.</span><span class="n">AssemblyType</span><span class="o">.</span><span class="n">FINAL</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_primal</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_primal</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_primal</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_primal</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">cost_func</span> <span class="o">!=</span> <span class="s1">&#39;compliance&#39;</span><span class="p">:</span>
+            <span class="c1">################</span>
+            <span class="c1"># Dual problem</span>
+            <span class="c1">################</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">p_const</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">p_const</span>
+
+            <span class="n">p</span> <span class="o">=</span>  <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+            <span class="n">v_adj</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_adj</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span>  <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span> \
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">*</span>  <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span>
+            
+            <span class="c1">#Stabilization:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_adj</span> <span class="o">+=</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">u</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>\
+            <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dS</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_adj_test</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span>  <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dx</span> <span class="o">+</span>  <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dx</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_adjoint_test</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_adj_test</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cache_dir&quot;</span> <span class="p">:</span> <span class="s2">&quot;ffcx-forms&quot;</span> <span class="p">})</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="p">((</span><span class="n">mechanics_tool</span><span class="o">.</span><span class="n">von_mises</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span><span class="o">/</span><span class="n">parameters</span><span class="o">.</span><span class="n">elasticity_limit</span><span class="p">)</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">p_const</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dxq</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span><span class="n">v_adj</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adjoint</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_adj</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adjoint</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adjoint</span><span class="p">)</span>
+            <span class="n">fem</span><span class="o">.</span><span class="n">apply_lifting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">a_adjoint_test</span><span class="p">],</span> <span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">]])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+            <span class="n">fem</span><span class="o">.</span><span class="n">petsc</span><span class="o">.</span><span class="n">set_bc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adjoint</span><span class="p">,</span> <span class="n">bcs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">])</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="o">.</span><span class="n">assemblyBegin</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">Mat</span><span class="o">.</span><span class="n">AssemblyType</span><span class="o">.</span><span class="n">FINAL</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="o">.</span><span class="n">assemblyEnd</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">Mat</span><span class="o">.</span><span class="n">AssemblyType</span><span class="o">.</span><span class="n">FINAL</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">level_set_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">dt</span> 
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_n</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">const</span> <span class="o">=</span> <span class="mf">1e-3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_adv</span> <span class="o">=</span> <span class="n">FacetNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_adv</span>  <span class="o">=</span>  <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">)</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dx</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_adv</span> <span class="o">+=</span>  <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">const</span><span class="p">)</span> <span class="o">*</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_n</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n_adv</span><span class="p">),</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n_adv</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dS</span>   
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_adv</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">)</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">dx</span> <span class="o">+</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">euclidean_norm_grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">)</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">dx</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adv</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adv</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_adv</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_adv</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_adv</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        
+        
+        
+<div class="viewcode-block" id="CutFemMethod.primal_problem">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.primal_problem">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">primal_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Resolution of the primal problem with the CutFEM method.</span>
+
+<span class="sd">        :param fem.Function level_set: The level set field which defined implicitly the domain :math:`\Omega`.</span>
+<span class="sd">        :param Parameters parameters: The object parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: The primal solution.</span>
+<span class="sd">        :rtype: fem.Function</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_measure_dxq</span><span class="p">(</span><span class="n">level_set</span><span class="p">)</span> <span class="c1"># actualization of the measure on \Omega</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gp_ids</span> <span class="o">=</span>  <span class="n">ghost_penalty_facets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gp_topo</span> <span class="o">=</span> <span class="n">facet_topology</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_ids</span><span class="p">)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subdomain_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cell&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span><span class="p">)]}</span> <span class="c1">#, &quot;interior_facet&quot;: [(0, self.gp_topo)]}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cutcell&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span><span class="p">)]}</span> <span class="c1">#, (1,self.interface_quadrature)]}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_primal</span><span class="o">.</span><span class="n">update_integration_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subdomain_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_primal</span><span class="o">.</span><span class="n">update_runtime_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span><span class="p">)</span>
+
+        <span class="c1"># compute_normal(self.n,self.level_set,self.intersected_entities)</span>
+        <span class="c1">#self.b_primal = assemble_vector(self.L_cut_primal)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_primal</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_primal</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        
+        <span class="c1"># MPI.COMM_WORLD.Barrier()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_primal</span><span class="p">,</span>  <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">])</span>
+
+        <span class="n">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span><span class="p">,</span><span class="s2">&quot;phi&gt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,[</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_primal</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_primal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span> 
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span></div>
+
+    
+<div class="viewcode-block" id="CutFemMethod.adjoint_problem">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.adjoint_problem">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">adjoint_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">adjoint</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Resolution of the dual problem with the CutFEM method.</span>
+
+<span class="sd">        :param fem.Function u: The displacement field function, :math:`u_{h}`.</span>
+<span class="sd">        :param Parameters parameters: The object parameters.</span>
+<span class="sd">        :param ufl.Expression adjoint: The adjoint operator if needed.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: The dual solution, :math:`p_{h}`.</span>
+<span class="sd">        :rtype: fem.Function</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># temporaire</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_measure_dxq</span><span class="p">(</span><span class="n">level_set</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span> <span class="o">=</span> <span class="n">u</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span> <span class="o">=</span> <span class="n">adjoint</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adjoint</span><span class="o">.</span><span class="n">update_integration_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subdomain_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adjoint</span><span class="o">.</span><span class="n">update_runtime_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span><span class="p">)</span>
+        <span class="c1"># if adjoint ==0 </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adjoint</span><span class="o">.</span><span class="n">update_integration_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subdomain_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adjoint</span><span class="o">.</span><span class="n">update_runtime_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_measure_dxq</span><span class="p">(</span><span class="n">level_set</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adjoint</span><span class="p">,</span>  <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">])</span>
+        <span class="n">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="p">,</span><span class="s2">&quot;phi&gt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,[</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="c1"># if djoint ==0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adjoint</span><span class="p">)</span>
+        <span class="n">fem</span><span class="o">.</span><span class="n">apply_lifting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">a_adjoint_test</span><span class="p">],</span> <span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        <span class="n">fem</span><span class="o">.</span><span class="n">petsc</span><span class="o">.</span><span class="n">set_bc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="o">.</span><span class="n">assemblyBegin</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">Mat</span><span class="o">.</span><span class="n">AssemblyType</span><span class="o">.</span><span class="n">FINAL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="o">.</span><span class="n">assemblyEnd</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">Mat</span><span class="o">.</span><span class="n">AssemblyType</span><span class="o">.</span><span class="n">FINAL</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_adjoint</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adjoint</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ph</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+
+        <span class="c1"># A_adjoint.destroy()</span>
+        <span class="c1"># b_adjoint.destroy()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span> 
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ph</span></div>
+
+    
+<div class="viewcode-block" id="CutFemMethod.set_measure_dxq">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.set_measure_dxq">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_measure_dxq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Set the measure dxq on :math:`\Omega`.</span>
+
+<span class="sd">        :param fem.Function level_set: The level_set field function, :math:`\phi`.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">level_set</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="n">inside_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+        
+        <span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="n">order</span><span class="p">)</span>
+        <span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="n">quad_domains</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cutcell&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="n">inside_quadrature</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">interface_quadrature</span><span class="p">)]}</span>
+
+        <span class="n">gp_ids</span> <span class="o">=</span>  <span class="n">ghost_penalty_facets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+        <span class="n">gp_topo</span> <span class="o">=</span> <span class="n">facet_topology</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span><span class="n">gp_ids</span><span class="p">)</span>
+
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inside_entities</span><span class="p">),(</span><span class="mi">2</span><span class="p">,</span> <span class="n">intersected_entities</span><span class="p">)],</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx_rt</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dC&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="n">quad_domains</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx_rt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="CutFemMethod.cutfem_solver">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.cutfem_solver">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cutfem_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">problem_topo</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Resolution of the primal and dual problem.</span>
+
+<span class="sd">        :param fem.Function level_set: The level set field which defined implicitly the domain :math:`\Omega`.</span>
+<span class="sd">        :param Parameters parameters: The object parameters.</span>
+<span class="sd">        :param ufl.Expression adjoint: The adjoint operator if needed.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: The values of the primal and dual solution.</span>
+<span class="sd">        :rtype: fem.Function, fem.Function</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;before primal solve&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primal_problem</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;after primal solve&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ph</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="n">adjoint</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">cost_func</span> <span class="o">!=</span> <span class="s2">&quot;compliance&quot;</span><span class="p">):</span>
+            <span class="c1">#almMethod.maj_param_constrainst_optim_slack(parameters,rest_constraint)</span>
+            <span class="n">adjoint</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">dual_operator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dxq</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">ph</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">adjoint_problem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">adjoint</span><span class="p">)</span> <span class="c1">#self.adjoint_problem(self.uh,parameters,level_set,adjoint)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ph</span>    </div>
+
+    
+<div class="viewcode-block" id="CutFemMethod.euclidean_norm_grad">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.euclidean_norm_grad">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">euclidean_norm_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">func</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculation of the integrand of the L2-norm of the gradient of the function provided, given by the following equality:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \left|\nabla\phi\right| = \sqrt{\nabla\phi\cdot\nabla\phi}</span>
+
+
+<span class="sd">        :param fem.Function func: Function field.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: The values of integrand of the L2-norm of the gradient.</span>
+<span class="sd">        :rtype: fem.Expression</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">euclidean_norm</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">func</span><span class="p">),</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">func</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">euclidean_norm</span></div>
+
+        
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cut_fem_adv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">velocity_field</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Resolution of advection equation with CutFEM stabilization.</span>
+
+<span class="sd">        :param fem.Function level_set: The level set field which defined implicitly the domain :math:`\Omega`.</span>
+<span class="sd">        :param float dt: The dt time parameters.</span>
+<span class="sd">        :param ufl.Expression velocity_field: The value of advection velocity_field, in normal direction of the interface :math:`\partial\Omega`.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: The values of the advected level set.</span>
+<span class="sd">        :rtype: fem.Function</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
+        <span class="n">velocity_expr</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">velocity_field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">interpolation_points</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">velocity_expr</span><span class="p">)</span>
+        <span class="c1">#self.velocity_field.x.array[:] = velocity_field.x.array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">gp_ids</span> <span class="o">=</span>  <span class="n">ghost_penalty_facets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gp_topo</span> <span class="o">=</span> <span class="n">facet_topology</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_ids</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="c1">#self.subdomain_data={&quot;interior_facet&quot;: [(0, self.gp_topo)]}</span>
+        <span class="c1">#self.quad_domains = {&quot;cutcell&quot;: [(1,self.interface_quadrature)]}</span>
+
+
+        <span class="c1">#self.a_cut_adv.update_integration_domains(self.subdomain_data)</span>
+        <span class="c1">#self.a_cut_adv.update_runtime_domains(self.quad_domains)</span>
+
+        <span class="c1"># compute_normal(self.n_K,self.level_set,self.intersected_entities)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_adv</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">)</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">dx</span> <span class="o">+</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">euclidean_norm_grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">)</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">dx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adv</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_adv</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span> 
+        
+        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+       
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span>
+        
+<div class="viewcode-block" id="CutFemMethod.cut_fem_adv">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.cut_fem_adv">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cut_fem_adv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">velocity_field</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Resolution of advection equation with CutFEM stabilization.</span>
+
+<span class="sd">        :param fem.Function level_set: The level set field wich defined implicitely the domain :math:`\Omega`.</span>
+<span class="sd">        :param float dt: The :math: `dt` time parameters.</span>
+<span class="sd">        :param ufl.Expression velocity_field: The value of advection velocity_field, in normal direction of the interface :math:`\partial\Omega`.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: The values of the advected level set.</span>
+<span class="sd">        :rtype: fem.Function</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tdim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">dim</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">dim</span>
+
+        <span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="n">inside_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+
+        <span class="n">V_DG</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;DG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">dim</span><span class="p">,)))</span>
+        <span class="n">n_K</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">V_DG</span><span class="p">)</span>
+        <span class="n">compute_normal</span><span class="p">(</span><span class="n">n_K</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">intersected_entities</span><span class="p">)</span>
+
+
+        <span class="n">phi_n</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="n">phi_test</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+
+        <span class="c1"># Compute n_K on local cells and ghost layer (all cells)</span>
+        <span class="n">const</span> <span class="o">=</span> <span class="mf">1e-3</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="n">n_adv</span> <span class="o">=</span> <span class="n">FacetNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="n">a_adv</span>  <span class="o">=</span>  <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">phi_n</span><span class="p">,</span><span class="n">phi_test</span><span class="p">)</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dx</span> 
+        <span class="n">a_adv</span> <span class="o">+=</span>  <span class="n">avg</span><span class="p">(</span><span class="n">const</span><span class="p">)</span> <span class="o">*</span> <span class="n">avg</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">phi_n</span><span class="p">),</span><span class="n">n_adv</span><span class="p">),</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">phi_test</span><span class="p">),</span><span class="n">n_adv</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dS</span>   
+            
+        <span class="n">L_adv</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="n">phi_test</span><span class="p">)</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">dx</span> <span class="o">+</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="o">-</span><span class="n">dt</span><span class="o">*</span><span class="n">velocity_field</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">euclidean_norm_grad</span><span class="p">(</span><span class="n">level_set</span><span class="p">),</span><span class="n">phi_test</span><span class="p">)</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">dx</span>
+            
+        <span class="n">a_cut_adv</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="n">a_adv</span><span class="p">)</span>
+        <span class="n">L_cut_adv</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="n">L_adv</span><span class="p">)</span>
+
+        <span class="n">b_adv</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="n">L_cut_adv</span><span class="p">)</span>
+        <span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        <span class="n">A_adv</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="n">a_cut_adv</span><span class="p">)</span>
+        <span class="n">A_adv</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+
+        <span class="n">solver_adv</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="n">solver_adv</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="n">A_adv</span><span class="p">)</span>
+        <span class="n">solver_adv</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="n">solver_adv</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="n">sol_adv</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="n">solver_adv</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b_adv</span><span class="p">,</span> <span class="n">sol_adv</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        <span class="n">b_adv</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">sol_adv</span></div>
+
+    
+<div class="viewcode-block" id="CutFemMethod.velocity_normalization">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.velocity_normalization">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">velocity_normalization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">c</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Normalization of the Velocity field according to the following equation:</span>
+
+<span class="sd">         .. math::</span>
+
+<span class="sd">            \overline{v} = \frac{v}{\sqrt{c\left\Vert \nabla\phi\right\Vert _{L^{2}\left(D\right)}^{2}+\left\Vert \phi\right\Vert _{L^{2}\left(D\right)}^{2}}}</span>
+<span class="sd">        </span>
+<span class="sd">            </span>
+<span class="sd">        with :math:`c&gt;0` and :math:`\left\Vert . \right\Vert _{L^{2}\left(D\right)}` norm defined as: </span>
+<span class="sd">        </span>
+<span class="sd">         .. math::</span>
+
+<span class="sd">            \left\Vert f \right\Vert _{L^{2}\left(D\right)}^{2} = \int_{D} f \cdot f \text{ }dx.</span>
+
+<span class="sd">        :param fem.Expression or fem.Function v: The scalar velocity field which defined the value of advection in direction of the normal to :math:`\partial\Omega`.</span>
+<span class="sd">        :param float c: Value of the smoothing for the velocity normalization. Topically, this value is equal to the smoothing value in the extension equation.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: The normalized velocity field, defined in `D`.</span>
+<span class="sd">        :rtype: fem.Expression</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b_grad</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="p">))</span><span class="o">*</span><span class="n">dx</span><span class="p">)</span>
+        <span class="n">b_v</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="n">inner</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="o">*</span><span class="n">dx</span><span class="p">)</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">allreduce</span><span class="p">((</span><span class="n">fem</span><span class="o">.</span><span class="n">assemble_scalar</span><span class="p">(</span><span class="n">b_grad</span><span class="p">)</span><span class="o">*</span><span class="n">c</span><span class="o">+</span><span class="n">fem</span><span class="o">.</span><span class="n">assemble_scalar</span><span class="p">(</span><span class="n">b_v</span><span class="p">)),</span><span class="n">op</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
+        <span class="n">denom_temp</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">allreduce</span><span class="p">((</span><span class="n">fem</span><span class="o">.</span><span class="n">assemble_scalar</span><span class="p">(</span><span class="n">b_v</span><span class="p">)),</span><span class="n">op</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">v</span> <span class="o">/</span> <span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">denom</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+    
+<div class="viewcode-block" id="CutFemMethod.descent_direction">
+<a class="viewcode-back" href="../cutfem_method.html#cutfem_method.CutFemMethod.descent_direction">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">descent_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">,</span><span class="n">constraint_integrand</span><span class="p">,</span><span class="n">cost_integrand</span><span class="p">,</span><span class="n">xsi</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Determine the descent direction by solving the following equation:</span>
+
+<span class="sd">        Find :math:`v&#39;_{\text{reg}}\in H_{\Gamma_{D}}^{1}=\left\{ v\in H^{1}\left(D\right)\text{ such that }v=0\text{ on }\Gamma_{D}\right\}` such that :math:`\forall w\in H_{\Gamma_{D}}^{1}`</span>
+<span class="sd">        </span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">                \alpha\left(\nabla v&#39;_{\text{reg}},\nabla w\right)_{L^{2}\left(D\right)}+\left(v&#39;_{\text{reg}},w\right)_{L^{2}\left(D\right)}=-J&#39;(\Omega)\left(w\right)</span>
+<span class="sd">       </span>
+<span class="sd">        with :math:`J` the cost function and :math:`\alpha&gt;0` is a smoothing parameter instantiated in the Parameter class. </span>
+<span class="sd">            </span>
+<span class="sd">        :param fem.Function level_set: The level set field which defined implicitly the domain :math:`\Omega`.</span>
+<span class="sd">        :param Parameters parameters: The object parameters.</span>
+<span class="sd">        :param float rest_constraint: The value of the constraint function :math:`C(\Omega)`.</span>
+<span class="sd">        :param fem.Expression constraint_integrand: The integrand of the constraint function.</span>
+<span class="sd">        :param fem.Expression cost_integrand: The integrand of the cost function.</span>
+
+<span class="sd">        :returns: The velocity field, defined in `D`.</span>
+<span class="sd">        :rtype: fem.Function</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">u_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="n">v_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="n">v_reg</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+
+        <span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        
+        <span class="n">V_DG</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;DG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">dim</span><span class="p">,)))</span>
+        <span class="n">n_K</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">V_DG</span><span class="p">)</span>
+        <span class="n">compute_normal</span><span class="p">(</span><span class="n">n_K</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">intersected_entities</span><span class="p">)</span>
+
+        <span class="n">order</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="n">order</span><span class="p">)</span>
+        <span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="n">quad_domains</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="n">inside_quadrature</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">interface_quadrature</span><span class="p">)]</span>
+
+        <span class="n">dx_rt</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dC&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="n">quad_domains</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+        <span class="n">dsq</span> <span class="o">=</span> <span class="n">dx_rt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">a_reg</span>  <span class="o">=</span>   <span class="n">parameters</span><span class="o">.</span><span class="n">alpha_reg_velocity</span> <span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">))</span><span class="o">*</span><span class="n">dx</span>
+        <span class="n">a_reg</span> <span class="o">+=</span> <span class="n">u_r</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="n">dx</span>
+
+        <span class="n">C_Omega_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">rest_constraint</span> <span class="o">+</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_slack_variable</span> <span class="p">)</span>
+
+
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">cost_integrand</span>
+        <span class="n">temp_ALM</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span><span class="o">*</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span> <span class="o">*</span> <span class="n">constraint_integrand</span> <span class="o">+</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span> <span class="o">*</span> <span class="n">C_Omega_value</span> <span class="o">*</span> <span class="n">constraint_integrand</span> \
+                <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">constraint_integrand</span><span class="o">*</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM_slack_variable</span><span class="p">)</span>
+        <span class="n">temp_ALM</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span><span class="p">)</span><span class="o">*</span><span class="n">parameters</span><span class="o">.</span><span class="n">target_constraint</span>
+        <span class="n">temp</span> <span class="o">+=</span> <span class="n">temp_ALM</span>
+
+        <span class="n">L_reg</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">inner</span><span class="p">(</span><span class="n">temp</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="n">n_K</span><span class="p">,</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">dsq</span><span class="p">)</span>
+        
+        <span class="n">a_cut_reg</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="n">a_reg</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cache_dir&quot;</span> <span class="p">:</span> <span class="s2">&quot;ffcx-forms&quot;</span> <span class="p">})</span>
+        <span class="n">L_cut_reg</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="n">L_reg</span><span class="p">)</span>
+
+        <span class="n">b_reg</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="n">L_cut_reg</span><span class="p">)</span>
+        <span class="n">b_reg</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="n">b_reg</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        <span class="n">A_reg</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="n">a_cut_reg</span><span class="p">,</span> <span class="n">bcs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc_velocity</span><span class="p">])</span>
+        <span class="n">A_reg</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="n">solver_reg</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="n">solver_reg</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="n">A_reg</span><span class="p">)</span>
+        <span class="n">solver_reg</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="n">solver_reg</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+        <span class="n">solver_reg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b_reg</span><span class="p">,</span> <span class="n">v_reg</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        <span class="n">b_reg</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">v_reg</span></div>
+</div>
+
+
+    
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, ONERA and MINES PARIS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

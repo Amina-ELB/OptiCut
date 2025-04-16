@@ -1,0 +1,555 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>levelSet_tool &mdash; OptiCut 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bfa8c73d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OptiCut
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo_optim.html">Shape optimization method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem.html">CutFEM for Immersed geometry discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OptiCut</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">levelSet_tool</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for levelSet_tool</h1><div class="highlight"><pre>
+<span></span><span class="c1"># The modules that will be used are imported:</span>
+
+<span class="c1"># +</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+<span class="c1"># mathematical language for FEM, auto differentiation, python</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">fem</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">plot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="c1"># meshes, assembly, c++, ython, pybind</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ufl</span><span class="w"> </span><span class="kn">import</span> <span class="n">ds</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">inner</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">dS</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py.PETSc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">PETSc</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyvista</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.fem</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">Constant</span><span class="p">,</span>  <span class="n">Function</span><span class="p">,</span> <span class="n">FunctionSpace</span><span class="p">,</span> <span class="n">assemble_scalar</span><span class="p">,</span> 
+                         <span class="n">dirichletbc</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">locate_dofs_topological</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.fem.petsc</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearProblem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_unit_square</span><span class="p">,</span> <span class="n">locate_entities</span><span class="p">,</span> <span class="n">meshtags</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py.PETSc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ufl</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">FacetNormal</span><span class="p">,</span> <span class="n">Measure</span><span class="p">,</span> <span class="n">SpatialCoordinate</span><span class="p">,</span> <span class="n">TestFunction</span><span class="p">,</span> <span class="n">TrialFunction</span><span class="p">,</span> 
+                 <span class="n">div</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">inner</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">dc</span><span class="p">,</span> <span class="n">FacetNormal</span><span class="p">,</span> <span class="n">CellDiameter</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="n">jump</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">XDMFFile</span>
+<span class="c1">#  from dolfinx.plot import create_vtk_mesh # error  </span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.level_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">locate_entities</span><span class="p">,</span> <span class="n">cut_entities</span><span class="p">,</span> <span class="n">ghost_penalty_facets</span><span class="p">,</span> <span class="n">facet_topology</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.level_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_normal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_cut_mesh</span><span class="p">,</span> <span class="n">create_cut_cells_mesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.quadrature</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_quadrature</span><span class="p">,</span> <span class="n">physical_points</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.fem</span><span class="w"> </span><span class="kn">import</span> <span class="n">cut_form</span><span class="p">,</span> <span class="n">cut_function</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.petsc</span><span class="w"> </span><span class="kn">import</span> <span class="n">assemble_vector</span><span class="p">,</span> <span class="n">assemble_matrix</span><span class="p">,</span> <span class="n">deactivate</span><span class="p">,</span> <span class="n">locate_dofs</span>
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">mechanics_tool</span>
+
+<span class="c1">############################################</span>
+<span class="c1"># HJ Reinitialization</span>
+<span class="c1">############################################</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">LevelSet</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span><span class="n">space</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">=</span> <span class="n">space</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_level_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        
+<div class="viewcode-block" id="Reinitialization">
+<a class="viewcode-back" href="../reinitialization.html#levelSet_tool.Reinitialization">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Reinitialization</span><span class="p">(</span><span class="n">LevelSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;This is the Reinitialization class.</span>
+
+<span class="sd">    In the subsection we give some details about the Reinitialization method used. </span>
+<span class="sd">    We use the Prediction Correction scheme proposed in .....</span>
+<span class="sd">    Initialization of predictor problem.</span>
+
+<span class="sd">    Definition of the Predictor variational problem</span>
+<span class="sd">    =================================================</span>
+
+<span class="sd">    prediction problem is given by: </span>
+<span class="sd">    Find :math:`\phi_{p}:D \rightarrow \mathbb{R}`</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">            \begin{cases}</span>
+<span class="sd">            -\Delta\phi_{p}  &amp; \!\!\!\!</span>
+<span class="sd">            = \psi(x)\text{ in D}\\</span>
+<span class="sd">            \phi_{p}  &amp; \!\!\!\!</span>
+<span class="sd">            = 0\text{ on }\Gamma \\ </span>
+<span class="sd">            \nabla \phi_{p} \cdot n &amp; \!\!\!\!</span>
+<span class="sd">            = \psi(x) \text{ on } \partial D .</span>
+<span class="sd">            \end{cases}</span>
+
+
+<span class="sd">    With Nitsche method, this yields to the following weak formulation: </span>
+<span class="sd">    Find :math:`\phi^{0} \in V`, such that for all :math:`v \in V` </span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        a\left(\phi_{p},v\right)=l\left(v\right),</span>
+<span class="sd">        </span>
+<span class="sd">    where:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">    </span>
+<span class="sd">        \begin{align}</span>
+<span class="sd">        a\left(\phi_{p},v\right) &amp;= \int_{D}\nabla \phi_{p}\cdot\nabla v\,\text{ }dx{\color{red}{ -\int_{\Gamma}\nabla \phi_{p}\cdot n_{\Gamma} \, v\text{ }ds-\int_{\Gamma}\nabla v\cdot n_{\Gamma} \, \phi_{p}\text{ }ds}} \\</span>
+<span class="sd">            &amp;{\color{red}{ +\gamma_{D}\int_{\Gamma} \phi_{p} \, v\text{ }ds}}\\</span>
+<span class="sd">        l\left(v\right) &amp;= \int_{D}\psi(x) v\text{ }dx + \int_{\partial D}\psi(x) v\text{ }ds</span>
+<span class="sd">        \end{align}</span>
+
+<span class="sd">    with :math:`\gamma_{D}&gt;0` is the Nistche parameter.</span>
+
+<span class="sd">    *The text in red is the Nitsche terms.*</span>
+
+<span class="sd">    Intialization of normal field to isocontour:</span>
+<span class="sd">    ---------------------------------------------</span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        V_DG = fem.functionspace(self.mesh, (&quot;DG&quot;, 0, (self.dim,)))</span>
+<span class="sd">        self.n_K = fem.Function(V_DG)</span>
+<span class="sd">        self.norm_euclidienne = ufl.sqrt(inner(ufl.grad(self.level_set),ufl.grad(self.level_set)))</span>
+<span class="sd">        self.n_K = ufl.grad(self.level_set)/ self.norm_euclidienne</span>
+
+
+<span class="sd">    Bilinear form (Predictor):</span>
+<span class="sd">    --------------------------</span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        import ufl</span>
+
+<span class="sd">        u_r = ufl.TrialFunction(self.V_ls) # Trial function</span>
+<span class="sd">        v_r = ufl.TestFunction(self.V_ls) # Test function</span>
+
+<span class="sd">        self.gamma_r = 1e+4 # Value of Nitsche parameter</span>
+
+<span class="sd">        self.h_r = CellDiameter(self.mesh) # mesh size</span>
+
+<span class="sd">        self.a_predict  = ufl.inner(grad(u_r), grad(v_r))*self.dx</span>
+<span class="sd">        self.a_predict += - dot(grad(u_r), self.n_K)*v_r*self.dsq</span>
+<span class="sd">        self.a_predict += - dot(grad(v_r), self.n_K)*u_r*self.dsq</span>
+<span class="sd">        self.a_predict += self.gamma_r*1.0/self.h_r*u_r*v_r*self.dsq</span>
+
+<span class="sd">    Linear form (Predictor):</span>
+<span class="sd">    ------------------------------</span>
+<span class="sd">    Approximation of the signed indicator function :math:`\psi`:</span>
+<span class="sd">        </span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        self.eps = 1e-6</span>
+<span class="sd">        self.sign = self.level_set / (ufl.sqrt(self.level_set**2+self.eps**2))</span>
+
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        self.L_predict = inner(self.l**2*self.sign,v_r)*self.dx</span>
+<span class="sd">        nuemann_bc = ufl.conditional(ufl.le(self.sign,0),-1,0)</span>
+<span class="sd">        nuemann_bc = ufl.conditional(ufl.ge(self.sign,0),1,nuemann_bc)</span>
+<span class="sd">        self.L_predict += ufl.dot(nuemann_bc,v_r)*ufl.ds</span>
+
+<span class="sd">    Be aware to impose correct Nuemann condition to guaranty the order of convergence.</span>
+
+
+<span class="sd">    Definition of the Corrector variational problem</span>
+<span class="sd">    =================================================</span>
+
+<span class="sd">    prediction problem is given by: </span>
+<span class="sd">    Find :math:`\phi:D \rightarrow \mathbb{R}`</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">            </span>
+<span class="sd">            \begin{cases}</span>
+<span class="sd">            \nabla\cdot\left(\nabla\phi-\frac{\nabla\phi}{\left|\nabla\phi\right|}\right)&amp; \!\!\!\!</span>
+<span class="sd">            =0\text{ in }D\\</span>
+<span class="sd">            \phi&amp;\!\!\!\!</span>
+<span class="sd">            =0\text{ on }\Gamma\\</span>
+<span class="sd">            \left(\nabla\phi-\frac{\nabla\phi}{\left|\nabla\phi\right|}\right)\cdot n&amp;</span>
+<span class="sd">            \!\!\!\! =0\text{ on }\partial D.</span>
+<span class="sd">            \end{cases}</span>
+<span class="sd">            </span>
+
+<span class="sd">            </span>
+
+<span class="sd">    With Nitsche method, this yields to the following weak formulation: </span>
+<span class="sd">    Find :math:`\phi^{n+1} \in V`, such that for all :math:`v \in V`:</span>
+
+<span class="sd">    .. math::  </span>
+<span class="sd">        a\left(\phi^{n+1},v\right)=l\left(v,\phi^{n}\right),</span>
+<span class="sd">        </span>
+<span class="sd">    where :</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \begin{align}</span>
+<span class="sd">        a\left(\phi^{n+1},v\right)&amp;=\int_{D}\nabla\phi^{n+1}\cdot\nabla v\text{ }dx -\int_{\Gamma}\nabla\phi^{n+1}\cdot n_{\Gamma}v\text{ }ds-\int_{\Gamma}\nabla v\cdot n_{\Gamma}\phi^{n+1}\text{ }ds \notag \\ </span>
+<span class="sd">        &amp;+\gamma_{D}\int_{\Gamma} \phi^{n+1}v\text{ }ds\label{corrector_bilin}\\</span>
+<span class="sd">        l\left(v,\phi^{n}\right)&amp;=\int_{D}\frac{\nabla\phi^{n}}{\max\left(\left|\nabla\phi^{n}\right|,\epsilon\right)}\cdot\nabla v\text{ }dx \quad\text{ with } \epsilon &gt;0 \text{, very small} \label{corrector_lin}</span>
+<span class="sd">        \end{align}</span>
+
+<span class="sd">        </span>
+<span class="sd">    with :math:`\phi^0=\phi_{p}` given by the Predictor problem and :math:`\gamma_{D}&gt;0` is the Nistche parameter.</span>
+
+<span class="sd">        </span>
+<span class="sd">    </span>
+<span class="sd">    Bilinear form (Corrector):</span>
+<span class="sd">    -----------------------------</span>
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        import ufl</span>
+
+<span class="sd">        u_r = ufl.TrialFunction(self.V_ls) # Trial function</span>
+<span class="sd">        v_r = ufl.TestFunction(self.V_ls) # Test function</span>
+
+<span class="sd">        self.gamma_r = 1e+4 # Value of Nitsche parameter</span>
+
+<span class="sd">        self.h_r = CellDiameter(self.mesh) # mesh size</span>
+
+<span class="sd">        self.a_correct  = ufl.inner(grad(u_r), grad(v_r))*self.dx</span>
+<span class="sd">        self.a_correct += - dot(grad(u_r), self.n_K)*v_r*self.dsq</span>
+<span class="sd">        self.a_correct += - dot(grad(v_r), self.n_K)*u_r*self.dsq</span>
+<span class="sd">        self.a_correct += self.gamma_r*1.0/self.h_r*u_r*v_r*self.dsq</span>
+
+<span class="sd">    Linear form (Corrector):</span>
+<span class="sd">    -------------------------</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        self.L_correct = inner(self.n_K, grad(v_r))*self.dx</span>
+
+<span class="sd">    The approximation of the normal to isocontour is automatically updated for each iteration.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span><span class="n">V_ls</span><span class="p">)</span>  
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">function_space</span><span class="o">.</span><span class="n">mesh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="n">l</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span> <span class="o">=</span> <span class="n">V_ls</span>
+        
+        <span class="c1">### Reinitialisation schema predicteur correcteur</span>
+        <span class="c1">## Predictor :</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tdim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+
+        <span class="n">V_DG</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;DG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">V_DG</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm_euclidienne</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">),</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)</span><span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_euclidienne</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dof_coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="o">.</span><span class="n">tabulate_dof_coordinates</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span><span class="p">),(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span><span class="p">)],</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx_rt</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;dC&quot;</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dsq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx_rt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="n">u_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="n">v_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma_r</span> <span class="o">=</span> <span class="mf">1e+4</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_r</span> <span class="o">=</span> <span class="n">FacetNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h_r</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span>  <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_r</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">h_r</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span> <span class="o">/</span> <span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span> <span class="o">=</span> <span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="n">v_r</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">conditional</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">conditional</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_expr</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">interpolation_points</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_func</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_func</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_expr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span> <span class="o">+=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_func</span><span class="p">,</span><span class="n">v_r</span><span class="p">)</span><span class="o">*</span><span class="n">ds</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_predict</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span><span class="p">,</span><span class="n">jit_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cache_dir&quot;</span> <span class="p">:</span> <span class="s2">&quot;ffcx-forms&quot;</span> <span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_predict</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span><span class="p">)</span>
+        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_predict</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_predict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_predict</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_predict</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_predict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_predict</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_predict</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        
+        
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_predict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+        
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span>  <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_r</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">h_r</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_correct</span> <span class="o">=</span> <span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">,</span> <span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_correct</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cache_dir&quot;</span> <span class="p">:</span> <span class="s2">&quot;ffcx-forms&quot;</span> <span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_correct</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_correct</span><span class="p">,</span><span class="n">jit_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cache_dir&quot;</span> <span class="p">:</span> <span class="s2">&quot;ffcx-forms&quot;</span> <span class="p">})</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_correct</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_correct</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_correct</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_correct</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_correct</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_correct</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_correct</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_correct</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+        
+
+<div class="viewcode-block" id="Reinitialization.predictor">
+<a class="viewcode-back" href="../reinitialization.html#levelSet_tool.Reinitialization.predictor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predictor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Returns the solution of the prediction problem, denoted :math:`\phi_{p}`.</span>
+
+<span class="sd">        :param fem.Expression level_set: The level_set function :math:`\phi`.</span>
+
+<span class="sd">        :returns: The solution to prediction problem.</span>
+<span class="sd">        :rtype: fem.Expression</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">v_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)</span><span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_euclidienne</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span> <span class="o">=</span> <span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="n">v_r</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">conditional</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">conditional</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_expr</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">interpolation_points</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_func</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_func</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_expr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span> <span class="o">+=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_func</span><span class="p">,</span><span class="n">v_r</span><span class="p">)</span><span class="o">*</span><span class="n">ds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_cut_predict</span> <span class="o">=</span> <span class="n">cut_form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cutcell&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span><span class="p">)]}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_predict</span><span class="o">.</span><span class="n">update_runtime_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_predict</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_predict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_predict</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_predict</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_predict</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_predict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_predict</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_predict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_predict</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_predict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span> 
+        
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp_func</span></div>
+
+
+
+<div class="viewcode-block" id="Reinitialization.corrector">
+<a class="viewcode-back" href="../reinitialization.html#levelSet_tool.Reinitialization.corrector">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">corrector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Returns the solution of the correction problem, denoted :math:`\phi_{i}`.</span>
+
+<span class="sd">        :param fem.Expression level_set: The level_set function :math:`\phi`.</span>
+
+<span class="sd">        :returns: The solution to correction problem.</span>
+<span class="sd">        :rtype: fem.Expression</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)</span><span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_euclidienne</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">intersected_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_entities</span> <span class="o">=</span> <span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inside_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi&lt;0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span> <span class="o">=</span> <span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="s2">&quot;phi=0&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cutcell&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_quadrature</span><span class="p">)]}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_cut_correct</span><span class="o">.</span><span class="n">update_runtime_domains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad_domains</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_correct</span> <span class="o">=</span> <span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_cut_correct</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_correct</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_correct</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span><span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_correct</span> <span class="o">=</span> <span class="n">assemble_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_cut_correct</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_correct</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_correct</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_corrector</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_correct</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span> 
+
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span></div>
+
+    
+<div class="viewcode-block" id="Reinitialization.reinitializationPC">
+<a class="viewcode-back" href="../reinitialization.html#levelSet_tool.Reinitialization.reinitializationPC">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reinitializationPC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">level_set</span><span class="p">,</span><span class="n">step_reinit</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Returns the solution of the PC reinitialization method for step_reinit iteration of the correction problem.</span>
+<span class="sd">        </span>
+<span class="sd">        :param fem.Expression level_set: The level_set function :math:`\phi`.</span>
+<span class="sd">        :param int step_reinit: The number of iteration for correction problem.</span>
+
+<span class="sd">        :returns: The solution to P.C. reinitialization problem.</span>
+<span class="sd">        :rtype: fem.Expression</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">level_set</span><span class="p">,</span> <span class="n">temp_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="p">(</span><span class="n">level_set</span><span class="p">)</span>
+        <span class="n">num_step</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="p">(</span><span class="n">num_step</span> <span class="o">&lt;</span> <span class="n">step_reinit</span><span class="p">):</span>
+            <span class="n">num_step</span> <span class="o">+=</span> <span class="mi">1</span>                    
+            <span class="n">level_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrector</span><span class="p">(</span><span class="n">level_set</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">temp_func</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, ONERA and MINES PARIS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
