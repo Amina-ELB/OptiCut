@@ -1,3 +1,12 @@
+# Copyright (c) 2025 ONERA and MINES Paris, France 
+#
+# All rights reserved.
+#
+# This file is part of OptiCut.
+#
+# Author(s)     : Amina El Bachari 
+
+
 import ufl
 import cutfemx
 from dolfinx import fem

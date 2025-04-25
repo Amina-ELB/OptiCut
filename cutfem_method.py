@@ -1,3 +1,11 @@
+# Copyright (c) 2025 ONERA and MINES Paris, France 
+#
+# All rights reserved.
+#
+# This file is part of OptiCut.
+#
+# Author(s)     : Amina El Bachari 
+
 import ufl
 from ufl import (FacetNormal, Measure, SpatialCoordinate, TestFunction, TrialFunction, 
                  div, dot, dx, grad, inner, lhs, rhs, dc, dS, FacetNormal, CellDiameter, dot, avg, jump)

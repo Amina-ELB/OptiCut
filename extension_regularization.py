@@ -1,3 +1,11 @@
+# Copyright (c) 2025 ONERA and MINES Paris, France 
+#
+# All rights reserved.
+#
+# This file is part of OptiCut.
+#
+# Author(s)     : Amina El Bachari 
+
 # The modules that will be used are imported:
 import numpy as np
 import math
