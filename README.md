@@ -2,7 +2,7 @@
 
 
 <p align="center">
-<img src="./doc/images/logo.png" alt="Description" width="500">
+<img src="./doc/images/schema_OptiCut.png" alt="Description" width="500">
 </p>
 
 
