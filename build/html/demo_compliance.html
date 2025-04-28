@@ -236,7 +236,7 @@ The optimal shape obtained is shown in <a class="reference internal" href="#fina
 </section>
 <section id="mesh-generation">
 <h3>Mesh Generation<a class="headerlink" href="#mesh-generation" title="Link to this heading"></a></h3>
-<p>Then to generate the rectangular mesh seen in <a class="reference internal" href="#mesh"><span class="std std-numref">Figure 14</span></a> the function <a class="reference internal" href="create_mesh.html#create_mesh.create_mesh_2D" title="create_mesh.create_mesh_2D"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_mesh.create_mesh_2D()</span></code></a> is called.</p>
+<p>Then to generate the rectangular mesh seen in <a class="reference internal" href="#mesh"><span class="std std-numref">Figure 14</span></a> the function <code class="xref py py-meth docutils literal notranslate"><span class="pre">create_mesh.create_mesh_2D()</span></code> is called.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span><span class="w"> </span><span class="nn">create_mesh</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="linenos">2</span>
 <span class="linenos">3</span><span class="n">msh</span> <span class="o">=</span> <span class="n">create_mesh_2D</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ly</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">lx</span><span class="o">/</span><span class="n">parameters</span><span class="o">.</span><span class="n">h</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">ly</span><span class="o">/</span><span class="n">parameters</span><span class="o">.</span><span class="n">h</span><span class="p">))</span>
@@ -259,7 +259,7 @@ The optimal shape obtained is shown in <a class="reference internal" href="#fina
 </section>
 <section id="initialization-of-the-level-set">
 <h3>Initialization of the level set<a class="headerlink" href="#initialization-of-the-level-set" title="Link to this heading"></a></h3>
-<p>To initialize the level set function, we use the module <a class="reference internal" href="geometry_init.html#module-geometry_initialization" title="geometry_initialization"><code class="xref py py-meth docutils literal notranslate"><span class="pre">geometry_initialization()</span></code></a> and the function :  <a class="reference internal" href="geometry_init.html#geometry_initialization.level_set" title="geometry_initialization.level_set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">geometry_initialization.level_set()</span></code></a>.
+<p>To initialize the level set function, we use the module <code class="xref py py-meth docutils literal notranslate"><span class="pre">geometry_initialization()</span></code> and the function :  <code class="xref py py-meth docutils literal notranslate"><span class="pre">geometry_initialization.level_set()</span></code>.
 In this module, we define all the desired initializations for the level set function and adjust the call based on the desired configuration.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span><span class="w"> </span><span class="nn">geometry_initialization</span>
 <span class="linenos">2</span>
@@ -338,13 +338,13 @@ In this module, we define all the desired initializations for the level set func
 <h3>Instantiation of the objects<a class="headerlink" href="#instantiation-of-the-objects" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>We instantiate the objects of the following classes:</dt><dd><ul class="simple">
-<li><p>Reinitialization (<a class="reference internal" href="reinitialization.html#levelSet_tool.Reinitialization" title="levelSet_tool.Reinitialization"><code class="xref py py-meth docutils literal notranslate"><span class="pre">levelSet_tool.Reinitialization()</span></code></a>),</p></li>
-<li><p>ErsatzMethod  (<a class="reference internal" href="ersatz_method.html#ersatz_method.ErsatzMethod" title="ersatz_method.ErsatzMethod"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ersatz_method.ErsatzMethod()</span></code></a>),</p></li>
-<li><p>CutFemMethod (<a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod" title="cutfem_method.CutFemMethod"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod()</span></code></a>).</p></li>
+<li><p>Reinitialization (<code class="xref py py-meth docutils literal notranslate"><span class="pre">levelSet_tool.Reinitialization()</span></code>),</p></li>
+<li><p>ErsatzMethod  (<code class="xref py py-meth docutils literal notranslate"><span class="pre">ersatz_method.ErsatzMethod()</span></code>),</p></li>
+<li><p>CutFemMethod (<code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod()</span></code>).</p></li>
 </ul>
 </dd>
 </dl>
-<p>Then, we initialize the coefficients of Lamé with the function <a class="reference internal" href="mechanics_tool.html#mechanics_tool.lame_compute" title="mechanics_tool.lame_compute"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mechanics_tool.lame_compute()</span></code></a>.</p>
+<p>Then, we initialize the coefficients of Lamé with the function <code class="xref py py-meth docutils literal notranslate"><span class="pre">mechanics_tool.lame_compute()</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">Reinitialization</span> <span class="o">=</span> <span class="n">Reinitialization</span><span class="p">(</span><span class="n">ls_func</span><span class="p">,</span> <span class="n">V_ls</span><span class="o">=</span><span class="n">V_ls</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">l_reinit</span><span class="p">)</span>
 <span class="linenos">2</span>
 <span class="linenos">3</span><span class="n">ErsatzMethod</span> <span class="o">=</span> <span class="n">ErsatzMethod</span><span class="p">(</span><span class="n">ls_func</span><span class="p">,</span><span class="n">V_ls</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="p">,</span> <span class="n">bc</span> <span class="o">=</span> <span class="n">bc</span><span class="p">,</span> <span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span><span class="p">)</span>
@@ -361,7 +361,7 @@ In this module, we define all the desired initializations for the level set func
 Here, we aim to minimize the compliance, so the problem is of the Compliance_Problem class.
 Defining the problem object then allows for automating the call of functions to calculate the cost, its integrand,
 the integrand of the cost’s derivative, the constraint value, the integrand of the constraint, the integrand of the derivative of the constraint,
-and the dual operator if necessary. See <a class="reference internal" href="problem.html#problem.Compliance_Problem" title="problem.Compliance_Problem"><code class="xref py py-meth docutils literal notranslate"><span class="pre">problem.Compliance_Problem()</span></code></a> for clarification.</p>
+and the dual operator if necessary. See <code class="xref py py-meth docutils literal notranslate"><span class="pre">problem.Compliance_Problem()</span></code> for clarification.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">problem_topo</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">Compliance_Problem</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -429,7 +429,7 @@ Here, we demonstrate the implementation of both methods for solving the linear e
 </section>
 <section id="update-alm-parameters">
 <h3>Update ALM parameters<a class="headerlink" href="#update-alm-parameters" title="Link to this heading"></a></h3>
-<p>To update the Augmented Lagrangian parameters we call the <a class="reference internal" href="almMethod.html#almMethod.maj_param_constraint_optim" title="almMethod.maj_param_constraint_optim"><code class="xref py py-meth docutils literal notranslate"><span class="pre">almMethod.maj_param_constraint_optim()</span></code></a>:</p>
+<p>To update the Augmented Lagrangian parameters we call the <code class="xref py py-meth docutils literal notranslate"><span class="pre">almMethod.maj_param_constraint_optim()</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">almMethod</span><span class="o">.</span><span class="n">maj_param_constraint_optim</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -442,11 +442,11 @@ Here, we demonstrate the implementation of both methods for solving the linear e
 <h3>Compute the descent direction<a class="headerlink" href="#compute-the-descent-direction" title="Link to this heading"></a></h3>
 <p>To compute the advection velocity, we first call on of this two functions :</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod.descent_direction" title="cutfem_method.CutFemMethod.descent_direction"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.descent_direction()</span></code></a></p></li>
-<li><p><a class="reference internal" href="ersatz_method.html#ersatz_method.ErsatzMethod.descent_direction" title="ersatz_method.ErsatzMethod.descent_direction"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ersatz_method.ErsatzMethod.descent_direction()</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.descent_direction()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">ersatz_method.ErsatzMethod.descent_direction()</span></code></p></li>
 </ul>
 <p>depending on the chosen method.</p>
-<p>Next, we normalize the solution field using an adaptation of the H1 norm by calling the function  <a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod.velocity_normalization" title="cutfem_method.CutFemMethod.velocity_normalization"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.velocity_normalization()</span></code></a> .
+<p>Next, we normalize the solution field using an adaptation of the H1 norm by calling the function  <code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.velocity_normalization()</span></code> .
 Finally, we compute the maximum of the velocity field to determine a time step for advection that satisfies the CFL condition.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">velocity_field</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">descent_direction</span><span class="p">(</span><span class="n">CutFemMethod</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="n">msh</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">bc_velocity</span><span class="p">,</span><span class="n">V_ls</span><span class="p">,</span>\
 <span class="linenos">2</span>                                    <span class="n">V_DG</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">,</span><span class="n">shape_derivative_integrand_constraint</span><span class="p">,</span><span class="n">shape_derivative</span><span class="p">)</span>
@@ -471,9 +471,9 @@ Finally, we compute the maximum of the velocity field to determine a time step f
 </section>
 <section id="advection-of-the-level-set-function">
 <h3>Advection of the level set function<a class="headerlink" href="#advection-of-the-level-set-function" title="Link to this heading"></a></h3>
-<p>To advect the level set in the computed descent direction, we call the function <a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod.cut_fem_adv" title="cutfem_method.CutFemMethod.cut_fem_adv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.cut_fem_adv()</span></code></a>.
-To optimize our code, we first call <a class="reference internal" href="opti_tool.html#opti_tool.adapt_c_HJ" title="opti_tool.adapt_c_HJ"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opti_tool.adapt_c_HJ()</span></code></a>, which optimizes the choice of the parameter c when computing the advection time step.
-This function uses the evolution of the convergence criterion to gradually decrease the value of c. Then, the function <a class="reference internal" href="opti_tool.html#opti_tool.adapt_dt" title="opti_tool.adapt_dt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opti_tool.adapt_dt()</span></code></a> is
+<p>To advect the level set in the computed descent direction, we call the function <code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.cut_fem_adv()</span></code>.
+To optimize our code, we first call <code class="xref py py-meth docutils literal notranslate"><span class="pre">opti_tool.adapt_c_HJ()</span></code>, which optimizes the choice of the parameter c when computing the advection time step.
+This function uses the evolution of the convergence criterion to gradually decrease the value of c. Then, the function <code class="xref py py-meth docutils literal notranslate"><span class="pre">opti_tool.adapt_dt()</span></code> is
 called to adjust the advection time step.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">c_param_HJ</span> <span class="o">=</span> <span class="n">opti_tool</span><span class="o">.</span><span class="n">adapt_c_HJ</span><span class="p">(</span><span class="n">c_param_HJ</span><span class="p">,</span><span class="n">crit</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">tol_cost_func</span><span class="p">,</span><span class="n">lagrangian</span><span class="p">)</span>
 <span class="linenos">2</span>
@@ -486,7 +486,7 @@ called to adjust the advection time step.</p>
 <section id="reinitialization-of-the-level-set">
 <h3>Reinitialization of the level set<a class="headerlink" href="#reinitialization-of-the-level-set" title="Link to this heading"></a></h3>
 <p>To reinitialize the level set using the P.C. method after setting the number of frequency for the
-reinitialization to parameters.step_reinit we call the method <a class="reference internal" href="reinitialization.html#levelSet_tool.Reinitialization.reinitializationPC" title="levelSet_tool.Reinitialization.reinitializationPC"><code class="xref py py-meth docutils literal notranslate"><span class="pre">levelSet_tool.Reinitialization.reinitializationPC()</span></code></a></p>
+reinitialization to parameters.step_reinit we call the method <code class="xref py py-meth docutils literal notranslate"><span class="pre">levelSet_tool.Reinitialization.reinitializationPC()</span></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">if</span> <span class="p">((</span><span class="n">j</span><span class="o">%</span><span class="n">parameters</span><span class="o">.</span><span class="n">freq_reinit</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
 <span class="linenos">2</span>        <span class="n">ls_func_temp</span><span class="p">,</span> <span class="n">temp_func</span> <span class="o">=</span> <span class="n">Reinitialization</span><span class="o">.</span><span class="n">reinitializationPC</span><span class="p">(</span><span class="n">ls_func_temp</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">step_reinit</span><span class="p">)</span>
 </pre></div>
@@ -580,7 +580,7 @@ obtained with CutFEM. It is observed that the constraint imposed on the volume i
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, ONERA and MINES PARIS.</p>
+    <p>&#169; Copyright 2025, ONERA and MINES PARIS - PSL.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

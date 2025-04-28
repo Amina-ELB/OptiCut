@@ -8,8 +8,8 @@
 
 
 project = 'OptiCut'
-copyright = '2025, ONERA and MINES PARIS'
-author = 'ONERA and MINES PARIS'
+copyright = '2025, ONERA and MINES PARIS - PSL'
+author = 'ONERA and MINES PARIS - PSL'
 release = '1'
 
 # -- General configuration ---------------------------------------------------

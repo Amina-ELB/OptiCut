@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OptiCut documentation &mdash; OptiCut 1 documentation</title>
+  <title>Ls-OptiCut documentation &mdash; OptiCut 1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/custom.css?v=bfa8c73d" />
@@ -69,7 +69,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">OptiCut documentation</li>
+      <li class="breadcrumb-item active">Ls-OptiCut documentation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -79,8 +79,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="opticut-documentation">
-<h1>OptiCut documentation<a class="headerlink" href="#opticut-documentation" title="Link to this heading"></a></h1>
+  <section id="ls-opticut-documentation">
+<h1>Ls-OptiCut documentation<a class="headerlink" href="#ls-opticut-documentation" title="Link to this heading"></a></h1>
+<div class="centered-figure docutils container">
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/schema_OptiCut.png"><img alt="Logo" src="_images/schema_OptiCut.png" style="width: 100%;" />
+</a>
+</figure>
+</div>
 <p>OptiCut is a shape optimization framework that combines the <strong>level set</strong> method with the <strong>Cut Finite Element Method</strong> (CutFEM) and the <strong>Ersatz material</strong> approach.</p>
 <p>Part <a class="reference internal" href="demo_optim.html#demooptim"><span class="std std-ref">Shape optimization method</span></a> provides a comprehensive overview of the shape optimization strategy employed, including the mathematical formulation and general methodology.</p>
 <p>In Part <a class="reference internal" href="demo_cutfem.html#democutfem"><span class="std std-ref">CutFEM for Immersed geometry discretization</span></a>, we introduce the CutFEM method in a broad sense, emphasizing its fundamental principles and comparing it to the classical fictitious material method, particularly in the context of shape optimization.</p>
@@ -155,58 +161,19 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="almMethod.html">Augmented Lagrangian Tools</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="almMethod.html#almMethod.maj_param_constraint_optim_slack"><code class="docutils literal notranslate"><span class="pre">maj_param_constraint_optim_slack()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="almMethod.html#almMethod.maj_param_constraint_optim"><code class="docutils literal notranslate"><span class="pre">maj_param_constraint_optim()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="almMethod.html#almMethod.init_param_constraint_optim"><code class="docutils literal notranslate"><span class="pre">init_param_constraint_optim()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="cutfem_method.html">CutFEM Method</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod"><code class="docutils literal notranslate"><span class="pre">CutFemMethod</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="create_mesh.html#create_mesh.create_mesh_2D"><code class="docutils literal notranslate"><span class="pre">create_mesh_2D()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="create_mesh.html#create_mesh.create_mesh_3D"><code class="docutils literal notranslate"><span class="pre">create_mesh_3D()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="ersatz_method.html#ersatz_method.ErsatzMethod"><code class="docutils literal notranslate"><span class="pre">ErsatzMethod</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="geometry_init.html">Geometry</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="geometry_init.html#geometry_initialization.circle"><code class="docutils literal notranslate"><span class="pre">circle()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="geometry_init.html#geometry_initialization.level_set"><code class="docutils literal notranslate"><span class="pre">level_set()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="geometry_init.html#geometry_initialization.level_set_3D"><code class="docutils literal notranslate"><span class="pre">level_set_3D()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="mechanics_tool.html">Mechanics Tools</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="mechanics_tool.html#mechanics_tool.stress"><code class="docutils literal notranslate"><span class="pre">stress()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mechanics_tool.html#mechanics_tool.strain"><code class="docutils literal notranslate"><span class="pre">strain()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mechanics_tool.html#mechanics_tool.lame_compute"><code class="docutils literal notranslate"><span class="pre">lame_compute()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mechanics_tool.html#mechanics_tool.von_mises"><code class="docutils literal notranslate"><span class="pre">von_mises()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="opti_tool.html#opti_tool.lagrangian_cost"><code class="docutils literal notranslate"><span class="pre">lagrangian_cost()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="opti_tool.html#opti_tool.adapt_c_HJ"><code class="docutils literal notranslate"><span class="pre">adapt_c_HJ()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="opti_tool.html#opti_tool.adapt_dt"><code class="docutils literal notranslate"><span class="pre">adapt_dt()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="opti_tool.html#opti_tool.adapt_HJ"><code class="docutils literal notranslate"><span class="pre">adapt_HJ()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="opti_tool.html#opti_tool.catch_NAN"><code class="docutils literal notranslate"><span class="pre">catch_NAN()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="parameters.html#Parameters.Parameters"><code class="docutils literal notranslate"><span class="pre">Parameters</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="almMethod.html">Augmented Lagrangian Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cutfem_method.html">CutFEM Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_init.html">Geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mechanics_tool.html">Mechanics Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="problem.html">Problem Class</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="problem.html#class">Class</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="reinitialization.html">Reinitialization — Prediction-Correction method</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reinitialization.html#levelSet_tool.Reinitialization"><code class="docutils literal notranslate"><span class="pre">Reinitialization</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="reinitialization.html">Reinitialization — Prediction-Correction method</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
@@ -224,7 +191,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, ONERA and MINES PARIS.</p>
+    <p>&#169; Copyright 2025, ONERA and MINES PARIS - PSL.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
