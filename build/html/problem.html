@@ -18,6 +18,8 @@
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -60,7 +62,12 @@
 <li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Problem Class</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#class">Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class">Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#problem.Compliance_Problem"><code class="docutils literal notranslate"><span class="pre">Compliance_Problem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#problem.VMLp_Problem"><code class="docutils literal notranslate"><span class="pre">VMLp_Problem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#problem.AreaProblem"><code class="docutils literal notranslate"><span class="pre">AreaProblem</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reinitialization.html">Reinitialization — Prediction-Correction method</a></li>
@@ -98,6 +105,509 @@
 <h1>Problem Class<a class="headerlink" href="#problem-class" title="Link to this heading"></a></h1>
 <section id="class">
 <h2>Class<a class="headerlink" href="#class" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="problem.Compliance_Problem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">problem.</span></span><span class="sig-name descname"><span class="pre">Compliance_Problem</span></span><a class="reference internal" href="_modules/problem.html#Compliance_Problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem" title="Link to this definition"></a></dt>
+<dd><p>This is the Compliance problem class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The Compliance  shape optimization problem’s name.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.Compliance_Problem.constraint">
+<span class="sig-name descname"><span class="pre">constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xsi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#Compliance_Problem.constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem.constraint" title="Link to this definition"></a></dt>
+<dd><p>Compute the value of constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the norm Lp of the Von Mises criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.Compliance_Problem.constraint_integrand">
+<span class="sig-name descname"><span class="pre">constraint_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#Compliance_Problem.constraint_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem.constraint_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the integrand of the area constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The integrand of the constraint function.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.Compliance_Problem.cost">
+<span class="sig-name descname"><span class="pre">cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#Compliance_Problem.cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem.cost" title="Link to this definition"></a></dt>
+<dd><p>Compute the cost function, defined as :</p>
+<div class="math notranslate nohighlight">
+\[J\left( \Omega \right) = \int_{\Omega} 0.5 \times \left( 2\mu \sigma(u_{h}):\sigma(u_{h}) + \lambda \nabla \cdot \sigma(u_{h}):\nabla \cdot \sigma(u_{h}) \right) \text{ }dx\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the cost function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.Compliance_Problem.cost_integrand">
+<span class="sig-name descname"><span class="pre">cost_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#Compliance_Problem.cost_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem.cost_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the integrand of the cost function, defined as :</p>
+<div class="math notranslate nohighlight">
+\[j\left( u \right) = 0.5 \times \left( 2\mu \sigma(u):\sigma(u) + \lambda \nabla \cdot \sigma(u):\nabla \cdot \sigma(u) \right)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the cost function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.Compliance_Problem.dual_operator">
+<span class="sig-name descname"><span class="pre">dual_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#Compliance_Problem.dual_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem.dual_operator" title="Link to this definition"></a></dt>
+<dd><p>Compute the dual operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>mesh</strong> (<em>Mesh</em>) – The mesh of the domaine <span class="math notranslate nohighlight">\(D\)</span>.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ol class="arabic simple" start="0">
+<li></li>
+</ol>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.Compliance_Problem.shape_derivative_integrand">
+<span class="sig-name descname"><span class="pre">shape_derivative_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#Compliance_Problem.shape_derivative_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem.shape_derivative_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the following shape derivative integrand:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+x =&amp; j\left( u_{h} \right) - 2\mu \sigma(u_{h}):\sigma(p_{h}) + \lambda \nabla \cdot \sigma(u_{h}):\nabla \cdot \sigma(p_{h}) \\
+   = &amp; - 0.5 \times \left( 2\mu \sigma(u_{h}):\sigma(p_{h}) + \lambda \nabla \cdot \sigma(u_{h}):\nabla \cdot \sigma(p_{h}) \right)
+\end{align}\end{split}\]</div>
+<section id="remark">
+<h3>Remark:<a class="headerlink" href="#remark" title="Link to this heading"></a></h3>
+<p>For the special case of the compliance minimization, we have <span class="math notranslate nohighlight">\(\\u_{h} = \\p_{h}\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">param fem.Function u<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p>
+</dd>
+<dt class="field-even">returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The shape derivative of the cost function minus linear elasticity.</p>
+</dd>
+<dt class="field-odd">rtype<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.Compliance_Problem.shape_derivative_integrand_constraint">
+<span class="sig-name descname"><span class="pre">shape_derivative_integrand_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#Compliance_Problem.shape_derivative_integrand_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.Compliance_Problem.shape_derivative_integrand_constraint" title="Link to this definition"></a></dt>
+<dd><p>Compute the shape derivative integrand of the area constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The integrand of the constraint function.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="problem.VMLp_Problem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">problem.</span></span><span class="sig-name descname"><span class="pre">VMLp_Problem</span></span><a class="reference internal" href="_modules/problem.html#VMLp_Problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem" title="Link to this definition"></a></dt>
+<dd><p>This is the Von Mises Lp norm problem class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The Von Mises Lp norm shape optimization problem’s name.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.VMLp_Problem.constraint">
+<span class="sig-name descname"><span class="pre">constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xsi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#VMLp_Problem.constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem.constraint" title="Link to this definition"></a></dt>
+<dd><p>Compute the value of constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the norm Lp of the Von Mises criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.VMLp_Problem.constraint_integrand">
+<span class="sig-name descname"><span class="pre">constraint_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#VMLp_Problem.constraint_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem.constraint_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the integrand of the area constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The integrand of the constraint function.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.VMLp_Problem.cost">
+<span class="sig-name descname"><span class="pre">cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#VMLp_Problem.cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem.cost" title="Link to this definition"></a></dt>
+<dd><p>Compute the cost function, defined as :</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}J\left( \Omega \right) = &amp; \left[ \int_{\Omega} \left[\frac{\sigma_{VM}\left(u_{h}\right)}{\overline{\sigma_{VM}}}\right]^{p}\text{ }dx \right]^{\frac{1}{p}} \\\end{split}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\sigma_{VM}\left(u_{h}\right)\)</span> compute with the function <code class="xref py py-func docutils literal notranslate"><span class="pre">mecanics_tool.von_mises()</span></code> and <span class="math notranslate nohighlight">\(\overline{\sigma_{VM}}\)</span> a constant attribut of Parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the cost function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.VMLp_Problem.cost_integrand">
+<span class="sig-name descname"><span class="pre">cost_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#VMLp_Problem.cost_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem.cost_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the integrand of the cost function given by the following formula:</p>
+<div class="math notranslate nohighlight">
+\[x = \left[\frac{\sigma_{VM}\left(u_{h}\right)}{\overline{\sigma_{VM}}}\right]^{p}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\sigma_{VM}\left(u_{h}\right)\)</span> compute with the function <code class="xref py py-func docutils literal notranslate"><span class="pre">mecanics_tool.von_mises()</span></code> and <span class="math notranslate nohighlight">\(\overline{\sigma_{VM}}\)</span> a constant attribut of Parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the norm Lp of the Von Mises criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.VMLp_Problem.dual_operator">
+<span class="sig-name descname"><span class="pre">dual_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#VMLp_Problem.dual_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem.dual_operator" title="Link to this definition"></a></dt>
+<dd><p>Compute the dual operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>mesh</strong> (<em>Mesh</em>) – The mesh of the domaine <span class="math notranslate nohighlight">\(D\)</span>.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The dual linear form.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.VMLp_Problem.shape_derivative_integrand">
+<span class="sig-name descname"><span class="pre">shape_derivative_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#VMLp_Problem.shape_derivative_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem.shape_derivative_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the following shape derivative integrand:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+x = &amp; \frac{1}{p} \left[ \int_{\Omega} \left[\frac{\sigma_{VM}\left(u_{h}\right)}{\overline{\sigma_{VM}}}\right]^{p} \text{ }dx \right]^{\frac{1}{p}-1} \\
+    &amp; \left[ \left( \frac{\sigma_{VM}\left(u_{h}\right)}{\overline{\sigma_{VM}}}\right)^{p}- 2\mu \sigma(u_{h}):\sigma(p_{h}) + \lambda \nabla \cdot \sigma(p_{h}):\nabla \cdot \sigma(u_{h}) \right]
+\end{align}\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>p</strong> (<em>fem.Function</em>) – The solution of the dual problem <span class="math notranslate nohighlight">\(\\p_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The shape derivative of the cost function minus linear elasticity.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.VMLp_Problem.shape_derivative_integrand_constraint">
+<span class="sig-name descname"><span class="pre">shape_derivative_integrand_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#VMLp_Problem.shape_derivative_integrand_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.VMLp_Problem.shape_derivative_integrand_constraint" title="Link to this definition"></a></dt>
+<dd><p>Compute the shape derivative integrand of the area constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The integrand of the constraint function.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="problem.AreaProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">problem.</span></span><span class="sig-name descname"><span class="pre">AreaProblem</span></span><a class="reference internal" href="_modules/problem.html#AreaProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem" title="Link to this definition"></a></dt>
+<dd><p>This is the Area problem class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The Area shape optimization problem’s name.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.AreaProblem.constraint">
+<span class="sig-name descname"><span class="pre">constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xsi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#AreaProblem.constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem.constraint" title="Link to this definition"></a></dt>
+<dd><p>Compute the value of constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the norm Lp of the Von Mises criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.AreaProblem.constraint_integrand">
+<span class="sig-name descname"><span class="pre">constraint_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#AreaProblem.constraint_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem.constraint_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the integrand of the Lp norm of the Von Mises constraint, defined as:</p>
+<div class="math notranslate nohighlight">
+\[x = \left[\frac{\sigma_{VM}\left(u_{h}\right)}{\overline{\sigma_{VM}}}\right]^{p}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\sigma_{VM}\left(u_{h}\right)\)</span> compute with the function <code class="xref py py-func docutils literal notranslate"><span class="pre">mecanics_tool.von_mises()</span></code> and <span class="math notranslate nohighlight">\(\overline{\sigma_{VM}}\)</span> a constant attribut of Parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the constraint fonction.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.AreaProblem.cost">
+<span class="sig-name descname"><span class="pre">cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#AreaProblem.cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem.cost" title="Link to this definition"></a></dt>
+<dd><p>Compute the cost function, defined as :</p>
+<div class="math notranslate nohighlight">
+\[J\left( \Omega \right) = \int_{\Omega}  \text{ }dx\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The the cost value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.AreaProblem.cost_integrand">
+<span class="sig-name descname"><span class="pre">cost_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#AreaProblem.cost_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem.cost_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the integrand of the cost function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field, solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the norm Lp of the Von Mises criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.AreaProblem.dual_operator">
+<span class="sig-name descname"><span class="pre">dual_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#AreaProblem.dual_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem.dual_operator" title="Link to this definition"></a></dt>
+<dd><p>Compute the dual operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>mesh</strong> (<em>Mesh</em>) – The mesh of the domaine <span class="math notranslate nohighlight">\(D\)</span>.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The dual linear form.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.AreaProblem.shape_derivative_integrand">
+<span class="sig-name descname"><span class="pre">shape_derivative_integrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#AreaProblem.shape_derivative_integrand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem.shape_derivative_integrand" title="Link to this definition"></a></dt>
+<dd><p>Compute the shape derivative integrand of the area constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>p</strong> (<em>fem.Function</em>) – The solution of the dual problem <span class="math notranslate nohighlight">\(\\p_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the cost function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="problem.AreaProblem.shape_derivative_integrand_constraint">
+<span class="sig-name descname"><span class="pre">shape_derivative_integrand_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm_DG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/problem.html#AreaProblem.shape_derivative_integrand_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#problem.AreaProblem.shape_derivative_integrand_constraint" title="Link to this definition"></a></dt>
+<dd><p>Compute the shape derivative integrand of the constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The solution of the primal problem <span class="math notranslate nohighlight">\(\\u_{h}\)</span>.</p></li>
+<li><p><strong>p</strong> (<em>fem.Function</em>) – The solution of the dual problem <span class="math notranslate nohighlight">\(\\p_{h}\)</span>.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>measure</strong> (<em>Measure</em>) – The measure on the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrand of the constraint function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ufl.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 

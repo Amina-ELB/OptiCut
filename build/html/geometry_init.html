@@ -18,6 +18,8 @@
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -55,7 +57,12 @@
 <li class="toctree-l2"><a class="reference internal" href="cutfem_method.html">CutFEM Method</a></li>
 <li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Geometry</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Geometry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#geometry_initialization.circle"><code class="docutils literal notranslate"><span class="pre">circle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#geometry_initialization.level_set"><code class="docutils literal notranslate"><span class="pre">level_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#geometry_initialization.level_set_3D"><code class="docutils literal notranslate"><span class="pre">level_set_3D()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="mechanics_tool.html">Mechanics Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
@@ -91,8 +98,78 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="geometry">
-<h1>Geometry<a class="headerlink" href="#geometry" title="Link to this heading"></a></h1>
+  <section id="module-geometry_initialization">
+<span id="geometry"></span><h1>Geometry<a class="headerlink" href="#module-geometry_initialization" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_initialization.circle">
+<span class="sig-prename descclassname"><span class="pre">geometry_initialization.</span></span><span class="sig-name descname"><span class="pre">circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geometry_initialization.html#circle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geometry_initialization.circle" title="Link to this definition"></a></dt>
+<dd><p>Computes the signed distance from a point to a circle.</p>
+<p>This function calculates the signed distance from a point <cite>x = (x_0, x_1)</cite> to a circle
+centered at <cite>(1, 0.5)</cite> with radius <cite>0.3</cite>. The function returns a negative value if
+the point is inside the circle and a positive value if it is outside.</p>
+<div class="math notranslate nohighlight">
+\[\text{distance}(x) = -\left(\sqrt{(x_0 - 1)^2 + (x_1 - 0.5)^2} - 0.3\right)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>tuple</em>) – A tuple representing the point coordinates (x_0, x_1).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The signed distance from the point to the circle.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_initialization.level_set">
+<span class="sig-prename descclassname"><span class="pre">geometry_initialization.</span></span><span class="sig-name descname"><span class="pre">level_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geometry_initialization.html#level_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geometry_initialization.level_set" title="Link to this definition"></a></dt>
+<dd><p>Computes a 2D level set function based on cosine functions.</p>
+<p>This function returns a level set value based on a combination of cosine functions
+depending on the coordinates of the input point <cite>x = (x_0, x_1)</cite> and a parameter <cite>lx</cite>.</p>
+<div class="math notranslate nohighlight">
+\[\text{level set}(x) = -\cos\left(\frac{6\pi x_0}{l_x}\right)\cos(4\pi x_1) - 0.6\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>tuple</em>) – A tuple representing the point coordinates (x_0, x_1).</p></li>
+<li><p><strong>parameters</strong> (object with attribute <cite>lx</cite>.) – The parameters object containing the domain length <cite>lx</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed level set value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_initialization.level_set_3D">
+<span class="sig-prename descclassname"><span class="pre">geometry_initialization.</span></span><span class="sig-name descname"><span class="pre">level_set_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geometry_initialization.html#level_set_3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geometry_initialization.level_set_3D" title="Link to this definition"></a></dt>
+<dd><p>Computes a 3D level set function based on cosine functions.</p>
+<p>This function returns a level set value based on a combination of cosine functions
+depending on the coordinates of the input point <cite>x = (x_0, x_1, x_2)</cite> and a parameter <cite>lx</cite>, ‘ly’ and ‘lz’, the dimensions of the box containing <span class="math notranslate nohighlight">\(\Omega\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\text{level set}(x) = -\cos\left(\frac{6\pi x_0}{l_x}\right)\cos(4\pi x_1)\cos(4\pi x_2)  - 0.6\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>tuple</em>) – A tuple representing the point coordinates (x_0, x_1, x_2).</p></li>
+<li><p><strong>parameters</strong> (object with attribute <cite>lx</cite>.) – The parameters object containing the domain length <cite>lx</cite>, ‘ly’ and ‘lz’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed level set value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

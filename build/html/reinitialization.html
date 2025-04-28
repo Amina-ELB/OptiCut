@@ -18,6 +18,8 @@
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -60,7 +62,15 @@
 <li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="problem.html">Problem Class</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Reinitialization — Prediction-Correction method</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Reinitialization — Prediction-Correction method</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#levelSet_tool.Reinitialization"><code class="docutils literal notranslate"><span class="pre">Reinitialization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#levelSet_tool.Reinitialization.corrector"><code class="docutils literal notranslate"><span class="pre">Reinitialization.corrector()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#levelSet_tool.Reinitialization.predictor"><code class="docutils literal notranslate"><span class="pre">Reinitialization.predictor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#levelSet_tool.Reinitialization.reinitializationPC"><code class="docutils literal notranslate"><span class="pre">Reinitialization.reinitializationPC()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
@@ -93,6 +103,190 @@
              
   <section id="reinitialization-prediction-correction-method">
 <h1>Reinitialization — Prediction-Correction method<a class="headerlink" href="#reinitialization-prediction-correction-method" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="levelSet_tool.Reinitialization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">levelSet_tool.</span></span><span class="sig-name descname"><span class="pre">Reinitialization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V_ls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelSet_tool.html#Reinitialization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelSet_tool.Reinitialization" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LevelSet</span></code></p>
+<p>This is the Reinitialization class.</p>
+<p>In the subsection we give some details about the Reinitialization method used.
+We use the Prediction Correction scheme proposed in …..
+Initialization of predictor problem.</p>
+<section id="definition-of-the-predictor-variational-problem">
+<h2>Definition of the Predictor variational problem<a class="headerlink" href="#definition-of-the-predictor-variational-problem" title="Link to this heading"></a></h2>
+<p>prediction problem is given by:
+Find <span class="math notranslate nohighlight">\(\phi_{p}:D \rightarrow \mathbb{R}\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{cases}
+-\Delta\phi_{p}  &amp; \!\!\!\!
+= \psi(x)\text{ in D}\\
+\phi_{p}  &amp; \!\!\!\!
+= 0\text{ on }\Gamma \\
+\nabla \phi_{p} \cdot n &amp; \!\!\!\!
+= \psi(x) \text{ on } \partial D .
+\end{cases}\end{split}\]</div>
+<p>With Nitsche method, this yields to the following weak formulation:
+Find <span class="math notranslate nohighlight">\(\phi^{0} \in V\)</span>, such that for all <span class="math notranslate nohighlight">\(v \in V\)</span></p>
+<div class="math notranslate nohighlight">
+\[a\left(\phi_{p},v\right)=l\left(v\right),\]</div>
+<p>where:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+a\left(\phi_{p},v\right) &amp;= \int_{D}\nabla \phi_{p}\cdot\nabla v\,\text{ }dx{\color{red}{ -\int_{\Gamma}\nabla \phi_{p}\cdot n_{\Gamma} \, v\text{ }ds-\int_{\Gamma}\nabla v\cdot n_{\Gamma} \, \phi_{p}\text{ }ds}} \\
+    &amp;{\color{red}{ +\gamma_{D}\int_{\Gamma} \phi_{p} \, v\text{ }ds}}\\
+l\left(v\right) &amp;= \int_{D}\psi(x) v\text{ }dx + \int_{\partial D}\psi(x) v\text{ }ds
+\end{align}\end{split}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\gamma_{D}&gt;0\)</span> is the Nistche parameter.</p>
+<p><em>The text in red is the Nitsche terms.</em></p>
+<section id="intialization-of-normal-field-to-isocontour">
+<h3>Intialization of normal field to isocontour:<a class="headerlink" href="#intialization-of-normal-field-to-isocontour" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">V_DG</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;DG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,)))</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">n_K</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">V_DG</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">norm_euclidienne</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">),</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)))</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">n_K</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)</span><span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_euclidienne</span>
+</pre></div>
+</div>
+</section>
+<section id="bilinear-form-predictor">
+<h3>Bilinear form (Predictor):<a class="headerlink" href="#bilinear-form-predictor" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+
+<span class="n">u_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span> <span class="c1"># Trial function</span>
+<span class="n">v_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span> <span class="c1"># Test function</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">gamma_r</span> <span class="o">=</span> <span class="mf">1e+4</span> <span class="c1"># Value of Nitsche parameter</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">h_r</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span> <span class="c1"># mesh size</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span>  <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_predict</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_r</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">h_r</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+</pre></div>
+</div>
+</section>
+<section id="linear-form-predictor">
+<h3>Linear form (Predictor):<a class="headerlink" href="#linear-form-predictor" title="Link to this heading"></a></h3>
+<p>Approximation of the signed indicator function <span class="math notranslate nohighlight">\(\psi\)</span>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span> <span class="o">/</span> <span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span> <span class="o">=</span> <span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="n">v_r</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+<span class="n">nuemann_bc</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">conditional</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">nuemann_bc</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">conditional</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="n">nuemann_bc</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">L_predict</span> <span class="o">+=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">nuemann_bc</span><span class="p">,</span><span class="n">v_r</span><span class="p">)</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">ds</span>
+</pre></div>
+</div>
+<p>Be aware to impose correct Nuemann condition to guaranty the order of convergence.</p>
+</section>
+</section>
+<section id="definition-of-the-corrector-variational-problem">
+<h2>Definition of the Corrector variational problem<a class="headerlink" href="#definition-of-the-corrector-variational-problem" title="Link to this heading"></a></h2>
+<p>prediction problem is given by:
+Find <span class="math notranslate nohighlight">\(\phi:D \rightarrow \mathbb{R}\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{cases}
+\nabla\cdot\left(\nabla\phi-\frac{\nabla\phi}{\left|\nabla\phi\right|}\right)&amp; \!\!\!\!
+=0\text{ in }D\\
+\phi&amp;\!\!\!\!
+=0\text{ on }\Gamma\\
+\left(\nabla\phi-\frac{\nabla\phi}{\left|\nabla\phi\right|}\right)\cdot n&amp;
+\!\!\!\! =0\text{ on }\partial D.
+\end{cases}\end{split}\]</div>
+<p>With Nitsche method, this yields to the following weak formulation:
+Find <span class="math notranslate nohighlight">\(\phi^{n+1} \in V\)</span>, such that for all <span class="math notranslate nohighlight">\(v \in V\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[a\left(\phi^{n+1},v\right)=l\left(v,\phi^{n}\right),\]</div>
+<p>where :</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+a\left(\phi^{n+1},v\right)&amp;=\int_{D}\nabla\phi^{n+1}\cdot\nabla v\text{ }dx -\int_{\Gamma}\nabla\phi^{n+1}\cdot n_{\Gamma}v\text{ }ds-\int_{\Gamma}\nabla v\cdot n_{\Gamma}\phi^{n+1}\text{ }ds \notag \\
+&amp;+\gamma_{D}\int_{\Gamma} \phi^{n+1}v\text{ }ds\label{corrector_bilin}\\
+l\left(v,\phi^{n}\right)&amp;=\int_{D}\frac{\nabla\phi^{n}}{\max\left(\left|\nabla\phi^{n}\right|,\epsilon\right)}\cdot\nabla v\text{ }dx \quad\text{ with } \epsilon &gt;0 \text{, very small} \label{corrector_lin}
+\end{align}\end{split}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\phi^0=\phi_{p}\)</span> given by the Predictor problem and <span class="math notranslate nohighlight">\(\gamma_{D}&gt;0\)</span> is the Nistche parameter.</p>
+<section id="bilinear-form-corrector">
+<h3>Bilinear form (Corrector):<a class="headerlink" href="#bilinear-form-corrector" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+
+<span class="n">u_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span> <span class="c1"># Trial function</span>
+<span class="n">v_r</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span> <span class="c1"># Test function</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">gamma_r</span> <span class="o">=</span> <span class="mf">1e+4</span> <span class="c1"># Value of Nitsche parameter</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">h_r</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span> <span class="c1"># mesh size</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span>  <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">u_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">)</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_correct</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_r</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">h_r</span><span class="o">*</span><span class="n">u_r</span><span class="o">*</span><span class="n">v_r</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dsq</span>
+</pre></div>
+</div>
+</section>
+<section id="linear-form-corrector">
+<h3>Linear form (Corrector):<a class="headerlink" href="#linear-form-corrector" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">L_correct</span> <span class="o">=</span> <span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_K</span><span class="p">,</span> <span class="n">grad</span><span class="p">(</span><span class="n">v_r</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span>
+</pre></div>
+</div>
+<p>The approximation of the normal to isocontour is automatically updated for each iteration.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="levelSet_tool.Reinitialization.corrector">
+<span class="sig-name descname"><span class="pre">corrector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelSet_tool.html#Reinitialization.corrector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelSet_tool.Reinitialization.corrector" title="Link to this definition"></a></dt>
+<dd><p>Returns the solution of the correction problem, denoted <span class="math notranslate nohighlight">\(\phi_{i}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level_set</strong> (<em>fem.Expression</em>) – The level_set function <span class="math notranslate nohighlight">\(\phi\)</span>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The solution to correction problem.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="levelSet_tool.Reinitialization.predictor">
+<span class="sig-name descname"><span class="pre">predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelSet_tool.html#Reinitialization.predictor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelSet_tool.Reinitialization.predictor" title="Link to this definition"></a></dt>
+<dd><p>Returns the solution of the prediction problem, denoted <span class="math notranslate nohighlight">\(\phi_{p}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level_set</strong> (<em>fem.Expression</em>) – The level_set function <span class="math notranslate nohighlight">\(\phi\)</span>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The solution to prediction problem.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="levelSet_tool.Reinitialization.reinitializationPC">
+<span class="sig-name descname"><span class="pre">reinitializationPC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_reinit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelSet_tool.html#Reinitialization.reinitializationPC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelSet_tool.Reinitialization.reinitializationPC" title="Link to this definition"></a></dt>
+<dd><p>Returns the solution of the PC reinitialization method for step_reinit iteration of the correction problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_set</strong> (<em>fem.Expression</em>) – The level_set function <span class="math notranslate nohighlight">\(\phi\)</span>.</p></li>
+<li><p><strong>step_reinit</strong> (<em>int</em>) – The number of iteration for correction problem.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The solution to P.C. reinitialization problem.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</dd></dl>
+
 </section>
 
 

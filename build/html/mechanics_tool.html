@@ -18,6 +18,8 @@
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -56,7 +58,13 @@
 <li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a></li>
 <li class="toctree-l2"><a class="reference internal" href="geometry_init.html">Geometry</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Mechanics Tools</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Mechanics Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mechanics_tool.stress"><code class="docutils literal notranslate"><span class="pre">stress()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mechanics_tool.strain"><code class="docutils literal notranslate"><span class="pre">strain()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mechanics_tool.lame_compute"><code class="docutils literal notranslate"><span class="pre">lame_compute()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mechanics_tool.von_mises"><code class="docutils literal notranslate"><span class="pre">von_mises()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="problem.html">Problem Class</a></li>
@@ -91,8 +99,103 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="mechanics-tools">
-<h1>Mechanics Tools<a class="headerlink" href="#mechanics-tools" title="Link to this heading"></a></h1>
+  <section id="module-mechanics_tool">
+<span id="mechanics-tools"></span><h1>Mechanics Tools<a class="headerlink" href="#module-mechanics_tool" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="mechanics_tool.stress">
+<span class="sig-prename descclassname"><span class="pre">mechanics_tool.</span></span><span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mechanics_tool.html#stress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mechanics_tool.stress" title="Link to this definition"></a></dt>
+<dd><p>Calculus of the stress tensor, for elasticity law as</p>
+<div class="math notranslate nohighlight">
+\[\sigma(u) = \lambda  \nabla\cdot u * \text{Id} + 2\mu * \varepsilon(u)\]</div>
+<p>with <span class="math notranslate nohighlight">\(\varepsilon(u)\)</span> computed with the function <code class="xref py py-func docutils literal notranslate"><span class="pre">mecanics_tool.strain()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v</strong> (<em>fem.Function</em>) – The displacement field function.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – the <span class="math notranslate nohighlight">\(\mu\)</span> Lame coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – the <span class="math notranslate nohighlight">\(\lambda\)</span> Lame coefficient.</p></li>
+<li><p><strong>dim</strong> (<em>int</em>) – the dimension of the displacement field.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Expression of the stress tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mechanics_tool.strain">
+<span class="sig-prename descclassname"><span class="pre">mechanics_tool.</span></span><span class="sig-name descname"><span class="pre">strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mechanics_tool.html#strain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mechanics_tool.strain" title="Link to this definition"></a></dt>
+<dd><p>Calculus of the strain tensor, for elasticity law as:</p>
+<div class="math notranslate nohighlight">
+\[\varepsilon(u) = \frac{1}{2}(\nabla\cdot u + \nabla^{T} \cdot u).\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>v</strong> (<em>fem.Function</em>) – The displacement field function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Expression of the strain tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mechanics_tool.lame_compute">
+<span class="sig-prename descclassname"><span class="pre">mechanics_tool.</span></span><span class="sig-name descname"><span class="pre">lame_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mechanics_tool.html#lame_compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mechanics_tool.lame_compute" title="Link to this definition"></a></dt>
+<dd><p>Calculus of the lame coefficient with Young modulus and Poisson coefficient as :</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\mu &amp;= \frac{E}{2(1+\nu)}  \\
+\lambda &amp;= \frac{E\nu}{(1+\nu)(1-2\nu)}
+\end{align}\end{split}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\sigma(u)\)</span> computed with the function <code class="xref py py-func docutils literal notranslate"><span class="pre">mecanics_tool.stress()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E</strong> (<em>float</em>) – The Young modulus.</p></li>
+<li><p><strong>v</strong> (<em>float</em>) – The Poisson coefficient.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Lame <span class="math notranslate nohighlight">\(\mu\)</span> and Lame <span class="math notranslate nohighlight">\(\lambda\)</span> coefficients.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mechanics_tool.von_mises">
+<span class="sig-prename descclassname"><span class="pre">mechanics_tool.</span></span><span class="sig-name descname"><span class="pre">von_mises</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mechanics_tool.html#von_mises"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mechanics_tool.von_mises" title="Link to this definition"></a></dt>
+<dd><p>Calculus of the Von Mises stress value:</p>
+<div class="math notranslate nohighlight">
+\[\sigma_{VM} = \sigma(u) - \frac{1}{3}\text{Tr}(\sigma(u))\text{Id}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\sigma(u)\)</span> compute with the function <code class="xref py py-func docutils literal notranslate"><span class="pre">mecanics_tool.stress()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field function.</p></li>
+<li><p><strong>lame_mu</strong> (<em>float</em>) – The Lame <span class="math notranslate nohighlight">\(\mu\)</span> coefficient.</p></li>
+<li><p><strong>lame_lambda</strong> (<em>float</em>) – The lame <span class="math notranslate nohighlight">\(\lambda\)</span> coefficient.</p></li>
+<li><p><strong>dim</strong> (<em>float</em>) – The dimension of the displacement field.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the Von Mises stress constraint.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Function</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

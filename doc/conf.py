@@ -47,6 +47,9 @@ nbsphinx_allow_errors = True
 
 import os
 import sphinx_rtd_theme  # Si vous utilisez le thème ReadTheDocs
+import sys
+
+sys.path.insert(0, os.path.abspath('../src'))
 
 # Ajouter le chemin du dossier _static
 html_static_path = ['_static']

@@ -18,6 +18,8 @@
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -51,7 +53,12 @@
 <li class="toctree-l1"><a class="reference internal" href="demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demos.html">Demos</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Augmented Lagrangian Tools</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Augmented Lagrangian Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#almMethod.maj_param_constraint_optim_slack"><code class="docutils literal notranslate"><span class="pre">maj_param_constraint_optim_slack()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#almMethod.maj_param_constraint_optim"><code class="docutils literal notranslate"><span class="pre">maj_param_constraint_optim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#almMethod.init_param_constraint_optim"><code class="docutils literal notranslate"><span class="pre">init_param_constraint_optim()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="cutfem_method.html">CutFEM Method</a></li>
 <li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a></li>
@@ -91,8 +98,86 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="augmented-lagrangian-tools">
-<h1>Augmented Lagrangian Tools<a class="headerlink" href="#augmented-lagrangian-tools" title="Link to this heading"></a></h1>
+  <section id="module-almMethod">
+<span id="augmented-lagrangian-tools"></span><h1>Augmented Lagrangian Tools<a class="headerlink" href="#module-almMethod" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="almMethod.maj_param_constraint_optim_slack">
+<span class="sig-prename descclassname"><span class="pre">almMethod.</span></span><span class="sig-name descname"><span class="pre">maj_param_constraint_optim_slack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rest_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/almMethod.html#maj_param_constraint_optim_slack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#almMethod.maj_param_constraint_optim_slack" title="Link to this definition"></a></dt>
+<dd><p>Update the slack parameter for inequality constraint, as the following equation:</p>
+<div class="math notranslate nohighlight">
+\[s^{n+1} = \text{max}(0,-( \frac{\lambda_{ALM}^{n}}{\mu_{ALM}^{n}}+C(\Omega^{n}) ) )\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>rest_constraint</strong> (<em>float</em>) – The value of <span class="math notranslate nohighlight">\(C(\Omega^{n})\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="almMethod.maj_param_constraint_optim">
+<span class="sig-prename descclassname"><span class="pre">almMethod.</span></span><span class="sig-name descname"><span class="pre">maj_param_constraint_optim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rest_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/almMethod.html#maj_param_constraint_optim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#almMethod.maj_param_constraint_optim" title="Link to this definition"></a></dt>
+<dd><p>Update the Augmented Lagrangian parameters of the Parameter object.</p>
+<ol class="arabic simple">
+<li><p><em>Update the Lagrange multiplier :</em></p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\lambda_{ALM}^{n+1} = \lambda_{ALM}^{n} + \mu_{ALM}^{n}(C(\Omega^{n}) + s^{n+1})\]</div>
+<ol class="arabic simple" start="2">
+<li><p><em>Update the Lagrange penalty parameter :</em></p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\mu_{ALM}^{n+1} = \text{min}(\overline{\mu},c \mu_{ALM}^{n})\]</div>
+<p>where <span class="math notranslate nohighlight">\(\overline{\mu}\)</span> is the limit of the penalty parameter and <span class="math notranslate nohighlight">\(c\)</span> is the penalty multiplier coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>rest_constraint</strong> (<em>float</em>) – The value of <span class="math notranslate nohighlight">\(C(\Omega)\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="almMethod.init_param_constraint_optim">
+<span class="sig-prename descclassname"><span class="pre">almMethod.</span></span><span class="sig-name descname"><span class="pre">init_param_constraint_optim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">denom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/almMethod.html#init_param_constraint_optim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#almMethod.init_param_constraint_optim" title="Link to this definition"></a></dt>
+<dd><p>Initialized the Augmented Lagrangian parameters:</p>
+<ol class="arabic simple">
+<li><p><em>Initialization of the Lagrange multiplier :</em></p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\lambda_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}\]</div>
+<p>with <span class="math notranslate nohighlight">\(k=10^{\text{round}(\log_{10}(\text{cost}))}\)</span></p>
+<ol class="arabic simple" start="2">
+<li><p><em>Initialization of the Lagrange penalty parameter :</em></p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\mu_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}\]</div>
+<p>with <span class="math notranslate nohighlight">\(k=10^{\text{round}(\log_{10}(\text{cost}))}\)</span></p>
+<ol class="arabic simple" start="3">
+<li><p><em>Initialization of the penalty limit :</em></p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\overline{\mu}_{ALM}^{0} = \text{denom}*\frac{10^{k}C(\Omega^{0})}{D}\]</div>
+<p>with <span class="math notranslate nohighlight">\(k=10^{\text{round}(\log_{10}(\text{cost}))}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The set of simulations we conducted allowed us to determine a value for D of approximately 100.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>Parameter</em>) – The parameter object.</p></li>
+<li><p><strong>cost</strong> (<em>float</em>) – The cost value <span class="math notranslate nohighlight">\(J(\Omega^{0})\)</span> at the initialization.</p></li>
+<li><p><strong>denom</strong> (<em>float</em>) – The D value, with a default value of <span class="math notranslate nohighlight">\(100\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
