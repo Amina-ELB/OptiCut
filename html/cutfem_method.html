@@ -1,0 +1,408 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CutFEM Method &mdash; OptiCut 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=bfa8c73d" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Mesher" href="create_mesh.html" />
+    <link rel="prev" title="Augmented Lagrangian Tools" href="almMethod.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OptiCut
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="demo_optim.html">Shape optimization method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_cutfem.html">CutFEM for Immersed geometry discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="almMethod.html">Augmented Lagrangian Tools</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CutFEM Method</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cutfem_method.CutFemMethod"><code class="docutils literal notranslate"><span class="pre">CutFemMethod</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.adjoint_problem"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.adjoint_problem()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.cut_fem_adv"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.cut_fem_adv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.cutfem_solver"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.cutfem_solver()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.descent_direction"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.descent_direction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.euclidean_norm_grad"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.euclidean_norm_grad()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.primal_problem"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.primal_problem()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.set_measure_dxq"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.set_measure_dxq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutfem_method.CutFemMethod.velocity_normalization"><code class="docutils literal notranslate"><span class="pre">CutFemMethod.velocity_normalization()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_init.html">Geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mechanics_tool.html">Mechanics Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem.html">Problem Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reinitialization.html">Reinitialization — Prediction-Correction method</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OptiCut</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="documentation.html">Documentation</a></li>
+      <li class="breadcrumb-item active">CutFEM Method</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cutfem_method.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cutfem-method">
+<h1>CutFEM Method<a class="headerlink" href="#cutfem-method" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cutfem_method.</span></span><span class="sig-name descname"><span class="pre">CutFemMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_set_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space_displacement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bc_velocity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod" title="Link to this definition"></a></dt>
+<dd><p>This is the CutFEM class.</p>
+<p>Some details about the initialization of linear elasticity problem with CutFEM method.</p>
+<section id="definition-of-primal-problem">
+<h2>Definition of Primal problem<a class="headerlink" href="#definition-of-primal-problem" title="Link to this heading"></a></h2>
+<p>Linear elasticity problem is given by:
+Find <span class="math notranslate nohighlight">\(u:\Omega \rightarrow \mathbb{R}^{d}\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\begin{cases}
+    -\text{div}( \sigma(u)) &amp; \!\!\!\!=0 \text{ in }\Omega\\
+    u&amp; \!\!\!\!=0\text{ on }\Gamma_{D}\\
+    \sigma(u)\cdot n &amp; \!\!\!\!=g\text{ on }\Gamma_{N}
+\end{cases}
+\end{align}\end{split}\]</div>
+<p>Where <span class="math notranslate nohighlight">\(d\)</span> the dimension of the problem.
+<em>We assume small deformations and zero volumetric forces.</em></p>
+<p>This yields to the following weak formulation:
+Find <span class="math notranslate nohighlight">\(u \in V\)</span>, such that for all <span class="math notranslate nohighlight">\(v \in V\)</span> we have</p>
+<div class="math notranslate nohighlight" id="bilinearformcutfem">
+\[a\left(u,v\right)=l\left(v\right)\]</div>
+<p>with:</p>
+<div class="math notranslate nohighlight" id="bilinearformcutfemdetails">
+\[\begin{split}\begin{align}
+a\left(u,v\right) &amp;= 2\mu\left(\varepsilon(u),\varepsilon(v)\right)_{L^{2}(\Omega)} + \lambda\left(\nabla\cdot u,\nabla\cdot v\right)_{L^{2}(\Omega)} \\
+l\left(v\right) &amp;= \left(g,v\right)_{L^{2}\left(\Gamma_{N}\right)},
+\end{align}\end{split}\]</div>
+<section id="bilinear-form-primal">
+<span id="bilinearformcutfemcode"></span><h3>Bilinear form (primal):<a class="headerlink" href="#bilinear-form-primal" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+
+<span class="n">u</span> <span class="o">=</span><span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span><span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">)</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">bc</span> <span class="o">=</span> <span class="n">bc</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span> <span class="o">=</span>  <span class="mf">2.0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span>  <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">mecanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">mecanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span> \
+    <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">*</span>  <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span>
+<span class="c1"># Stabilization:</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span> <span class="o">+=</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">u</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>\
+    <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dS</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="linear-form-primal">
+<span id="linearform"></span><h3>Linear form (primal):<a class="headerlink" href="#linear-form-primal" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">L_primal</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="definition-of-dual-problem">
+<h2>Definition of Dual problem<a class="headerlink" href="#definition-of-dual-problem" title="Link to this heading"></a></h2>
+<p>Some details about the initialization of adjoint problem with CutFEM.</p>
+<section id="bilinear-form-dual">
+<span id="bilinearformdual"></span><h3>Bilinear form (dual):<a class="headerlink" href="#bilinear-form-dual" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+
+<span class="n">u</span> <span class="o">=</span><span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span><span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">)</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">bc</span> <span class="o">=</span> <span class="n">bc</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">a_adjoint</span> <span class="o">=</span>  <span class="mf">2.0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span>  <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">mecanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">mecanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span> \
+    <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">*</span>  <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span>
+<span class="c1"># Stabilization:</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">a_adjoint</span> <span class="o">+=</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">u</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>\
+    <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dS</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="linear-form-dual">
+<span id="linearformlpnorm"></span><h3>Linear form (dual):<a class="headerlink" href="#linear-form-dual" title="Link to this heading"></a></h3>
+<p>The dual operator is compute using the automatic differentiation :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">## Exemple for Lp nom of VonMises constraint minimization:</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="p">((</span><span class="n">mechanics_tool</span><span class="o">.</span><span class="n">von_mises</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span><span class="o">/</span><span class="n">parameters</span><span class="o">.</span><span class="n">elasticity_limit</span><span class="p">)</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">p_const</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dxq</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span><span class="n">v_adj</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.adjoint_problem">
+<span class="sig-name descname"><span class="pre">adjoint_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.adjoint_problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.adjoint_problem" title="Link to this definition"></a></dt>
+<dd><p>Resolution of the dual problem with the CutFEM method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>fem.Function</em>) – The displacement field function, <span class="math notranslate nohighlight">\(u_{h}\)</span>.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference internal" href="parameters.html#Parameters.Parameters" title="Parameters.Parameters"><em>Parameters</em></a>) – The object parameters.</p></li>
+<li><p><strong>adjoint</strong> (<em>ufl.Expression</em>) – The adjoint operator if needed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The dual solution, <span class="math notranslate nohighlight">\(p_{h}\)</span>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.cut_fem_adv">
+<span class="sig-name descname"><span class="pre">cut_fem_adv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity_field</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.cut_fem_adv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.cut_fem_adv" title="Link to this definition"></a></dt>
+<dd><p>Resolution of advection equation with CutFEM stabilization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_set</strong> (<em>fem.Function</em>) – The level set field wich defined implicitely the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – The :math: <cite>dt</cite> time parameters.</p></li>
+<li><p><strong>velocity_field</strong> (<em>ufl.Expression</em>) – The value of advection velocity_field, in normal direction of the interface <span class="math notranslate nohighlight">\(\partial\Omega\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The values of the advected level set.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.cutfem_solver">
+<span class="sig-name descname"><span class="pre">cutfem_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem_topo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.cutfem_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.cutfem_solver" title="Link to this definition"></a></dt>
+<dd><p>Resolution of the primal and dual problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_set</strong> (<em>fem.Function</em>) – The level set field which defined implicitly the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference internal" href="parameters.html#Parameters.Parameters" title="Parameters.Parameters"><em>Parameters</em></a>) – The object parameters.</p></li>
+<li><p><strong>adjoint</strong> (<em>ufl.Expression</em>) – The adjoint operator if needed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The values of the primal and dual solution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Function, fem.Function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.descent_direction">
+<span class="sig-name descname"><span class="pre">descent_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rest_constraint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint_integrand</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_integrand</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xsi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.descent_direction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.descent_direction" title="Link to this definition"></a></dt>
+<dd><p>Determine the descent direction by solving the following equation:</p>
+<p>Find <span class="math notranslate nohighlight">\(v'_{\text{reg}}\in H_{\Gamma_{D}}^{1}=\left\{ v\in H^{1}\left(D\right)\text{ such that }v=0\text{ on }\Gamma_{D}\right\}\)</span> such that <span class="math notranslate nohighlight">\(\forall w\in H_{\Gamma_{D}}^{1}\)</span></p>
+<div class="math notranslate nohighlight">
+\[\alpha\left(\nabla v'_{\text{reg}},\nabla w\right)_{L^{2}\left(D\right)}+\left(v'_{\text{reg}},w\right)_{L^{2}\left(D\right)}=-J'(\Omega)\left(w\right)\]</div>
+<p>with <span class="math notranslate nohighlight">\(J\)</span> the cost function and <span class="math notranslate nohighlight">\(\alpha&gt;0\)</span> is a smoothing parameter instantiated in the Parameter class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_set</strong> (<em>fem.Function</em>) – The level set field which defined implicitly the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference internal" href="parameters.html#Parameters.Parameters" title="Parameters.Parameters"><em>Parameters</em></a>) – The object parameters.</p></li>
+<li><p><strong>rest_constraint</strong> (<em>float</em>) – The value of the constraint function <span class="math notranslate nohighlight">\(C(\Omega)\)</span>.</p></li>
+<li><p><strong>constraint_integrand</strong> (<em>fem.Expression</em>) – The integrand of the constraint function.</p></li>
+<li><p><strong>cost_integrand</strong> (<em>fem.Expression</em>) – The integrand of the cost function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The velocity field, defined in <cite>D</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.euclidean_norm_grad">
+<span class="sig-name descname"><span class="pre">euclidean_norm_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.euclidean_norm_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.euclidean_norm_grad" title="Link to this definition"></a></dt>
+<dd><p>Calculation of the integrand of the L2-norm of the gradient of the function provided, given by the following equality:</p>
+<div class="math notranslate nohighlight">
+\[\left|\nabla\phi\right| = \sqrt{\nabla\phi\cdot\nabla\phi}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>func</strong> (<em>fem.Function</em>) – Function field.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The values of integrand of the L2-norm of the gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.primal_problem">
+<span class="sig-name descname"><span class="pre">primal_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.primal_problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.primal_problem" title="Link to this definition"></a></dt>
+<dd><p>Resolution of the primal problem with the CutFEM method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_set</strong> (<em>fem.Function</em>) – The level set field which defined implicitly the domain <span class="math notranslate nohighlight">\(\Omega\)</span>.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference internal" href="parameters.html#Parameters.Parameters" title="Parameters.Parameters"><em>Parameters</em></a>) – The object parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The primal solution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.set_measure_dxq">
+<span class="sig-name descname"><span class="pre">set_measure_dxq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.set_measure_dxq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.set_measure_dxq" title="Link to this definition"></a></dt>
+<dd><p>Set the measure dxq on <span class="math notranslate nohighlight">\(\Omega\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level_set</strong> (<em>fem.Function</em>) – The level_set field function, <span class="math notranslate nohighlight">\(\phi\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cutfem_method.CutFemMethod.velocity_normalization">
+<span class="sig-name descname"><span class="pre">velocity_normalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cutfem_method.html#CutFemMethod.velocity_normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cutfem_method.CutFemMethod.velocity_normalization" title="Link to this definition"></a></dt>
+<dd><p>Normalization of the Velocity field according to the following equation:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\overline{v} = \frac{v}{\sqrt{c\left\Vert \nabla\phi\right\Vert _{L^{2}\left(D\right)}^{2}+\left\Vert \phi\right\Vert _{L^{2}\left(D\right)}^{2}}}\]</div>
+</div></blockquote>
+<p>with <span class="math notranslate nohighlight">\(c&gt;0\)</span> and <span class="math notranslate nohighlight">\(\left\Vert . \right\Vert _{L^{2}\left(D\right)}\)</span> norm defined as:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\left\Vert f \right\Vert _{L^{2}\left(D\right)}^{2} = \int_{D} f \cdot f \text{ }dx.\]</div>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v</strong> (<em>fem.Expression</em><em> or </em><em>fem.Function</em>) – The scalar velocity field which defined the value of advection in direction of the normal to <span class="math notranslate nohighlight">\(\partial\Omega\)</span>.</p></li>
+<li><p><strong>c</strong> (<em>float</em>) – Value of the smoothing for the velocity normalization. Topically, this value is equal to the smoothing value in the extension equation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The normalized velocity field, defined in <cite>D</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="almMethod.html" class="btn btn-neutral float-left" title="Augmented Lagrangian Tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="create_mesh.html" class="btn btn-neutral float-right" title="Mesher" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, ONERA and MINES PARIS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
