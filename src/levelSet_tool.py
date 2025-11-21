@@ -54,13 +54,141 @@ import mechanics_tool
 ############################################
 
 class LevelSet:
-    def __init__(self, level_set,space):
+    def __init__(self, level_set, space):
+        """
+        LevelSet class to define a level-set function.
+
+        Parameters
+        ----------
+        level_set : fem.Function
+            Initial level-set function.
+        space : fem.FunctionSpace
+            Function space of the level-set.
+        dt : float, optional
+            Time step for advection.
+        """
         self.level_set = fem.Function(space)
         self.level_set.x.array[:] = level_set.x.array
         self.space = space
 
-    def set_level_set(self,level_set):
+    def set_level_set(self, level_set):
+        """Update the level-set function."""
         self.level_set.x.array[:] = level_set.x.array
+
+
+class Advection(LevelSet):
+    """
+    Class to perform level-set advection using CutFEM.
+    Inherits from LevelSet.
+    """
+
+    def __init__(self, level_set, V_ls, dt=1e-3):
+        """
+        Initialize the Advection solver for a level-set.
+
+        Parameters
+        ----------
+        level_set : fem.Function
+            Initial level-set function.
+        V_ls : fem.FunctionSpace
+            Function space of the level-set.
+        dt : float, optional
+            Time step for advection (default: 0.0).
+        l : float, optional
+            Stabilization parameter (default: 1.0).
+        """
+        # Initialise LevelSet
+        super().__init__(level_set, V_ls)
+
+        self.dt = dt
+        self.V_ls = V_ls
+        self.mesh = V_ls.mesh
+
+        # Trial/test functions
+        self.phi_n = ufl.TrialFunction(self.V_ls)
+        self.phi_test = ufl.TestFunction(self.V_ls)
+
+        # Velocity field initialized to zero
+        self.velocity_field = fem.Function(self.V_ls)
+        self.velocity_field.x.array[:] = 1e-3
+
+        # Mesh-dependent quantities
+        self.h = ufl.CellDiameter(self.mesh)
+        self.dS = ufl.dS
+        self.n = ufl.FacetNormal(self.mesh)
+        self.const = 1e-3
+
+        # Assemble matrix and RHS
+        self._assemble_matrix()
+        self._assemble_rhs()
+
+        # Solver
+        self.solver_adv = PETSc.KSP().create(self.mesh.comm)
+        self.solver_adv.setOperators(self.A_adv)
+        self.solver_adv.setType(PETSc.KSP.Type.PREONLY)
+        pc = self.solver_adv.getPC()
+        pc.setType(PETSc.PC.Type.LU)
+        pc.setFactorSolverType("mumps")
+        self.solver_adv.setUp()
+
+        self.sol_adv = fem.Function(self.V_ls)
+
+    def _assemble_matrix(self):
+        """Assemble the advection CutFEM matrix."""
+        a_adv = ufl.dot(self.phi_n, self.phi_test) * ufl.dx
+        a_adv += avg(self.const) * avg(self.h)**3 * ufl.inner(
+            ufl.jump(ufl.grad(self.phi_n), self.n),
+            ufl.jump(ufl.grad(self.phi_test), self.n)
+        ) * self.dS
+
+        a_cut_adv = cut_form(a_adv)
+        if hasattr(self, "A_adv") and self.A_adv is not None:
+            self.A_adv.destroy()
+        self.A_adv = assemble_matrix(a_cut_adv)
+        self.A_adv.assemble()
+
+    def _assemble_rhs(self):
+        """Assemble the RHS vector for CutFEM advection."""
+        L_adv = ufl.dot(self.level_set, self.phi_test) * ufl.dx + \
+                ufl.dot(-self.dt * self.velocity_field * ufl.sqrt(ufl.inner(ufl.grad(self.level_set), ufl.grad(self.level_set))), self.phi_test) * ufl.dx
+
+        L_cut_adv = cut_form(L_adv)
+        if hasattr(self, "b_adv") and self.b_adv is not None:
+            with self.b_adv.localForm() as loc:
+                loc.set(0.0)
+        self.b_adv = assemble_vector(L_cut_adv)
+        self.b_adv.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+        self.b_adv.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
+
+    def cut_fem_adv(self, velocity_field, dt):
+        r"""Perform one advection step of the level-set function.
+
+        :param fem.Function level_set: The level set field wich defined implicitely the domain :math:`\Omega`.
+        :param float dt: The :math: `dt` time parameters.
+        :param ufl.Expression velocity_field: The value of advection velocity_field, in normal direction of the interface :math:`\partial\Omega`.
+        
+        :returns: The values of the advected level set.
+        :rtype: fem.Function
+        
+        """
+        velocity_expr = fem.Expression(velocity_field, self.V_ls.element.interpolation_points())
+        self.velocity_field.interpolate(velocity_expr)
+
+        self.dt = dt
+
+        self._assemble_matrix()
+        self._assemble_rhs()
+
+        # Solve system
+        self.solver_adv.solve(self.b_adv, self.sol_adv.x.petsc_vec)
+        self.sol_adv.x.scatter_forward()
+
+        # Update level-set in-place
+        self.level_set.x.array[:] = self.sol_adv.x.array
+        self.level_set.x.scatter_forward()
+
+        return self.sol_adv
+
         
 class Reinitialization(LevelSet):
     r"""This is the Reinitialization class.
@@ -252,7 +380,7 @@ class Reinitialization(LevelSet):
         self.n_K = ufl.grad(self.level_set)/ self.norm_euclidienne
         self.dof_coordinates = self.V_ls.tabulate_dof_coordinates()
         
-        self.order = 2
+        self.order = 1
         self.inside_quadrature = runtime_quadrature(self.level_set,"phi<0",self.order)
         self.interface_quadrature = runtime_quadrature(self.level_set,"phi=0",self.order)
 
@@ -279,13 +407,7 @@ class Reinitialization(LevelSet):
         self.eps = 1e-6
         self.sign = self.level_set / (ufl.sqrt(self.level_set**2+self.eps**2))
         self.L_predict = inner(self.l**2*self.sign,v_r)*self.dx
-
-        self.temp = ufl.conditional(ufl.le(self.sign,0),-1,0)
-        self.temp = ufl.conditional(ufl.ge(self.sign,0),1,self.temp)
-        self.temp_expr = fem.Expression(self.temp, self.V_ls.element.interpolation_points())
-        self.temp_func = fem.Function(self.V_ls)
-        self.temp_func.interpolate(self.temp_expr)
-        self.L_predict += ufl.dot(self.temp_func,v_r)*ds
+        self.L_predict += ufl.dot(self.sign,v_r)*ds
 
         self.a_cut_predict = cut_form(self.a_predict,jit_options={"cache_dir" : "ffcx-forms" })
         self.L_cut_predict = cut_form(self.L_predict)
@@ -304,7 +426,7 @@ class Reinitialization(LevelSet):
         self.solver_predict.setOperators(self.A_predict)
         self.solver_predict.setType(PETSc.KSP.Type.PREONLY)
         self.solver_predict.getPC().setType(PETSc.PC.Type.LU)
-        
+        self.solver_predict.getPC().setFactorSolverType("mumps")
 
         self.a_correct  = ufl.inner(grad(u_r), grad(v_r))*self.dx
         self.a_correct += - dot(grad(u_r), self.n_K)*v_r*self.dsq
@@ -329,6 +451,7 @@ class Reinitialization(LevelSet):
         self.solver_corrector.setOperators(self.A_correct)
         self.solver_corrector.setType(PETSc.KSP.Type.PREONLY)
         self.solver_corrector.getPC().setType(PETSc.PC.Type.LU)
+        self.solver_corrector.getPC().setFactorSolverType("mumps")
         
 
     def predictor(self, level_set):
@@ -342,24 +465,12 @@ class Reinitialization(LevelSet):
         """
 
         v_r = ufl.TestFunction(self.V_ls)
-
-
         self.level_set.x.array[:] = level_set.x.array
+        self.level_set.x.scatter_forward()
         self.n_K = ufl.grad(self.level_set)/ self.norm_euclidienne
-
-        self.L_predict = inner(self.l**2*self.sign,v_r)*self.dx
-
-        self.temp = ufl.conditional(ufl.le(self.sign,0),-1,0)
-        self.temp = ufl.conditional(ufl.ge(self.sign,0),1,self.temp)
-        self.temp_expr = fem.Expression(self.temp, self.V_ls.element.interpolation_points())
-        self.temp_func = fem.Function(self.V_ls)
-        self.temp_func.interpolate(self.temp_expr)
-        self.L_predict += ufl.dot(self.temp_func,v_r)*ds
-        self.L_cut_predict = cut_form(self.L_predict)
 
         self.intersected_entities = locate_entities(self.level_set,self.dim,"phi=0")
         self.inside_entities = locate_entities(self.level_set,self.dim,"phi<0")
-        self.inside_quadrature = runtime_quadrature(self.level_set,"phi<0",self.order)
         self.interface_quadrature = runtime_quadrature(self.level_set,"phi=0",self.order)
 
 
@@ -367,22 +478,32 @@ class Reinitialization(LevelSet):
 
         self.a_cut_predict.update_runtime_domains(self.quad_domains)
 
-        self.b_predict = assemble_vector(self.L_cut_predict)
-        self.b_predict.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
-        self.b_predict.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
+        self.L_predict = inner(self.l**2*self.sign,v_r)*self.dx
+        self.L_predict += ufl.dot(self.sign,v_r)*ds
+        self.L_cut_predict = cut_form(self.L_predict)
+
+        with self.b_predict.localForm() as loc:
+            loc.set(0.0)
+
+        b_tmp = assemble_vector(self.L_cut_predict)
+        b_tmp.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+        b_tmp.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
         
+        b_tmp.copy(self.b_predict)
+        b_tmp.destroy()
+
+        if hasattr(self,"A_predict"):
+            self.A_predict.destroy()
         self.A_predict = assemble_matrix(self.a_cut_predict)
         self.A_predict.assemble()
 
         self.solver_predict.setOperators(self.A_predict)
-        self.solver_predict.setType(PETSc.KSP.Type.PREONLY)
-        self.solver_predict.getPC().setType(PETSc.PC.Type.LU)
 
         self.solver_predict.solve(self.b_predict, self.level_set.x.petsc_vec)
         self.level_set.x.scatter_forward() 
         
 
-        return self.level_set, self.temp_func
+        return self.level_set
 
 
     def corrector(self,level_set):
@@ -397,31 +518,31 @@ class Reinitialization(LevelSet):
         self.level_set.x.array[:] = level_set.x.array
         self.n_K = ufl.grad(self.level_set)/ self.norm_euclidienne
         
-        self.intersected_entities = locate_entities(self.level_set,self.dim,"phi=0")
-        self.inside_entities = locate_entities(self.level_set,self.dim,"phi<0")
+        interface_quadrature = runtime_quadrature(self.level_set,"phi=0",self.order)
 
-        self.inside_quadrature = runtime_quadrature(self.level_set,"phi<0",self.order)
-        self.interface_quadrature = runtime_quadrature(self.level_set,"phi=0",self.order)
+        quad_domains = {"cutcell": [ (1,interface_quadrature)]}
 
-        self.quad_domains = {"cutcell": [ (1,self.interface_quadrature)]}
+        self.a_cut_correct.update_runtime_domains(quad_domains)
 
-        self.a_cut_correct.update_runtime_domains(self.quad_domains)
+        with self.b_correct.localForm() as loc:
+            loc.set(0.0)
 
-        self.b_correct = assemble_vector(self.L_cut_correct)
-        self.b_correct.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
-        self.b_correct.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
+        b_tmp = assemble_vector(self.L_cut_correct)
+        b_tmp.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+        b_tmp.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
+        
+        b_tmp.copy(self.b_correct)
+        b_tmp.destroy()
 
+        if hasattr(self,"A_correct"):
+            self.A_correct.destroy()
         self.A_correct = assemble_matrix(self.a_cut_correct)
         self.A_correct.assemble()
 
         self.solver_corrector.setOperators(self.A_correct)
-        self.solver_corrector.setType(PETSc.KSP.Type.PREONLY)
-        self.solver_corrector.getPC().setType(PETSc.PC.Type.LU)
 
         self.solver_corrector.solve(self.b_correct, self.level_set.x.petsc_vec)
         self.level_set.x.scatter_forward() 
-
-        
         return self.level_set
     
     def reinitializationPC(self,level_set,step_reinit):
@@ -434,10 +555,10 @@ class Reinitialization(LevelSet):
         :rtype: fem.Expression
 
         """
-        level_set, temp_func = self.predictor(level_set)
+        level_set = self.predictor(level_set)
         num_step = 0
 
         while (num_step < step_reinit):
             num_step += 1                    
             level_set = self.corrector(level_set)
-        return level_set, temp_func
+        return level_set

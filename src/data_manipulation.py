@@ -32,10 +32,10 @@ from ufl import ( dx, inner)
 
 from Parameters import *
 from create_mesh import *
-from ersatz_method import *
-from cutfem_method import *
+from ersatz_elastic_solver import *
+from cutfem_elastic_solver import *
 from levelSet_tool import *
-from extension_regularization import *
+from velocity_tools import *
 from geometry_initialization import *
 from dolfinx.mesh import locate_entities, meshtags, locate_entities_boundary
 from cutfemx.level_set import locate_entities, cut_entities, ghost_penalty_facets, facet_topology

@@ -33,10 +33,10 @@ from ufl import *
 
 from Parameters import *
 from create_mesh import *
-from ersatz_method import *
-from cutfem_method import *
+from ersatz_elastic_solver import *
+from cutfem_elastic_solver import *
 from levelSet_tool import *
-from extension_regularization import *
+from velocity_tools import *
 from geometry_initialization import *
 import almMethod 
 
@@ -110,8 +110,8 @@ else:
     print("- for Von Mises : param_vonMises.txt")
     print("- for area : param_area.txt")
 
-    name = "param_VonMises.txt" # input()
-    #name = "param_compliance.txt"
+    #name = "param_VonMises.txt" # input()
+    name = "param_compliance.txt"
     parameters.set__paramFolder(name)
 
 ###################################
@@ -121,7 +121,7 @@ print("Choose the test case:")
 print(" - for 3D : '3D' ")
 print(" - for L shape write : 'L_shape' ")
 print(" - for cantilever in 2D : 'rectangle' ")
-test_case = "L_shape"  #input()
+test_case = "rectangle"  #input()
 xdmf_filename =  "mesh/L_VM.xdmf"
 
 if test_case=='rectangle':
@@ -212,7 +212,8 @@ def load_marker(x):
         return np.logical_and(x[0]>(parameters.lx-1e-6),x[1]>0.35)
     
     elif test_case == "3D":
-        return np.logical_and(np.isclose(x[0],parameters.lx),np.logical_and(x[1]<(0.7),x[1]>(0.3))) 
+        R = 0.15
+        return np.logical_and((x[0]>=parameters.lx-1e-6),((x[2]-0.5)**2+(x[1]-0.5)**2-R**2) <0)
     elif test_case == "rectangle":
         return np.logical_and(np.isclose(x[0],parameters.lx),np.logical_and(x[1]<(0.55),x[1]>(0.45))) 
     else:
@@ -240,10 +241,10 @@ elif test_case == "rectangle" or test_case == "L_shape":
 else :
     print("not implemented test case")
 
-
+Advection = Advection(ls_func, V_ls=V_ls, dt=parameters.dt)
 Reinitialization = Reinitialization(ls_func, V_ls=V_ls, l=parameters.l_reinit)
-ErsatzMethod = ErsatzMethod(ls_func,V_ls, V, ds = ds, bc = bc, bc_velocity = bc_velocity, parameters = parameters, shift = shift)
-CutFemMethod = CutFemMethod(ls_func,V_ls, V, ds = ds, bc = bc, bc_velocity = bc_velocity,  parameters = parameters, shift = shift)
+ErsatzMethod = ErsatzElasticSolver(ls_func,V_ls, V, ds = ds, bc = bc, bc_velocity = bc_velocity, parameters = parameters, shift = shift)
+CutFemMethod = CutFEMElasticSolver(ls_func,V_ls, V, ds = ds, bc = bc, bc_velocity = bc_velocity,  parameters = parameters, shift = shift)
 
 lame_mu,lame_lambda = mechanics_tool.lame_compute(parameters.young_modulus,parameters.poisson)
 
@@ -255,7 +256,7 @@ velocity_field.x.array[:] = CutFemMethod.level_set.x.array*0
 ###################################
 ####    Reinitialization       ####
 ###################################
-CutFemMethod.level_set, temp_func = Reinitialization.reinitializationPC(CutFemMethod.level_set,parameters.step_reinit)
+CutFemMethod.level_set = Reinitialization.reinitializationPC(CutFemMethod.level_set,parameters.step_reinit)
                
 # ls_predict, temp_func = Reinitialization.predictor(CutFemMethod.level_set)
 # CutFemMethod.level_set.x.array[:] = ls_predict.x.array
@@ -396,7 +397,7 @@ n_k = 1
 c_k = 1
 
 almMethod.init_param_constraint_optim(constraint,parameters,cost)
-
+resources = prepare_descent(msh, V_ls, parameters)
 while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
     (abs(crit[1])>parameters.tol_cost_func) or ((abs(crit[2])>parameters.tol_cost_func)) or (abs(crit[3])>parameters.tol_cost_func)):
     c_param_HJ = opti_tool.adapt_c_HJ(c_param_HJ,crit,parameters.tol_cost_func,lagrangian)
@@ -416,14 +417,10 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
     ##########################################
     ## Velocity field 
     ##########################################
-    if parameters.cutFEM == 1:
-        velocity_field = CutFemMethod.descent_direction(CutFemMethod.level_set,parameters,\
-                                        constraint,shape_derivative_integrand_constraint,shape_derivative,ErsatzMethod.xsi)
-    else: 
-        velocity_field = ErsatzMethod.descent_direction(CutFemMethod.level_set,parameters,\
-                                        constraint,shape_derivative_integrand_constraint,shape_derivative,ErsatzMethod.xsi)
-    
-    velocity_field = CutFemMethod.velocity_normalization(velocity_field,parameters.alpha_reg_velocity)
+    velocity_field = descent_direction(CutFemMethod.level_set, msh, parameters, bc_velocity, V_ls,
+                              constraint, shape_derivative_integrand_constraint, shape_derivative,
+                              resources)
+    velocity_field = velocity_normalization(velocity_field,parameters.alpha_reg_velocity)
 
     velocity_expr = fem.Expression(velocity_field, V_ls.element.interpolation_points())
     velocity = fem.Function(V_ls)
@@ -431,8 +428,8 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
 
     max_velocity = comm.allreduce(np.max(np.abs(velocity.x.array[:])),op=MPI.MAX)
 
-    parameters.dt  =  opti_tool.compliance_adapt_dt(lagrangian_cost,lagrangian_cost_previous,max_velocity,parameters,c_param_HJ)
-    print("dt = ",parameters.dt)
+    #parameters.dt  =  opti_tool.compliance_adapt_dt(lagrangian_cost,lagrangian_cost_previous,max_velocity,parameters,c_param_HJ)
+    #print("dt = ",parameters.dt)
 
     ##########################################
     ## Advection: HJ equation
@@ -453,8 +450,9 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
         ls_func_temp.name = "ls_func"
         xdmf_.write_function(ls_func_temp, time_ls)
         while j< parameters.j_max:
-
-            ls_func_temp = CutFemMethod.cut_fem_adv_temp(ls_func_temp,(1/adv_bool)*parameters.dt, velocity_field)
+            # level_set_new est un fem.Function contenant les nouvelles valeurs
+            Advection.set_level_set(ls_func_temp)
+            ls_func_temp = Advection.cut_fem_adv(velocity_field, (1/adv_bool)*parameters.dt)
              
             j += 1
             
@@ -462,7 +460,7 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
             ## Reinitialization
             ##########################################
             if ((j%parameters.freq_reinit)==0):
-                ls_func_temp, temp_func = Reinitialization.reinitializationPC(ls_func_temp,parameters.step_reinit)
+                ls_func_temp = Reinitialization.reinitializationPC(ls_func_temp,parameters.step_reinit)
                 # ls_func_temp = Reinitialization.predictor(ls_func_temp)
                 # num_step = 0
                 # while (num_step < parameters.step_reinit):
@@ -602,9 +600,7 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
     xdmf_ls.write_function(uh, time)
     ph.name = "dual"
     xdmf_ls.write_function(ph, time)
-    temp_func.name = "temp func pred"
-    xdmf_ls.write_function(temp_func, time)
-
+    
     
     velocity_expr = fem.Expression(velocity_field, V_ls.element.interpolation_points())
     velocity = fem.Function(V_ls)

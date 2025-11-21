@@ -9,55 +9,21 @@
 import mechanics_tool
 import ufl
 # mathematical language for FEM, auto differentiation, python
-from dolfinx import fem, io, mesh
 import ufl
-from ufl import (FacetNormal, Measure, SpatialCoordinate, TestFunction, TrialFunction, 
-                 div, dot, dx, grad, inner, lhs, rhs, dc, dS, FacetNormal, CellDiameter, dot, avg, jump)
 
 ###
 
 import cutfemx
-from dolfinx import cpp as _dolfinxcpp
-from dolfinx import fem, io, mesh
-
-
-import math
-import collections
-import functools
-import typing
 
 import numpy as np
-
-from dolfinx import la
-
 from mpi4py import MPI
 
-#  from dolfinx.cpp.la.petsc import create_vector # error 4 
-from dolfinx.cpp.fem import pack_coefficients as dolfinx_pack_coefficients
-# from dolfinx.fem.forms import form_types# error 5 
-from dolfinx.fem.assemble import pack_constants as dolfinx_pack_constants
-# from dolfinx.fem.bcs import DirichletBCMetaClass # error 6 
-from dolfinx.fem.function import Function, FunctionSpace
-###
-
 from dolfinx import fem
-from dolfinx.mesh import locate_entities, meshtags
-from petsc4py import PETSc
 from petsc4py.PETSc import ScalarType
 import numpy as np
-#from mecanics_problem import *
-from dolfinx.mesh import locate_entities, meshtags, locate_entities_boundary
 
-from cutfemx.level_set import locate_entities, cut_entities, ghost_penalty_facets, facet_topology
-from cutfemx.level_set import compute_normal
-from cutfemx.mesh import create_cut_mesh, create_cut_cells_mesh
-from cutfemx.quadrature import runtime_quadrature, physical_points
-from cutfemx.fem import cut_form, cut_function
+from cutfemx.fem import cut_form
 
-from cutfemx.petsc import assemble_vector, assemble_matrix, deactivate, locate_dofs
-
-
-import data_manipulation 
 
 class Compliance_Problem:
     """This is the Compliance problem class.

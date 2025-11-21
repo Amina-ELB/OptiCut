@@ -12,7 +12,7 @@ type_constraint equal # only "equal constraint" is implemented here
 descent_direction_Riesz 1 # 1 if descent direction is extended with Riez Theorem and CutFEM, else 0
 tol_cost_func 0.00000001 # value of the tolerance for stopped condition
 p_const 6 # value on the p parameter (the powered of the cost function) if the cost function is Von Mises
-max_incr 5 # Value of the maximum iteration
+max_incr 100 # Value of the maximum iteration
 lx 2 # mesure of the x direction area
 ly 1 # mesure of the y direction area
 lz 0 # if 3D mesure of the z direction area
