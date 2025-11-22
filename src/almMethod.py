@@ -63,11 +63,11 @@ def maj_param_constraint_optim(parameters,rest_constraint):
         # 2// update of penalization parameter
         parameters.ALM_penalty_parameter = min(parameters.ALM_penalty_limit,parameters.ALM_penalty_coef_multiplicator*parameters.ALM_penalty_parameter)
 
-def init_param_constraint_optim(constraint,parameters,cost,denom=100):
+def init_param_constraint_optim_test(constraint_derivative,parameters,cost_derivative,denom=100):
     r"""Initialized the Augmented Lagrangian parameters:
 
-        1. *Initialization of the Lagrange multiplier :*
-
+        1. *Initialization of the Lagrange multiplier :
+ 
         .. math::
 
                 \lambda_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}
@@ -100,11 +100,13 @@ def init_param_constraint_optim(constraint,parameters,cost,denom=100):
         :param float denom: The D value, with a default value of :math:`100`.
 
         """
-    cost_power = round(Decimal(cost).log10())  
-    cost_decimal =  float(Decimal(10) ** cost_power)
+    sqrt_tol = 0.00001
+    print("vcost_derivative =",cost_derivative)
+    print("constraint derivative = ",constraint_derivative)
     if parameters.ALM == 1:
-        parameters.ALM_lagrangian_multiplicator = (cost_decimal*constraint)/(denom)
-        parameters.ALM_penalty_parameter = (cost_decimal*constraint)/(denom)
-        parameters.ALM_penalty_limit = 1000*(cost_decimal*constraint)/(denom)
-
+        parameters.ALM_lagrangian_multiplicator = cost_derivative / (constraint_derivative)
+        parameters.ALM_penalty_parameter = cost_derivative / (constraint_derivative**2 )
+        parameters.ALM_penalty_limit = 10*cost_derivative / ((constraint_derivative**2))
+        print(" parameters.ALM_lagrangian_multiplicator = ",parameters.ALM_lagrangian_multiplicator)
+        print("parameters.ALM_penalty_parameter = ",parameters.ALM_penalty_parameter)
 
