@@ -110,8 +110,8 @@ else:
     print("- for Von Mises : param_vonMises.txt")
     print("- for area : param_area.txt")
 
-    #name = "param_VonMises.txt" # input()
-    name = "param_compliance.txt"
+    name = "param_VonMises.txt" # input()
+    #name = "param_compliance.txt"
     parameters.set__paramFolder(name)
 
 ###################################
@@ -121,7 +121,7 @@ print("Choose the test case:")
 print(" - for 3D : '3D' ")
 print(" - for L shape write : 'L_shape' ")
 print(" - for cantilever in 2D : 'rectangle' ")
-test_case = "rectangle"  #input()
+test_case = "L_shape"  #input()
 xdmf_filename =  "mesh/L_VM.xdmf"
 
 if test_case=='rectangle':
@@ -204,7 +204,7 @@ else :
     print("not implemented test case")
 
 bc = fem.dirichletbc(u_D, fem.locate_dofs_topological(V, fdim, boundary_facets), V)
-
+bcs= [bc]
 # Neumann condition initialization for load traction
 
 def load_marker(x):
@@ -241,10 +241,19 @@ elif test_case == "rectangle" or test_case == "L_shape":
 else :
     print("not implemented test case")
 
+if parameters.cost_func=="compliance":
+    problem_topo = problem.Compliance_Problem()
+elif parameters.cost_func == "VonMises":
+    problem_topo = problem.VMLp_Problem()
+elif parameters.cost_func == "Area":
+    problem_topo = problem.AreaProblem()
+else :
+    print("problem not implemented")
+
 Advection = Advection(ls_func, V_ls=V_ls, dt=parameters.dt)
 Reinitialization = Reinitialization(ls_func, V_ls=V_ls, l=parameters.l_reinit)
 ErsatzMethod = ErsatzElasticSolver(ls_func,V_ls, V, ds = ds, bc = bc, bc_velocity = bc_velocity, parameters = parameters, shift = shift)
-CutFemMethod = CutFEMElasticSolver(ls_func,V_ls, V, ds = ds, bc = bc, bc_velocity = bc_velocity,  parameters = parameters, shift = shift)
+CutFemMethod = CutFEMElasticSolver(ls_func,V_ls, V, ds = ds, bc = bcs, bc_velocity = bc_velocity,  parameters = parameters, problem_topo= problem_topo, shift = shift)
 
 lame_mu,lame_lambda = mechanics_tool.lame_compute(parameters.young_modulus,parameters.poisson)
 
@@ -301,21 +310,13 @@ print(style.WHITE+" ")
 ## DUAL and PRIMAL problem :
 ##########################################
 
-if parameters.cost_func=="compliance":
-    problem_topo = problem.Compliance_Problem()
-elif parameters.cost_func == "VonMises":
-    problem_topo = problem.VMLp_Problem()
-elif parameters.cost_func == "Area":
-    problem_topo = problem.AreaProblem()
-else :
-    print("problem not implemented")
-
 xsi_temp = Function(V_ls)
 
 
 if parameters.cutFEM == 1:
-    uh = CutFemMethod.primal_problem(ls_func_temp,parameters)
+    uh, cut_mesh = CutFemMethod.primal_problem(ls_func_temp,parameters)
     cost_integrand = problem_topo.cost_integrand(uh,lame_mu,lame_lambda,parameters)
+    
     cost = problem_topo.cost(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,CutFemMethod.dxq,parameters)
 
     shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,CutFemMethod.dxq)
@@ -482,7 +483,7 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
             #     uh, ph = ErsatzMethod.ersatz_solver(ls_func_temp, parameters) 
 
             if parameters.cutFEM == 1:
-                uh = CutFemMethod.primal_problem(ls_func_temp,parameters)
+                uh, cut_mesh = CutFemMethod.primal_problem(ls_func_temp,parameters)
                 cost_integrand = problem_topo.cost_integrand(uh,lame_mu,lame_lambda,parameters)
                 CutFemMethod.set_measure_dxq(ls_func_temp)
                 cost = problem_topo.cost(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,CutFemMethod.dxq,parameters)

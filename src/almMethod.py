@@ -63,7 +63,7 @@ def maj_param_constraint_optim(parameters,rest_constraint):
         # 2// update of penalization parameter
         parameters.ALM_penalty_parameter = min(parameters.ALM_penalty_limit,parameters.ALM_penalty_coef_multiplicator*parameters.ALM_penalty_parameter)
 
-def init_param_constraint_optim_test(constraint_derivative,parameters,cost_derivative,denom=100):
+def init_param_constraint_optim(constraint_derivative,parameters,cost_derivative,denom=100):
     r"""Initialized the Augmented Lagrangian parameters:
 
         1. *Initialization of the Lagrange multiplier :

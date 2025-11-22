@@ -184,7 +184,7 @@ class CutFEMElasticSolver:
         
     """
 
-    def __init__(self, level_set, level_set_space, space_displacement,ds, bc, bc_velocity, parameters, shift):
+    def __init__(self, level_set, level_set_space, space_displacement,ds, bc, bc_velocity, parameters,problem_topo, shift):
         
         self.level_set = fem.Function(level_set_space)
         self.level_set.x.array[:] = level_set.x.array
@@ -270,23 +270,29 @@ class CutFEMElasticSolver:
         self.a_cut_primal = cut_form(self.a_primal)
         self.L_cut_primal = cut_form(self.L_primal)
 
-        self.A_primal = assemble_matrix(self.a_cut_primal, bcs=[self.bc])
-
+        
+        self.A_primal = assemble_matrix(self.a_cut_primal, bcs=self.bc)
+        
         self.A_primal.assemble()
+
         self.A_primal.assemblyBegin(PETSc.Mat.AssemblyType.FINAL)
         self.A_primal.assemblyEnd(PETSc.Mat.AssemblyType.FINAL)
 
-        self.b_primal = assemble_vector(self.L_cut_primal)
+
+        
+        self.b_primal = fem.petsc.create_vector(self.L_cut_primal) #assemble_vector(cut_form(self.L_primal))
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
-
+ 
 
         self.solver_primal = PETSc.KSP().create(self.mesh.comm)
-
         self.solver_primal.setOperators(self.A_primal)
-        self.solver_primal.setType(PETSc.KSP.Type.PREONLY)
-        self.solver_primal.getPC().setType(PETSc.PC.Type.LU)
 
+        self.solver_primal.setType(PETSc.KSP.Type.PREONLY)
+        pc = self.solver_primal.getPC()
+        pc.setType(PETSc.PC.Type.LU)        
+        pc.setFactorSolverType("mumps")
+        self.solver_primal.setUp()
 
         if parameters.cost_func != 'compliance':
             ################
@@ -307,18 +313,20 @@ class CutFEMElasticSolver:
             self.a_adj_test = 2.0*self.lame_mu  * ufl.inner(mechanics_tool.strain(p), mechanics_tool.strain(v)) * ufl.dx +  self.lame_lambda*ufl.inner(ufl.nabla_div(p), ufl.nabla_div(v)) * ufl.dx
             self.a_adjoint_test = fem.form(self.a_adj_test, jit_options={"cache_dir" : "ffcx-forms" })
 
-            self.J = ((mechanics_tool.von_mises(self.uh,self.lame_mu,self.lame_lambda,self.dim)/parameters.elasticity_limit)**self.p_const)*self.dxq
+            #self.J = ((mechanics_tool.von_mises(self.uh,self.lame_mu,self.lame_lambda,self.dim)/parameters.elasticity_limit)**self.p_const)*self.dxq
 
-            self.L_adj = ufl.derivative(self.J,self.uh,v_adj)
+            self.L_adj = problem_topo.dual_operator(self.uh,self.lame_mu,self.lame_lambda,parameters,self.mesh,self.dxq) #ufl.derivative(self.J,self.uh,v_adj)
+            #self.L_adj = ufl.derivative(self.J,self.uh,v_adj)
+            
             self.a_cut_adjoint = cut_form(self.a_adj)
             self.L_cut_adjoint = cut_form(self.L_adj)
             
-            self.b_adjoint = assemble_vector(self.L_cut_adjoint)
-            fem.apply_lifting(self.b_adjoint, [self.a_adjoint_test], [[self.bc]])
+            self.b_adjoint = assemble_vector(cut_form(self.L_adj))
+            fem.apply_lifting(self.b_adjoint, [self.a_adjoint_test], [self.bc])
             self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
             self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
-            fem.petsc.set_bc(self.b_adjoint, [self.bc])
-            self.A_adjoint = assemble_matrix(self.a_cut_adjoint, bcs = [self.bc])
+            fem.petsc.set_bc(self.b_adjoint, self.bc)
+            self.A_adjoint = assemble_matrix(self.a_cut_adjoint, bcs = self.bc)
             
             self.A_adjoint.assemble()
             self.A_adjoint.assemblyBegin(PETSc.Mat.AssemblyType.FINAL)
@@ -327,66 +335,71 @@ class CutFEMElasticSolver:
             self.solver_adjoint = PETSc.KSP().create(self.mesh.comm)
             self.solver_adjoint.setOperators(self.A_adjoint)
             self.solver_adjoint.setType(PETSc.KSP.Type.PREONLY)
-            self.solver_adjoint.getPC().setType(PETSc.PC.Type.LU)
-
+            pc =  self.solver_adjoint.getPC()
+            pc.setType(PETSc.PC.Type.LU)
+            pc.setFactorSolverType("mumps")
+            self.solver_adjoint.setUp()
         
     def primal_problem(self,level_set,parameters):
-        r"""Resolution of the primal problem with the CutFEM method.
+        """Resolution of the primal problem with the CutFEM method.
 
-        :param fem.Function level_set: The level set field which defined implicitly the domain :math:`\Omega`.
+        :param fem.Function level_set: The level set field wich defined implicitely the domain :math:`\Omega`.
         :param Parameters parameters: The object parameters.
         
         :returns: The primal solution.
         :rtype: fem.Function
         
         """
-
         self.level_set.x.array[:] = level_set.x.array
-
-        self.set_measure_dxq(level_set) # actualization of the measure on \Omega
-
+        self.set_measure_dxq(level_set)
+        
         self.intersected_entities = locate_entities(self.level_set,self.dim,"phi=0")
         self.inside_entities = locate_entities(self.level_set,self.dim,"phi<0")
-
-        self.gp_ids =  ghost_penalty_facets(self.level_set, "phi<0")
+        self.cut_cells = cut_entities(self.level_set, self.dof_coordinates, self.intersected_entities, self.dim, "phi<0")
+        cut_mesh = create_cut_mesh(self.mesh.comm, self.cut_cells, self.mesh, self.inside_entities)
+        
+        self.gp_ids = ghost_penalty_facets(self.level_set, "phi<0")
         self.gp_topo = facet_topology(self.mesh,self.gp_ids)
-
-
-        self.inside_quadrature = runtime_quadrature(self.level_set,"phi<0",self.order)
-        self.interface_quadrature = runtime_quadrature(self.level_set,"phi=0",self.order)
-
-        self.subdomain_data={"cell": [(0, self.inside_entities)]} #, "interior_facet": [(0, self.gp_topo)]}
-        self.quad_domains = {"cutcell": [(0,self.inside_quadrature)]} #, (1,self.interface_quadrature)]}
-
+        
+        inside_quadrature = runtime_quadrature(self.level_set,"phi<0",self.order)
+        interface_quadrature = runtime_quadrature(self.level_set,"phi=0",self.order)
+        
+        self.subdomain_data = {"cell": [(0, self.inside_entities)]}
+        self.quad_domains = {"cutcell": [(0, inside_quadrature)]}
+        
         self.a_cut_primal.update_integration_domains(self.subdomain_data)
         self.a_cut_primal.update_runtime_domains(self.quad_domains)
-
-        # compute_normal(self.n,self.level_set,self.intersected_entities)
-        #self.b_primal = assemble_vector(self.L_cut_primal)
-
+        
+        with self.b_primal.localForm() as loc:
+          loc.set(0.0)
+        b_tmp = assemble_vector(self.L_cut_primal)
+        self.b_primal.axpy(1.0, b_tmp)   # self.b_primal += b_tmp
+        b_tmp.destroy()   
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
         
         # MPI.COMM_WORLD.Barrier()
-
-        self.A_primal = assemble_matrix(self.a_cut_primal,  [self.bc])
+        if hasattr(self, "A_primal"):
+          self.A_primal.destroy()  
+        self.A_primal = assemble_matrix(self.a_cut_primal,  self.bc)
 
         deactivate(self.A_primal,"phi>0",self.level_set,[self.space_displacement])
         self.A_primal.assemble()
 
         self.solver_primal.setOperators(self.A_primal)
-        self.solver_primal.setType(PETSc.KSP.Type.PREONLY)
-        self.solver_primal.getPC().setType(PETSc.PC.Type.LU)
+        self.solver_primal.setUp()
+      
 
         self.solver_primal.solve(self.b_primal, self.uh.x.petsc_vec)
         self.level_set.x.scatter_forward() 
         
         self.uh.x.scatter_forward()
         
-        return self.uh
+        return self.uh, cut_mesh
+
     
     def adjoint_problem(self,u,parameters,level_set,adjoint=0):
-        r"""Resolution of the dual problem with the CutFEM method.
+        """Resolution of the dual problem with the CutFEM method.
 
         :param fem.Function u: The displacement field function, :math:`u_{h}`.
         :param Parameters parameters: The object parameters.
@@ -396,47 +409,40 @@ class CutFEMElasticSolver:
         :rtype: fem.Function
         
         """
-        # temporaire
         self.set_measure_dxq(level_set)
-
         self.uh = u
         self.L_adj = adjoint
-
+        
         self.a_cut_adjoint.update_integration_domains(self.subdomain_data)
         self.a_cut_adjoint.update_runtime_domains(self.quad_domains)
-        # if adjoint ==0 
         self.L_cut_adjoint.update_integration_domains(self.subdomain_data)
         self.L_cut_adjoint.update_runtime_domains(self.quad_domains)
         
         self.set_measure_dxq(level_set)
-
-        self.A_adjoint = assemble_matrix(self.a_cut_adjoint,  [self.bc])
+        if hasattr(self, "A_adjoint"):
+          self.A_adjoint.destroy()  
+        self.A_adjoint = assemble_matrix(self.a_cut_adjoint,  self.bc)
         deactivate(self.A_adjoint,"phi>0",self.level_set,[self.space_displacement])
-        self.A_adjoint.assemble()
-
-        # if djoint ==0
-        self.b_adjoint = assemble_vector(self.L_cut_adjoint)
-        fem.apply_lifting(self.b_adjoint, [self.a_adjoint_test], [[self.bc]])
-        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
-        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
-        fem.petsc.set_bc(self.b_adjoint, [self.bc])
-
         self.A_adjoint.assemble()
         self.A_adjoint.assemblyBegin(PETSc.Mat.AssemblyType.FINAL)
         self.A_adjoint.assemblyEnd(PETSc.Mat.AssemblyType.FINAL)
-
+        
+        with self.b_adjoint.localForm() as loc:
+          loc.set(0.0)
+        self.b_adjoint = assemble_vector(self.L_cut_adjoint)
+        fem.apply_lifting(self.b_adjoint, [self.a_adjoint_test], [self.bc])
+        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
+        fem.petsc.set_bc(self.b_adjoint, self.bc)
+        
         self.solver_adjoint.setOperators(self.A_adjoint)
-        self.solver_adjoint.setType(PETSc.KSP.Type.PREONLY)
-        self.solver_adjoint.getPC().setType(PETSc.PC.Type.LU)
-
         self.solver_adjoint.solve(self.b_adjoint, self.ph.x.petsc_vec)
 
-        # A_adjoint.destroy()
-        # b_adjoint.destroy()
+        self.ph.x.scatter_forward()
+        
         self.level_set.x.scatter_forward() 
-
         return self.ph
-    
+
     def set_measure_dxq(self,level_set):
         r"""Set the measure dxq on :math:`\Omega`.
 
@@ -477,119 +483,10 @@ class CutFEMElasticSolver:
         
         """
         self.level_set.x.array[:] = level_set.x.array
-        print("before primal solve")
-        self.uh = self.primal_problem(level_set,parameters)
-        print("after primal solve")
+        self.uh, cut_mesh = self.primal_problem(level_set,parameters)
         self.ph.x.array[:] = self.uh.x.array
         adjoint = 0
         if (parameters.cost_func != "compliance"):
-            #almMethod.maj_param_constrainst_optim_slack(parameters,rest_constraint)
             adjoint = problem_topo.dual_operator(self.uh,self.lame_mu,self.lame_lambda,parameters,self.mesh,self.dxq)
-            
             self.ph =  self.adjoint_problem(self.uh,parameters,level_set,adjoint) #self.adjoint_problem(self.uh,parameters,level_set,adjoint)
         return self.uh, self.ph    
-   
-    def velocity_normalization(self,v,c):
-        r"""Normalization of the Velocity field according to the following equation:
-
-         .. math::
-
-            \overline{v} = \frac{v}{\sqrt{c\left\Vert \nabla\phi\right\Vert _{L^{2}\left(D\right)}^{2}+\left\Vert \phi\right\Vert _{L^{2}\left(D\right)}^{2}}}
-        
-            
-        with :math:`c>0` and :math:`\left\Vert . \right\Vert _{L^{2}\left(D\right)}` norm defined as: 
-        
-         .. math::
-
-            \left\Vert f \right\Vert _{L^{2}\left(D\right)}^{2} = \int_{D} f \cdot f \text{ }dx.
-
-        :param fem.Expression or fem.Function v: The scalar velocity field which defined the value of advection in direction of the normal to :math:`\partial\Omega`.
-        :param float c: Value of the smoothing for the velocity normalization. Topically, this value is equal to the smoothing value in the extension equation.
-        
-        :returns: The normalized velocity field, defined in `D`.
-        :rtype: fem.Expression
-        
-        """
-        b_grad = fem.form(inner(ufl.grad(v),ufl.grad(v))*dx)
-        b_v = fem.form(inner(v,v)*dx)
-        denom = MPI.COMM_WORLD.allreduce((fem.assemble_scalar(b_grad)*c+fem.assemble_scalar(b_v)),op=MPI.SUM)
-        denom_temp = MPI.COMM_WORLD.allreduce((fem.assemble_scalar(b_v)),op=MPI.SUM)
-        res = v / ufl.sqrt(denom)
-        return res
-    
-    def descent_direction(self,level_set,parameters,rest_constraint,constraint_integrand,cost_integrand,xsi=0):
-        r"""Determine the descent direction by solving the following equation:
-
-        Find :math:`v'_{\text{reg}}\in H_{\Gamma_{D}}^{1}=\left\{ v\in H^{1}\left(D\right)\text{ such that }v=0\text{ on }\Gamma_{D}\right\}` such that :math:`\forall w\in H_{\Gamma_{D}}^{1}`
-        
-        .. math::
-
-                \alpha\left(\nabla v'_{\text{reg}},\nabla w\right)_{L^{2}\left(D\right)}+\left(v'_{\text{reg}},w\right)_{L^{2}\left(D\right)}=-J'(\Omega)\left(w\right)
-       
-        with :math:`J` the cost function and :math:`\alpha>0` is a smoothing parameter instantiated in the Parameter class. 
-            
-        :param fem.Function level_set: The level set field which defined implicitly the domain :math:`\Omega`.
-        :param Parameters parameters: The object parameters.
-        :param float rest_constraint: The value of the constraint function :math:`C(\Omega)`.
-        :param fem.Expression constraint_integrand: The integrand of the constraint function.
-        :param fem.Expression cost_integrand: The integrand of the cost function.
-
-        :returns: The velocity field, defined in `D`.
-        :rtype: fem.Function
-        
-        """
-
-        u_r = ufl.TrialFunction(self.V_ls)
-        v_r = ufl.TestFunction(self.V_ls)
-        v_reg = fem.Function(self.V_ls)
-
-        intersected_entities = locate_entities(level_set,self.dim,"phi=0")
-        
-        V_DG = fem.functionspace(self.mesh, ("DG", 0, (self.mesh.geometry.dim,)))
-        n_K = fem.Function(V_DG)
-        compute_normal(n_K,level_set,intersected_entities)
-
-        order = 2
-        inside_quadrature = runtime_quadrature(level_set,"phi<0",order)
-        interface_quadrature = runtime_quadrature(level_set,"phi=0",order)
-
-        quad_domains = [(0,inside_quadrature), (1,interface_quadrature)]
-
-        dx_rt = ufl.Measure("dC", subdomain_data=quad_domains, domain=self.mesh)
-
-        dsq = dx_rt(1)
-
-        a_reg  =   parameters.alpha_reg_velocity *ufl.inner(grad(u_r), grad(v_r))*dx
-        a_reg += u_r*v_r*dx
-
-        C_Omega_value = (rest_constraint + parameters.ALM_slack_variable )
-
-
-        temp = cost_integrand
-        temp_ALM = parameters.ALM*(parameters.ALM_lagrangian_multiplicator * constraint_integrand + parameters.ALM_penalty_parameter * C_Omega_value * constraint_integrand \
-                + 2 * constraint_integrand*parameters.ALM_slack_variable)
-        temp_ALM += (1-parameters.ALM)*parameters.target_constraint
-        temp += temp_ALM
-
-        L_reg = -(inner(temp*v_r*n_K,n_K)*dsq)
-        
-        a_cut_reg = cut_form(a_reg, jit_options={"cache_dir" : "ffcx-forms" })
-        L_cut_reg = cut_form(L_reg)
-
-        b_reg = assemble_vector(L_cut_reg)
-        b_reg.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
-        b_reg.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
-        A_reg = assemble_matrix(a_cut_reg, bcs = [self.bc_velocity])
-        A_reg.assemble()
-
-        solver_reg = PETSc.KSP().create(self.mesh.comm)
-        solver_reg.setOperators(A_reg)
-        solver_reg.setType(PETSc.KSP.Type.PREONLY)
-        solver_reg.getPC().setType(PETSc.PC.Type.LU)
-        solver_reg.solve(b_reg, v_reg.x.petsc_vec)
-        b_reg.destroy()
-
-        return v_reg
-
-    
-

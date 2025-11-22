@@ -315,10 +315,9 @@ class VMLp_Problem:
         J =((shapeDerivativeConstraintintegrand))*measure
         v_adj = ufl.TestFunction(V)
         dual_operator = ufl.derivative(J,u,v_adj)
-        multiplyShapeDerivative = (1/parameters.p_const)*cutfemx.fem.assemble_scalar(cut_form(((mechanics_tool.von_mises(u,lame_mu,lame_lambda,dim)/parameters.elasticity_limit)**parameters.p_const)*measure))**(1/parameters.p_const-1)
-        multiplyShapeDerivative = MPI.COMM_WORLD.allreduce(multiplyShapeDerivative,op=MPI.SUM)
+        # multiplyShapeDerivative = (1/parameters.p_const)*cutfemx.fem.assemble_scalar(cut_form(((mechanics_tool.von_mises(u,lame_mu,lame_lambda,dim)/parameters.elasticity_limit)**parameters.p_const)*measure))**(1/parameters.p_const-1)
+        # multiplyShapeDerivative = MPI.COMM_WORLD.allreduce(multiplyShapeDerivative,op=MPI.SUM)
         return dual_operator
-    
 
 class AreaProblem:
     """This is the Area problem class.
