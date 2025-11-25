@@ -261,9 +261,11 @@ class CutFEMElasticSolver:
 
         self.a_primal =  2.0*self.lame_mu  * ufl.inner(mechanics_tool.strain(u), mechanics_tool.strain(v)) * self.dxq \
             + self.lame_lambda *  ufl.inner(ufl.nabla_div(u), ufl.nabla_div(v)) * self.dxq
+        self.a_primal += 0.0 * ufl.inner(u, v) * self.dsq
         #Stabilization:
         self.a_primal += avg(self.gamma) * avg(self.h)**3*ufl.inner(ufl.jump(ufl.grad(u),self.n),\
             ufl.jump(ufl.grad(v),self.n))*self.dS(0)
+        
         
         self.L_primal = ufl.dot(self.shift,v) * self.ds(2)
 
@@ -313,11 +315,8 @@ class CutFEMElasticSolver:
             self.a_adj_test = 2.0*self.lame_mu  * ufl.inner(mechanics_tool.strain(p), mechanics_tool.strain(v)) * ufl.dx +  self.lame_lambda*ufl.inner(ufl.nabla_div(p), ufl.nabla_div(v)) * ufl.dx
             self.a_adjoint_test = fem.form(self.a_adj_test, jit_options={"cache_dir" : "ffcx-forms" })
 
-            #self.J = ((mechanics_tool.von_mises(self.uh,self.lame_mu,self.lame_lambda,self.dim)/parameters.elasticity_limit)**self.p_const)*self.dxq
-
             self.L_adj = problem_topo.dual_operator(self.uh,self.lame_mu,self.lame_lambda,parameters,self.mesh,self.dxq) #ufl.derivative(self.J,self.uh,v_adj)
-            #self.L_adj = ufl.derivative(self.J,self.uh,v_adj)
-            
+
             self.a_cut_adjoint = cut_form(self.a_adj)
             self.L_cut_adjoint = cut_form(self.L_adj)
             
@@ -339,8 +338,8 @@ class CutFEMElasticSolver:
             pc.setType(PETSc.PC.Type.LU)
             pc.setFactorSolverType("mumps")
             self.solver_adjoint.setUp()
-        
-    def primal_problem(self,level_set,parameters):
+            
+    def primal_problem(self, level_set):
         """Resolution of the primal problem with the CutFEM method.
 
         :param fem.Function level_set: The level set field wich defined implicitely the domain :math:`\Omega`.
@@ -351,54 +350,39 @@ class CutFEMElasticSolver:
         
         """
         self.level_set.x.array[:] = level_set.x.array
-        self.set_measure_dxq(level_set)
-        
-        self.intersected_entities = locate_entities(self.level_set,self.dim,"phi=0")
-        self.inside_entities = locate_entities(self.level_set,self.dim,"phi<0")
-        self.cut_cells = cut_entities(self.level_set, self.dof_coordinates, self.intersected_entities, self.dim, "phi<0")
-        cut_mesh = create_cut_mesh(self.mesh.comm, self.cut_cells, self.mesh, self.inside_entities)
-        
-        self.gp_ids = ghost_penalty_facets(self.level_set, "phi<0")
-        self.gp_topo = facet_topology(self.mesh,self.gp_ids)
-        
-        inside_quadrature = runtime_quadrature(self.level_set,"phi<0",self.order)
-        interface_quadrature = runtime_quadrature(self.level_set,"phi=0",self.order)
-        
-        self.subdomain_data = {"cell": [(0, self.inside_entities)]}
-        self.quad_domains = {"cutcell": [(0, inside_quadrature)]}
-        
-        self.a_cut_primal.update_integration_domains(self.subdomain_data)
-        self.a_cut_primal.update_runtime_domains(self.quad_domains)
-        
+        self.update_measures_and_quadratures(level_set)
+    
+        # Update forms domains if needed
+        if hasattr(self, "subdomain_data"):
+            self.a_cut_primal.update_integration_domains(self.subdomain_data)
+            self.a_cut_primal.update_runtime_domains(self.quad_domains)
+
+        # Assemble vector
         with self.b_primal.localForm() as loc:
-          loc.set(0.0)
+            loc.set(0.0)
         b_tmp = assemble_vector(self.L_cut_primal)
-        self.b_primal.axpy(1.0, b_tmp)   # self.b_primal += b_tmp
-        b_tmp.destroy()   
+        self.b_primal.axpy(1.0, b_tmp)
+        b_tmp.destroy()
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
-        
-        # MPI.COMM_WORLD.Barrier()
-        if hasattr(self, "A_primal"):
-          self.A_primal.destroy()  
-        self.A_primal = assemble_matrix(self.a_cut_primal,  self.bc)
 
-        deactivate(self.A_primal,"phi>0",self.level_set,[self.space_displacement])
+        # Assemble matrix
+        if hasattr(self, "A_primal"):
+            self.A_primal.destroy()
+        self.A_primal = assemble_matrix(self.a_cut_primal, self.bc)
+        deactivate(self.A_primal, "phi>0", self.level_set, [self.space_displacement])
         self.A_primal.assemble()
 
+        # Solve
         self.solver_primal.setOperators(self.A_primal)
         self.solver_primal.setUp()
-      
-
         self.solver_primal.solve(self.b_primal, self.uh.x.petsc_vec)
-        self.level_set.x.scatter_forward() 
-        
+        self.level_set.x.scatter_forward()
         self.uh.x.scatter_forward()
-        
-        return self.uh, cut_mesh
 
+        return self.uh
     
-    def adjoint_problem(self,u,parameters,level_set,adjoint=0):
+    def adjoint_problem(self, u, level_set, adjoint=0):
         """Resolution of the dual problem with the CutFEM method.
 
         :param fem.Function u: The displacement field function, :math:`u_{h}`.
@@ -409,69 +393,51 @@ class CutFEMElasticSolver:
         :rtype: fem.Function
         
         """
-        self.set_measure_dxq(level_set)
+        # Update the level set with the provided value
+        self.level_set.x.array[:] = level_set.x.array
+        # Update measures and quadratures associated with the level set
+        self.update_measures_and_quadratures(level_set)
+
+        # Store the displacement field and the adjoint operator
         self.uh = u
         self.L_adj = adjoint
-        
-        self.a_cut_adjoint.update_integration_domains(self.subdomain_data)
-        self.a_cut_adjoint.update_runtime_domains(self.quad_domains)
-        self.L_cut_adjoint.update_integration_domains(self.subdomain_data)
-        self.L_cut_adjoint.update_runtime_domains(self.quad_domains)
-        
-        self.set_measure_dxq(level_set)
+
+        # Update form domains if needed
+        if hasattr(self, "subdomain_data"):
+            self.a_cut_adjoint.update_integration_domains(self.subdomain_data)
+            self.a_cut_adjoint.update_runtime_domains(self.quad_domains)
+            self.L_cut_adjoint.update_integration_domains(self.subdomain_data)
+            self.L_cut_adjoint.update_runtime_domains(self.quad_domains)
+
+        # Assemble the adjoint matrix
         if hasattr(self, "A_adjoint"):
-          self.A_adjoint.destroy()  
-        self.A_adjoint = assemble_matrix(self.a_cut_adjoint,  self.bc)
-        deactivate(self.A_adjoint,"phi>0",self.level_set,[self.space_displacement])
-        self.A_adjoint.assemble()
-        self.A_adjoint.assemblyBegin(PETSc.Mat.AssemblyType.FINAL)
-        self.A_adjoint.assemblyEnd(PETSc.Mat.AssemblyType.FINAL)
-        
+            self.A_adjoint.destroy()  # Destroy the old matrix if it exists
+        self.A_adjoint = assemble_matrix(self.a_cut_adjoint, self.bc)  # Assemble the new matrix
+        deactivate(self.A_adjoint, "phi>0", self.level_set, [self.space_displacement])  # Deactivate DOFs outside the domain
+        self.A_adjoint.assemble()  # Assemble the matrix
+        self.A_adjoint.assemblyBegin(PETSc.Mat.AssemblyType.FINAL)  # Begin final assembly
+        self.A_adjoint.assemblyEnd(PETSc.Mat.AssemblyType.FINAL)  # End final assembly
+
+        # Initialize the adjoint vector
         with self.b_adjoint.localForm() as loc:
-          loc.set(0.0)
-        self.b_adjoint = assemble_vector(self.L_cut_adjoint)
-        fem.apply_lifting(self.b_adjoint, [self.a_adjoint_test], [self.bc])
-        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
-        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
-        fem.petsc.set_bc(self.b_adjoint, self.bc)
-        
-        self.solver_adjoint.setOperators(self.A_adjoint)
-        self.solver_adjoint.solve(self.b_adjoint, self.ph.x.petsc_vec)
+            loc.set(0.0)  # Reset the vector to zero
+        self.b_adjoint = assemble_vector(self.L_cut_adjoint)  # Assemble the vector
+        fem.apply_lifting(self.b_adjoint, [self.a_adjoint_test], [self.bc])  # Apply boundary conditions
+        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)  # Update the vector
+        self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)  # Update the vector
+        fem.petsc.set_bc(self.b_adjoint, self.bc)  # Apply boundary conditions to the vector
 
-        self.ph.x.scatter_forward()
-        
-        self.level_set.x.scatter_forward() 
-        return self.ph
+        # Solve the adjoint problem
+        self.solver_adjoint.setOperators(self.A_adjoint)  # Set the operator for the solver
+        self.solver_adjoint.solve(self.b_adjoint, self.ph.x.petsc_vec)  # Solve the system
 
-    def set_measure_dxq(self,level_set):
-        r"""Set the measure dxq on :math:`\Omega`.
+        self.ph.x.scatter_forward()  # Update the adjoint solution
+        self.level_set.x.scatter_forward()  # Update the level set
 
-        :param fem.Function level_set: The level_set field function, :math:`\phi`.
-        
-        """
+        return self.ph  # Return the adjoint solution
 
-        if level_set != 0:
-            self.level_set.x.array[:] = level_set.x.array
-        order = 2
 
-        intersected_entities = locate_entities(self.level_set,self.dim,"phi=0")
-        inside_entities = locate_entities(self.level_set,self.dim,"phi<0")
-        
-        inside_quadrature = runtime_quadrature(self.level_set,"phi<0",order)
-        interface_quadrature = runtime_quadrature(self.level_set,"phi=0",order)
-
-        quad_domains = {"cutcell": [(0,inside_quadrature), (1,interface_quadrature)]}
-
-        gp_ids =  ghost_penalty_facets(self.level_set, "phi<0")
-        gp_topo = facet_topology(self.mesh,gp_ids)
-
-        
-        self.dx = ufl.Measure("dx", subdomain_data=[(0, inside_entities),(2, intersected_entities)], domain=self.mesh)
-        self.dx_rt = ufl.Measure("dC", subdomain_data=quad_domains, domain=self.mesh)
-        
-        self.dxq = self.dx_rt(0) + self.dx(0)
-        
-    def cutfem_solver(self,level_set,parameters,problem_topo=0):
+    def cutfem_solver(self, level_set, parameters, problem_topo=0):
         r"""Resolution of the primal and dual problem.
 
         :param fem.Function level_set: The level set field which defined implicitly the domain :math:`\Omega`.
@@ -483,10 +449,84 @@ class CutFEMElasticSolver:
         
         """
         self.level_set.x.array[:] = level_set.x.array
-        self.uh, cut_mesh = self.primal_problem(level_set,parameters)
-        self.ph.x.array[:] = self.uh.x.array
-        adjoint = 0
-        if (parameters.cost_func != "compliance"):
-            adjoint = problem_topo.dual_operator(self.uh,self.lame_mu,self.lame_lambda,parameters,self.mesh,self.dxq)
-            self.ph =  self.adjoint_problem(self.uh,parameters,level_set,adjoint) #self.adjoint_problem(self.uh,parameters,level_set,adjoint)
-        return self.uh, self.ph    
+        self.uh = self.primal_problem(level_set)
+        if parameters.cost_func == "compliance":
+            self.ph.x.array[:] = self.uh.x.array
+        else:
+            adjoint = problem_topo.dual_operator(
+                self.uh, self.lame_mu, self.lame_lambda, parameters, self.mesh, self.dxq
+            )
+            self.ph = self.adjoint_problem(self.uh, level_set, adjoint)
+        return self.uh, self.ph
+
+
+    def _assemble_matrix(self, form, bcs):
+        mat = assemble_matrix(form, bcs)
+        mat.assemble()
+        mat.assemblyBegin(PETSc.Mat.AssemblyType.FINAL)
+        mat.assemblyEnd(PETSc.Mat.AssemblyType.FINAL)
+        return mat
+
+    def _assemble_vector(self, form, bcs=None):
+        vec = assemble_vector(form)
+        if bcs is not None:
+            fem.petsc.set_bc(vec, bcs)
+        vec.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+        vec.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
+        return vec
+    
+    def __del__(self):
+        if hasattr(self, "A_primal"):
+            self.A_primal.destroy()
+        if hasattr(self, "A_adjoint"):
+            self.A_adjoint.destroy()
+        if hasattr(self, "solver_primal"):
+            self.solver_primal.destroy()
+        if hasattr(self, "solver_adjoint"):
+            self.solver_adjoint.destroy()
+        if hasattr(self, "b_primal"):
+            self.b_primal.destroy()
+        if hasattr(self, "b_adjoint"):
+            self.b_adjoint.destroy()
+    
+    def get_cut_mesh(self, level_set):
+        """
+        Updates the cut entities and returns the cut mesh associated with the given level set.
+        """
+        self.update_measures_and_quadratures(level_set)
+        return self.cut_mesh
+
+    def update_measures_and_quadratures(self, level_set, order=2):
+        """
+        Updates measures, quadratures, and entities associated with the level set.
+        """
+        
+        self.level_set.x.array[:] = level_set.x.array
+
+        if level_set != 0:
+            self.level_set.x.array[:] = level_set.x.array
+        order = 2
+
+        self.intersected_entities = locate_entities(self.level_set, self.dim, "phi=0")
+        self.inside_entities = locate_entities(self.level_set, self.dim, "phi<0")
+        
+        self.inside_quadrature = runtime_quadrature(self.level_set, "phi<0", order)
+        self.interface_quadrature = runtime_quadrature(self.level_set, "phi=0", order)
+
+        self.quad_domains = {"cutcell": [(0,self.inside_quadrature)]} 
+        self.subdomain_data = {"cell": [(0, self.inside_entities)]}
+        
+
+        self.gp_ids = ghost_penalty_facets(self.level_set, "phi<0")
+        self.gp_topo = facet_topology(self.mesh, self.gp_ids)
+        
+        self.dx = ufl.Measure("dx", subdomain_data=[(0, self.inside_entities)], domain=self.mesh)
+        self.dx_rt = ufl.Measure("dC", subdomain_data=self.quad_domains, domain=self.mesh)
+
+        self.dxq = self.dx_rt(0) + self.dx(0)
+        self.dS = ufl.Measure("dS", subdomain_data=[(0, self.gp_topo)], domain=self.mesh)
+
+
+
+
+        

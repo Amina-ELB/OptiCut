@@ -31,7 +31,7 @@ from petsc4py.PETSc import ScalarType
 from ufl import ( dx, inner)
 
 from Parameters import *
-from create_mesh import *
+from mesh_utils import *
 from ersatz_elastic_solver import *
 from cutfem_elastic_solver import *
 from levelSet_tool import *

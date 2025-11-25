@@ -155,7 +155,7 @@ class ErsatzElasticSolver:
         
         self.b_primal = fem.petsc.create_vector(self.L_primal)
         
-        self.A_primal = fem.petsc.assemble_matrix(self.a_primal, bcs=[self.bc])
+        self.A_primal = fem.petsc.assemble_matrix(self.a_primal, bcs=self.bc)
         self.A_primal.assemble()
 
         self.primal_solver = PETSc.KSP().create(self.mesh.comm)
@@ -172,7 +172,7 @@ class ErsatzElasticSolver:
         self.a_adjoint = fem.form(self.a)
         self.L_adjoint = fem.form(self.L_adj)
 
-        self.A_adjoint = fem.petsc.assemble_matrix(self.a_adjoint, bcs=[self.bc])
+        self.A_adjoint = fem.petsc.assemble_matrix(self.a_adjoint, bcs=self.bc)
         self.A_adjoint.assemble()
         
         self.adjoint_solver = PETSc.KSP().create(self.mesh.comm)
@@ -276,7 +276,7 @@ class ErsatzElasticSolver:
 
         b_adv = fem.petsc.create_vector(L_cut_adv)
         
-        A_adv = fem.petsc.assemble_matrix(a_cut_adv, bcs=[self.bc])
+        A_adv = fem.petsc.assemble_matrix(a_cut_adv, bcs=self.bc)
         A_adv.assemble()
 
 
@@ -317,17 +317,17 @@ class ErsatzElasticSolver:
 
         self.a_primal = self.set_bilin_form()
         self.A_primal.zeroEntries()
-        fem.petsc.assemble_matrix(self.A_primal, self.a_primal, bcs=[self.bc])
+        fem.petsc.assemble_matrix(self.A_primal, self.a_primal, bcs=self.bc)
         self.A_primal.assemble()
 
         with self.b_primal.localForm() as loc:
             loc.set(0)
         fem.petsc.assemble_vector(self.b_primal, self.L_primal)
-        fem.petsc.apply_lifting(self.b_primal, [self.a_primal], [[self.bc]])
+        fem.petsc.apply_lifting(self.b_primal, [self.a_primal], [self.bc])
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
 
-        fem.petsc.set_bc(self.b_primal, [self.bc])
+        fem.petsc.set_bc(self.b_primal, self.bc)
 
         
         self.primal_solver.setOperators(self.A_primal)
@@ -347,18 +347,18 @@ class ErsatzElasticSolver:
 
         v = ufl.TestFunction(self.space_displacement)  
         self.A_adjoint.zeroEntries()
-        fem.petsc.assemble_matrix(self.A_adjoint, self.a_adjoint, bcs=[self.bc])
+        fem.petsc.assemble_matrix(self.A_adjoint, self.a_adjoint, bcs=self.bc)
         self.A_adjoint.assemble()
 
         b_adjoint = fem.petsc.create_vector(self.L_adjoint)
 
         fem.petsc.assemble_vector(b_adjoint, self.L_adjoint)
         
-        fem.apply_lifting(b_adjoint, [self.a_adjoint], [[self.bc]])
+        fem.apply_lifting(b_adjoint, [self.a_adjoint], [self.bc])
         b_adjoint.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         b_adjoint.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
 
-        fem.petsc.set_bc(b_adjoint, [self.bc])
+        fem.petsc.set_bc(b_adjoint, self.bc)
         
         self.adjoint_solver.setOperators(self.A_adjoint)
 

@@ -94,25 +94,27 @@ vect_max_vm = []
 
 type_constraint_vm = "PN"
 
-#"UKS" don't work 
+
 i = 0
-###################################
-#### parameters initialization ####
-###################################
+from config_utils import load_parameters, init_output_folders
+from function_spaces_utils import init_function_spaces
+from bc_utils import initialize_boundary_conditions, initialize_shift
 
-parameters = Parameters()
-temp = 1 
-if temp == 0:
-    parameters.set__paramManually()
-else:
-    print("Enter the name of your data folder")
-    print("- for compliance : param_compliance.txt")
-    print("- for Von Mises : param_vonMises.txt")
-    print("- for area : param_area.txt")
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
 
-    name = "param_VonMises.txt" # input()
-    #name = "param_compliance.txt"
-    parameters.set__paramFolder(name)
+# ----------------------------
+# Initialize output folders
+# ----------------------------
+init_output_folders(rank)
+
+# ----------------------------
+# Load parameters
+# ----------------------------
+use_file = 1
+param_file = "parameters/param_VonMises.txt"
+parameters = load_parameters(use_file=use_file, filename=param_file)
+
 
 ###################################
 #### 	Mesh generation 	   ####
@@ -147,14 +149,13 @@ else :
 
 msh.topology.create_connectivity(msh.topology.dim, msh.topology.dim-1)
 
-###################################
-### Initialization of the spaces###
-###################################
-V = fem.functionspace(msh, ("Lagrange", 1, (msh.geometry.dim, )))
-V_vm = fem.functionspace(msh, ("Lagrange", 2, (msh.geometry.dim, )))
-V_ls = fem.functionspace(msh, ("Lagrange", 1))
-Q = fem.functionspace(msh, ("DG", 0))
-V_DG = fem.functionspace(msh, ("DG", 0, (msh.geometry.dim, )))
+
+# ----------------------------
+# Initialize function spaces
+# ----------------------------
+spaces = init_function_spaces(msh)
+V, V_vm, V_ls, Q, V_DG = spaces["V"], spaces["V_vm"], spaces["V_ls"], spaces["Q"], spaces["V_DG"]
+
 
 # Initialization of the spacial coordinate
 x = ufl.SpatialCoordinate(msh)
@@ -252,7 +253,7 @@ else :
 
 Advection = Advection(ls_func, V_ls=V_ls, dt=parameters.dt)
 Reinitialization = Reinitialization(ls_func, V_ls=V_ls, l=parameters.l_reinit)
-ErsatzMethod = ErsatzElasticSolver(ls_func,V_ls, V, ds = ds, bc = bc, bc_velocity = bc_velocity, parameters = parameters, shift = shift)
+ErsatzMethod = ErsatzElasticSolver(ls_func,V_ls, V, ds = ds, bc = bcs, bc_velocity = bc_velocity, parameters = parameters, shift = shift)
 CutFemMethod = CutFEMElasticSolver(ls_func,V_ls, V, ds = ds, bc = bcs, bc_velocity = bc_velocity,  parameters = parameters, problem_topo= problem_topo, shift = shift)
 
 lame_mu,lame_lambda = mechanics_tool.lame_compute(parameters.young_modulus,parameters.poisson)
@@ -314,7 +315,7 @@ xsi_temp = Function(V_ls)
 
 
 if parameters.cutFEM == 1:
-    uh, cut_mesh = CutFemMethod.primal_problem(ls_func_temp,parameters)
+    uh = CutFemMethod.primal_problem(ls_func_temp)
     cost_integrand = problem_topo.cost_integrand(uh,lame_mu,lame_lambda,parameters)
     
     cost = problem_topo.cost(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,CutFemMethod.dxq,parameters)
@@ -326,7 +327,7 @@ if parameters.cutFEM == 1:
     almMethod.maj_param_constraint_optim_slack(parameters,constraint)
     if parameters.cost_func != "compliance" : 
         dual_operator  = problem_topo.dual_operator(uh,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,msh,CutFemMethod.dxq,vm_list)
-        ph = CutFemMethod.adjoint_problem(uh,parameters,ls_func_temp,dual_operator)
+        ph = CutFemMethod.adjoint_problem(uh,ls_func_temp,dual_operator)
     shape_derivative_constraint_integrand = problem_topo.shape_derivative_integrand_constraint(uh,ph,lame_mu,lame_lambda,parameters,CutFemMethod.dxq,vm_list)
 
 else:
@@ -483,9 +484,9 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
             #     uh, ph = ErsatzMethod.ersatz_solver(ls_func_temp, parameters) 
 
             if parameters.cutFEM == 1:
-                uh, cut_mesh = CutFemMethod.primal_problem(ls_func_temp,parameters)
+                uh = CutFemMethod.primal_problem(ls_func_temp)
                 cost_integrand = problem_topo.cost_integrand(uh,lame_mu,lame_lambda,parameters)
-                CutFemMethod.set_measure_dxq(ls_func_temp)
+                CutFemMethod.update_measures_and_quadratures(ls_func_temp)
                 cost = problem_topo.cost(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,CutFemMethod.dxq,parameters)
     
                 shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,CutFemMethod.dxq)
@@ -497,8 +498,8 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
                 almMethod.maj_param_constraint_optim_slack(parameters,constraint)
                 if parameters.cost_func != "compliance" : 
                     dual_operator  = problem_topo.dual_operator(uh,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,msh,CutFemMethod.dxq,vm_list,c_k)
-                    CutFemMethod.set_measure_dxq(ls_func_temp)
-                    ph = CutFemMethod.adjoint_problem(uh,parameters,ls_func_temp,dual_operator)
+                    CutFemMethod.update_measures_and_quadratures(ls_func_temp)
+                    ph = CutFemMethod.adjoint_problem(uh,ls_func_temp,dual_operator)
 
                 shape_derivative_integrand_constraint = problem_topo.shape_derivative_integrand_constraint(uh,ph,lame_mu,lame_lambda,parameters,CutFemMethod.dxq,vm_list,c_k)
             else:
@@ -506,7 +507,7 @@ while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
                 uh, ph = ErsatzMethod.ersatz_solver(ls_func_temp, parameters) 
 
                 measure = ufl.dx
-                CutFemMethod.set_measure_dxq(ls_func_temp)
+                CutFemMethod.update_measures_and_quadratures(ls_func_temp)
                 cost = problem_topo.cost(uh,ph,ErsatzMethod.lame_mu_fic ,ErsatzMethod.lame_lambda_fic ,measure,parameters)
 
                 shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,measure)
