@@ -16,34 +16,28 @@ import ufl
 from dolfinx import fem
 import matplotlib.pyplot as plt
 # meshes, assembly, c++, ython, pybind
-from ufl import ds, dx, inner
+
 
 
 from typing import TYPE_CHECKING
-import pyvista
 
 
-from dolfinx.fem import Function
+
+
 import dolfinx.fem.petsc 
-from dolfinx.mesh import locate_entities, meshtags
 from mpi4py import MPI
-from petsc4py.PETSc import ScalarType
-from ufl import ( dx, inner)
+
 
 from Parameters import *
-from mesh_utils import *
+from utils.mesh_utils import *
 from ersatz_elastic_solver import *
 from cutfem_elastic_solver import *
 from levelSet_tool import *
 from velocity_tools import *
 from geometry_initialization import *
-from dolfinx.mesh import locate_entities, meshtags, locate_entities_boundary
-from cutfemx.level_set import locate_entities, cut_entities, ghost_penalty_facets, facet_topology
-from cutfemx.level_set import compute_normal
-from cutfemx.mesh import create_cut_mesh, create_cut_cells_mesh
+
 import mechanics_tool
-import shutil
-import os
+
 
 
 def create_list_vm(msh,uh,parameters,lame_mu,lame_lambda,i,level_set,V_ls,Q, domain_marker = 0):

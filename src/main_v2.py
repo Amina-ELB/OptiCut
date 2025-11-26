@@ -32,7 +32,7 @@ from petsc4py.PETSc import ScalarType
 from ufl import *
 
 from Parameters import *
-from mesh_utils import *
+from utils.mesh_utils import *
 from ersatz_elastic_solver import *
 from cutfem_elastic_solver import *
 from levelSet_tool import *
@@ -96,9 +96,9 @@ vect_max_vm = []
 from mpi4py import MPI
 from dolfinx import fem, mesh, io
 import ufl
-from config_utils import load_parameters, init_output_folders
+from utils.config_utils import load_parameters, init_output_folders
 from function_spaces_utils import init_function_spaces
-from bc_utils import initialize_boundary_conditions, initialize_shift
+from utils.bc_utils import initialize_boundary_conditions, initialize_shift
 from problem import Compliance_Problem, VMLp_Problem, AreaProblem
 from ersatz_elastic_solver import *
 from cutfem_elastic_solver import *
@@ -369,7 +369,7 @@ while (i < parameters.max_incr) and (
         while ((parameters.adapt_time_step + 1) * cv) == 0:
             if parameters.cutFEM == 1:
                 # primal solve on updated level-set
-                uh, _ = CutFemSolver.primal_problem(ls_func_temp)
+                uh = CutFemSolver.primal_problem(ls_func_temp)
                 CutFemSolver.update_measures_and_quadratures(ls_func_temp)
                 # compute cost and shape derivatives using updated measure
                 cost = problem_topo.cost(uh, ph, CutFemSolver.lame_mu, CutFemSolver.lame_lambda, CutFemSolver.dxq, parameters)
