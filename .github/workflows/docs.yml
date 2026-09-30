@@ -21,25 +21,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Conda environment
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          activate-environment: opticut-env
-          environment-file: environment.yml
-          auto-activate-base: false
-          miniforge-version: latest
-          use-mamba: true
+          python-version: "3.11"
 
-      - name: Install dependencies and OptiCut
-        shell: bash -l {0}
+      - name: Install Sphinx and documentation dependencies
         run: |
-          chmod +x install_opticut.sh
-          ./install_opticut.sh
+          pip install \
+            sphinx \
+            furo \
+            myst-parser \
+            sphinxcontrib-bibtex \
+            sphinxcontrib-mermaid \
+            nbsphinx \
+            sphinx-copybutton
 
       - name: Build Sphinx documentation
-        shell: bash -l {0}
-        run: |
-          make html
+        run: make html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

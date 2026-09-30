@@ -40,6 +40,22 @@ autosectionlabel_prefix_document = True
 autosectionlabel_enabled = False
 nbsphinx_execute = 'never'
 
+# Mock heavy scientific dependencies so Sphinx can build the docs
+# without requiring a full FEniCSx/CutFEMx installation.
+autodoc_mock_imports = [
+    "dolfinx",
+    "cutfemx",
+    "petsc4py",
+    "mpi4py",
+    "ufl",
+    "basix",
+    "ffcx",
+    "numpy",
+    "scipy",
+    "gmsh",
+    "psutil",
+]
+
 templates_path = ['_templates']
 exclude_patterns = []
 
