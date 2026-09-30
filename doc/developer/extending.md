@@ -70,9 +70,17 @@ For our example:
                 lame_lambda * ufl.inner(ufl.nabla_div(u), ufl.nabla_div(p)))
 ```
 
-### 4. Provide the Dual Operator
+### 4. Automatic Differentiation for the Adjoint Problem
 
-If your problem is not self-adjoint (e.g., stress constraints), you must define the `dual_operator` to allow the solver to compute the adjoint state. This generally involves computing the Fréchet derivative of the constraint with respect to the state variable $u$.
+A key architectural feature of OptiCut is that **the adjoint operator does not need to be derived or implemented manually**. For non-self-adjoint problems (e.g., stress-constrained optimization), the adjoint bilinear form is assembled automatically from the UFL symbolic representation of the constraint functional.
+
+This is made possible by FEniCSx's **symbolic automatic differentiation** engine, exposed through `ufl.derivative`. Given a scalar functional $J(u) = \int_\Omega f(u) \, dx$ defined as a UFL expression, the call:
+
+$$\frac{\partial J}{\partial u}[\hat{v}] \approx \texttt{ufl.derivative}(J, u, \hat{v})$$
+
+computes the Gateaux derivative of $J$ with respect to $u$ in the direction of the test function $\hat{v}$, producing the linear form of the adjoint problem. This symbolic operation is performed at the level of the UFL expression tree, before any finite element assembly, which ensures both correctness and generality.
+
+This design means that a user introducing a new constraint functional (however complex) automatically gets the correct adjoint problem at no additional implementation cost. The method `dual_operator` simply wraps this call:
 
 ```python
     def dual_operator(self, u, lame_mu, lame_lambda, parameters, mesh, measure=0, vm_DG=0, c_k=0):
@@ -81,10 +89,12 @@ If your problem is not self-adjoint (e.g., stress constraints), you must define 
         J = self.constraint_integrand(u, lame_mu, lame_lambda, parameters) * measure
         v_adj = ufl.TestFunction(V)
         
-        # Fréchet derivative of J with respect to u
+        # Gateaux derivative of J w.r.t. u: assembles the adjoint linear form automatically
         dual_operator = ufl.derivative(J, u, v_adj)
         return dual_operator
 ```
+
+For self-adjoint problems (e.g., compliance minimization), this method is not required since the adjoint state coincides with (a multiple of) the primal state, and the solver handles this special case directly.
 
 ### 5. Activate the Problem in the Configuration
 

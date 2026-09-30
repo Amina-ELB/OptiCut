@@ -64,7 +64,7 @@ To help developers navigate the codebase, here is how the architectural concepts
 ### `src/config/` (Configuration & Physics)
 This module acts as the user interface for defining the optimization setup.
 - **`parameters.py`**: A centralized dataclass holding all runtime parameters (mesh size, elasticity limits, ALM penalties).
-- **`problem.py`**: Contains the physical formulations. Classes inheriting from `BaseProblem` define the integrands for the cost function, the constraint, and the dual operator. 
+- **`problem.py`**: Contains the physical formulations. Each problem class defines the UFL integrands for the cost function, the constraint, and their shape derivatives. For non-self-adjoint problems, the adjoint operator is assembled automatically via `ufl.derivative`, FEniCSx's symbolic automatic differentiation engine, directly from the constraint UFL expression — without any manual derivation of the adjoint equations.
 
 ```{mermaid}
 %%{init: {'theme': 'neutral'}}%%
