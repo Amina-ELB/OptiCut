@@ -1,7 +1,7 @@
 CutFEM Method
 ====================
 
-.. autoclass:: cutfem_method.CutFemMethod
+.. autoclass:: solvers.cutfem_elastic_solver.CutFEMElasticSolver
 	:members:
 
 

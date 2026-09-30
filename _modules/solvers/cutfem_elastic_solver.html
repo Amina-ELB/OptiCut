@@ -1,0 +1,1882 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
+        <link rel="prefetch" href="../../_static/opticut-logo-v2.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>solvers.cutfem_elastic_solver - OptiCut</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=33ca9fb2" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #000000;
+  --color-brand-content: #000000;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">OptiCut</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/opticut-logo-v2.svg" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/problem_definition.html">Problem Definition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/parameters.html">Parameters Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../demos.html">Demos</a><input aria-label="Toggle navigation of Demos" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../demo_compliance.html">Compliance minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Theory</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_optim.html">Shape optimization method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_cutfem.html">CutFEM for Immersed geometry discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../developer/architecture.html">Software Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer/extending.html">Extending OptiCut</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation.html">Documentation</a><input aria-label="Toggle navigation of Documentation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../almMethod.html">Augmented Lagrangian Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cutfem_method.html">CutFEM Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../create_mesh.html">Mesher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ersatz_method.html">Ersatz Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../geometry_init.html">Geometry Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mechanics_tool.html">Mechanics Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../opti_tool.html">Optimization Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parameters.html">Parameters Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../problem.html">Problem Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reinitialization.html">Level-Set Tools</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../bibliography.html">Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for solvers.cutfem_elastic_solver</h1><div class="highlight"><pre>
+<span></span><span class="c1"># # Copyright (c) 2026 ONERA and MINES Paris, France</span>
+<span class="c1"># #</span>
+<span class="c1"># # All rights reserved.</span>
+<span class="c1"># #</span>
+<span class="c1"># # This file is part of OptiCut.</span>
+<span class="c1"># #</span>
+<span class="c1"># # Author(s)     : Amina El Bachari</span>
+<span class="c1"># #</span>
+<span class="c1"># # Migration note: updated to CutFEMx 0.2 (DOLFINx 0.11)</span>
+
+<span class="c1"># import ufl</span>
+<span class="c1"># from ufl import FacetNormal, Measure, CellDiameter, avg, jump</span>
+
+<span class="c1"># import cutfemx</span>
+<span class="c1"># import cutfemx.petsc as cf_petsc</span>
+
+<span class="c1"># from dolfinx import fem, mesh, la</span>
+<span class="c1"># from dolfinx.fem import petsc as dolfinx_petsc</span>
+<span class="c1"># from dolfinx.mesh import meshtags, locate_entities, locate_entities_boundary</span>
+
+<span class="c1"># from mpi4py import MPI</span>
+<span class="c1"># import numpy as np</span>
+
+<span class="c1"># from petsc4py import PETSc</span>
+<span class="c1"># from petsc4py.PETSc import ScalarType</span>
+
+<span class="c1"># from utils import mechanics_tool</span>
+
+
+<span class="c1"># class CutFEMElasticSolver:</span>
+<span class="c1">#     r"""CutFEM linear-elasticity solver (CutFEMx 0.2 compatible)."""</span>
+
+<span class="c1">#     def __init__(self, level_set, level_set_space, space_displacement, ds, bc,</span>
+<span class="c1">#                  bc_velocity, parameters, problem_topo, shift):</span>
+
+<span class="c1">#         self.level_set = fem.Function(level_set_space)</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+<span class="c1">#         self.level_set.x.scatter_forward()</span>
+
+<span class="c1">#         self.mesh = self.level_set.function_space.mesh</span>
+<span class="c1">#         self.space_displacement = space_displacement</span>
+<span class="c1">#         self.cutFEM = parameters.cutFEM</span>
+
+<span class="c1">#         lame_mu, lame_lambda = mechanics_tool.lame_compute(parameters.young_modulus,</span>
+<span class="c1">#                                                            parameters.poisson)</span>
+<span class="c1">#         self.V_ls = level_set_space</span>
+<span class="c1">#         self.cost_func = parameters.cost_func</span>
+
+<span class="c1">#         self.lame_mu = lame_mu</span>
+<span class="c1">#         self.lame_lambda = lame_lambda</span>
+<span class="c1">#         self.dim = self.mesh.topology.dim</span>
+
+<span class="c1">#         self.bc_velocity = bc_velocity</span>
+<span class="c1">#         self.tdim = self.dim</span>
+<span class="c1">#         self.shift = shift</span>
+
+<span class="c1">#         # Geometric objects</span>
+<span class="c1">#         self.n = FacetNormal(self.mesh)</span>
+<span class="c1">#         self.h = CellDiameter(self.mesh)</span>
+<span class="c1">#         self.bc = bc</span>
+<span class="c1">#         self.ds = Measure("ds", domain=self.mesh,</span>
+<span class="c1">#                           subdomain_data=ds.subdomain_data() if hasattr(ds, 'subdomain_data') else ds)</span>
+
+<span class="c1">#         # Trial and test functions</span>
+<span class="c1">#         self.u_trial = ufl.TrialFunction(self.space_displacement)</span>
+<span class="c1">#         self.v_test  = ufl.TestFunction(self.space_displacement)</span>
+<span class="c1">#         self.uh = fem.Function(self.space_displacement)</span>
+<span class="c1">#         self.ph = fem.Function(self.space_displacement)</span>
+
+<span class="c1">#         self.gamma_N = 1e3</span>
+<span class="c1">#         self.gamma   = 1e-5 * (self.lame_mu + self.lame_lambda)</span>
+
+<span class="c1">#         self.fast_jit = {"cffi_extra_compile_args": ["-O0", "-w"]}</span>
+
+<span class="c1">#         # KSP solvers</span>
+<span class="c1">#         self.solver_primal = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         self.solver_adjoint = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         self._configure_ksp(self.solver_primal, parameters)</span>
+<span class="c1">#         self._configure_ksp(self.solver_adjoint, parameters)</span>
+
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         # CutFEMx 0.2: CutData creation (only once)</span>
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         self.order    = 4</span>
+<span class="c1">#         self.cut_data = cutfemx.cut(self.level_set)</span>
+
+<span class="c1">#         self._build_measures()</span>
+<span class="c1">#         self._build_variational_forms(parameters, problem_topo)</span>
+
+<span class="c1">#         if parameters.cost_func != 'compliance':</span>
+<span class="c1">#             self.p_const   = parameters.p_const</span>
+<span class="c1">#             self.parameters = parameters</span>
+<span class="c1">#             self._build_adjoint_forms(parameters, problem_topo)</span>
+
+
+<span class="c1">#     def _configure_ksp(self, solver, parameters):</span>
+<span class="c1">#         if hasattr(parameters, 'linear_solver') and parameters.linear_solver == "amg":</span>
+<span class="c1">#             solver.setType(PETSc.KSP.Type.GMRES)</span>
+<span class="c1">#             pc = solver.getPC()</span>
+<span class="c1">#             pc.setType("gamg")</span>
+<span class="c1">#             solver.setTolerances(rtol=1e-6)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             solver.setType(PETSc.KSP.Type.PREONLY)</span>
+<span class="c1">#             pc = solver.getPC()</span>
+<span class="c1">#             pc.setType(PETSc.PC.Type.LU)</span>
+<span class="c1">#             pc.setFactorSolverType("mumps")</span>
+
+
+<span class="c1">#     def _build_measures(self):</span>
+<span class="c1">#         """Constructs or reconstructs UFL measures from cut_data."""</span>
+<span class="c1">#         # 1. Volume (phi &lt; 0)</span>
+<span class="c1">#         self.solid_cells = cutfemx.locate_entities(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         self.solid_rules = cutfemx.runtime_quadrature(self.cut_data, "phi&lt;0", self.order)</span>
+<span class="c1">#         self.dx_solid = ufl.Measure("dx", domain=self.mesh, subdomain_id=0,</span>
+<span class="c1">#                                     subdomain_data=[self.solid_cells, self.solid_rules])</span>
+<span class="c1">#         self.dxq = self.dx_solid  # Alias required for main.py</span>
+
+<span class="c1">#         # 2. Ghost facets (Ghost penalty)</span>
+<span class="c1">#         self.ghost_facets = cutfemx.ghost_penalty_facets(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         self.dS_ghost = ufl.Measure("dS", domain=self.mesh, subdomain_id=1,</span>
+<span class="c1">#                                     subdomain_data=self.ghost_facets, metadata={"quadrature_degree": self.order})</span>
+
+
+<span class="c1">#     def _build_variational_forms(self, parameters=None, problem_topo=None):</span>
+<span class="c1">#         u = self.u_trial</span>
+<span class="c1">#         v = self.v_test</span>
+
+<span class="c1">#         # CutFEM bilinear form</span>
+<span class="c1">#         self.a_primal = (</span>
+<span class="c1">#             2.0 * self.lame_mu * ufl.inner(mechanics_tool.strain(u), mechanics_tool.strain(v)) * self.dx_solid</span>
+<span class="c1">#             + self.lame_lambda * ufl.inner(ufl.nabla_div(u), ufl.nabla_div(v)) * self.dx_solid</span>
+<span class="c1">#         )</span>
+
+<span class="c1">#         if self.ghost_facets.size &gt; 0:</span>
+<span class="c1">#             self.a_primal += (</span>
+<span class="c1">#                 self.gamma * avg(self.h)</span>
+<span class="c1">#                 * ufl.inner(ufl.jump(ufl.grad(u)), ufl.jump(ufl.grad(v))) * self.dS_ghost</span>
+<span class="c1">#             )</span>
+
+<span class="c1">#         # Neumann right-hand side (uncut outer boundary)</span>
+<span class="c1">#         self.L_primal = ufl.dot(self.shift, v) * self.ds(2)</span>
+
+
+<span class="c1">#     def _build_adjoint_forms(self, parameters, problem_topo):</span>
+<span class="c1">#         p     = self.u_trial</span>
+<span class="c1">#         v_adj = self.v_test</span>
+
+<span class="c1">#         self.a_adj = (</span>
+<span class="c1">#             2.0 * self.lame_mu * ufl.inner(mechanics_tool.strain(p), mechanics_tool.strain(v_adj)) * self.dx_solid</span>
+<span class="c1">#             + self.lame_lambda * ufl.inner(ufl.nabla_div(p), ufl.nabla_div(v_adj)) * self.dx_solid</span>
+<span class="c1">#         )</span>
+
+<span class="c1">#         if self.ghost_facets.size &gt; 0:</span>
+<span class="c1">#             self.a_adj += (</span>
+<span class="c1">#                 avg(self.gamma) * avg(self.h)</span>
+<span class="c1">#                 * ufl.inner(ufl.jump(ufl.grad(p)), ufl.jump(ufl.grad(v_adj))) * self.dS_ghost</span>
+<span class="c1">#             )</span>
+
+<span class="c1">#         self.L_adj = problem_topo.dual_operator(</span>
+<span class="c1">#             self.uh, self.lame_mu, self.lame_lambda, parameters, self.mesh, self.dx_solid</span>
+<span class="c1">#         )</span>
+
+
+<span class="c1">#     def update_measures_and_quadratures(self, level_set, order=4):</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+<span class="c1">#         self.level_set.x.scatter_forward()</span>
+<span class="c1">#         self.order = order</span>
+
+<span class="c1">#         cutfemx.update(self.cut_data)</span>
+<span class="c1">#         self._build_measures()</span>
+<span class="c1">#         self._build_variational_forms()</span>
+
+<span class="c1">#         if hasattr(self, 'a_adj'):</span>
+<span class="c1">#             self._build_adjoint_forms(getattr(self, 'parameters', None), None)</span>
+
+
+<span class="c1">#     def primal_problem(self, level_set, parameters):</span>
+<span class="c1">#         self.update_measures_and_quadratures(level_set)</span>
+<span class="c1">#         bcs_list = self.bc if isinstance(self.bc, list) else [self.bc]</span>
+
+<span class="c1">#         self.a_cut_primal = cutfemx.fem.form(self.a_primal, jit_options=self.fast_jit)</span>
+<span class="c1">#         self.L_std_primal = fem.form(self.L_primal, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         if hasattr(self, "A_primal") and self.A_primal is not None:</span>
+<span class="c1">#             self.A_primal.destroy()</span>
+<span class="c1">#         self.A_primal = cf_petsc.assemble_matrix(self.a_cut_primal, bcs=bcs_list)</span>
+<span class="c1">#         self.A_primal.assemble()</span>
+
+<span class="c1">#         if hasattr(self, "b_primal") and self.b_primal is not None:</span>
+<span class="c1">#             self.b_primal.destroy()</span>
+<span class="c1">#         self.b_primal = dolfinx_petsc.assemble_vector(self.L_std_primal)</span>
+
+<span class="c1">#         # Dynamic official CutFEMx lifting on the cut form</span>
+<span class="c1">#         with self.b_primal.localForm() as b_local:</span>
+<span class="c1">#             cutfemx.fem.apply_lifting(b_local.array, [self.a_cut_primal], [bcs_list])</span>
+
+<span class="c1">#         self.b_primal.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)</span>
+<span class="c1">#         dolfinx_petsc.set_bc(self.b_primal, bcs_list)</span>
+
+<span class="c1">#         active = cutfemx.fem.active_domain(self.a_cut_primal)</span>
+<span class="c1">#         cf_petsc.deactivate_outside(self.A_primal, self.b_primal, active)</span>
+<span class="c1">#         self.A_primal.assemble()</span>
+
+<span class="c1">#         self.solver_primal.setOperators(self.A_primal)</span>
+<span class="c1">#         self.solver_primal.solve(self.b_primal, self.uh.x.petsc_vec)</span>
+<span class="c1">#         self.uh.x.scatter_forward()</span>
+
+<span class="c1">#         return self.uh</span>
+
+
+<span class="c1">#     def adjoint_problem(self, u, level_set, dual_operator):</span>
+<span class="c1">#         self.update_measures_and_quadratures(level_set)</span>
+<span class="c1">#         self.uh   = u</span>
+<span class="c1">#         self.L_adj = dual_operator</span>
+<span class="c1">#         bcs_list = self.bc if isinstance(self.bc, list) else [self.bc]</span>
+
+<span class="c1">#         self.a_cut_adjoint = cutfemx.fem.form(self.a_adj, jit_options=self.fast_jit)</span>
+<span class="c1">#         self.L_cut_adjoint = cutfemx.fem.form(self.L_adj, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         if hasattr(self, "A_adjoint") and self.A_adjoint is not None:</span>
+<span class="c1">#             self.A_adjoint.destroy()</span>
+<span class="c1">#         self.A_adjoint = cf_petsc.assemble_matrix(self.a_cut_adjoint, bcs=bcs_list)</span>
+<span class="c1">#         self.A_adjoint.assemble()</span>
+
+<span class="c1">#         if hasattr(self, "b_adjoint") and self.b_adjoint is not None:</span>
+<span class="c1">#             self.b_adjoint.destroy()</span>
+
+<span class="c1">#         if isinstance(self.L_adj, fem.Form):</span>
+<span class="c1">#             self.b_adjoint = dolfinx_petsc.assemble_vector(self.L_adj)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             self.b_adjoint = cf_petsc.assemble_vector(self.L_cut_adjoint)</span>
+
+<span class="c1">#         with self.b_adjoint.localForm() as b_local:</span>
+<span class="c1">#             cutfemx.fem.apply_lifting(b_local.array, [self.a_cut_adjoint], [bcs_list])</span>
+
+<span class="c1">#         self.b_adjoint.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)</span>
+<span class="c1">#         dolfinx_petsc.set_bc(self.b_adjoint, bcs_list)</span>
+
+<span class="c1">#         active = cutfemx.fem.active_domain(self.a_cut_adjoint)</span>
+<span class="c1">#         cf_petsc.deactivate_outside(self.A_adjoint, self.b_adjoint, active)</span>
+<span class="c1">#         self.A_adjoint.assemble()</span>
+
+<span class="c1">#         self.solver_adjoint.setOperators(self.A_adjoint)</span>
+<span class="c1">#         self.solver_adjoint.solve(self.b_adjoint, self.ph.x.petsc_vec)</span>
+<span class="c1">#         self.ph.x.scatter_forward()</span>
+
+<span class="c1">#         return self.ph</span>
+
+
+<span class="c1">#     def cutfem_solver(self, level_set, parameters, problem_topo=0):</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+
+<span class="c1">#         self.uh = self.primal_problem(level_set, parameters)</span>
+
+<span class="c1">#         if parameters.cost_func == "compliance":</span>
+<span class="c1">#             self.ph.x.array[:] = self.uh.x.array</span>
+<span class="c1">#             self.ph.x.scatter_forward()</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             adjoint = problem_topo.dual_operator(</span>
+<span class="c1">#                 self.uh, self.lame_mu, self.lame_lambda, parameters, self.mesh, self.dx_solid</span>
+<span class="c1">#             )</span>
+<span class="c1">#             self.ph = self.adjoint_problem(self.uh, level_set, adjoint)</span>
+
+<span class="c1">#         return self.uh, self.ph</span>
+
+
+<span class="c1">#     def __del__(self):</span>
+<span class="c1">#         for attr in ("A_primal", "A_adjoint", "b_primal", "b_adjoint",</span>
+<span class="c1">#                      "solver_primal", "solver_adjoint"):</span>
+<span class="c1">#             obj = getattr(self, attr, None)</span>
+<span class="c1">#             if obj is not None:</span>
+<span class="c1">#                 try:</span>
+<span class="c1">#                     obj.destroy()</span>
+<span class="c1">#                 except Exception:</span>
+<span class="c1">#                     pass</span>
+
+
+<span class="c1"># PETSc version with and without MPI!</span>
+
+
+<span class="c1"># Copyright (c) 2026 ONERA and MINES Paris, France</span>
+<span class="c1">#</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of OptiCut.</span>
+<span class="c1">#</span>
+<span class="c1"># Author(s)     : Amina El Bachari</span>
+<span class="c1">#</span>
+<span class="c1"># Migration note: updated to CutFEMx 0.2 (DOLFINx 0.11)</span>
+<span class="c1"># Stable CutFEMx assembly combined with PETSc KSP solver.</span>
+
+<span class="c1"># import ufl</span>
+<span class="c1"># from ufl import FacetNormal, Measure, CellDiameter, avg, jump</span>
+
+<span class="c1"># import cutfemx</span>
+<span class="c1"># import cutfemx.petsc as cf_petsc</span>
+
+<span class="c1"># from dolfinx import fem, mesh, la</span>
+<span class="c1"># from dolfinx.fem import petsc as dolfinx_petsc</span>
+<span class="c1"># from dolfinx.mesh import meshtags, locate_entities, locate_entities_boundary</span>
+
+<span class="c1"># from mpi4py import MPI</span>
+<span class="c1"># import numpy as np</span>
+
+<span class="c1"># from petsc4py import PETSc</span>
+<span class="c1"># from petsc4py.PETSc import ScalarType</span>
+
+<span class="c1"># from utils import mechanics_tool</span>
+
+
+<span class="c1"># class CutFEMElasticSolver:</span>
+<span class="c1">#     r"""CutFEM linear-elasticity solver aligned with the official CutFEMx 0.2 tutorial and PETSc KSP."""</span>
+
+<span class="c1">#     def __init__(self, level_set, level_set_space, space_displacement, ds, bc,</span>
+<span class="c1">#                  bc_velocity, parameters, problem_topo, shift):</span>
+
+<span class="c1">#         self.level_set = fem.Function(level_set_space)</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+<span class="c1">#         self.level_set.x.scatter_forward()</span>
+
+<span class="c1">#         self.mesh = self.level_set.function_space.mesh</span>
+<span class="c1">#         self.space_displacement = space_displacement</span>
+<span class="c1">#         self.cutFEM = parameters.cutFEM</span>
+<span class="c1">#         self.parameters = parameters</span>
+<span class="c1">#         self.problem_topo = problem_topo</span>
+
+<span class="c1">#         lame_mu, lame_lambda = mechanics_tool.lame_compute(parameters.young_modulus,</span>
+<span class="c1">#                                                            parameters.poisson)</span>
+<span class="c1">#         self.V_ls = level_set_space</span>
+<span class="c1">#         self.cost_func = parameters.cost_func</span>
+
+<span class="c1">#         self.lame_mu = lame_mu</span>
+<span class="c1">#         self.lame_lambda = lame_lambda</span>
+<span class="c1">#         self.dim = self.mesh.topology.dim</span>
+
+<span class="c1">#         self.bc_velocity = bc_velocity</span>
+<span class="c1">#         self.shift = shift</span>
+
+<span class="c1">#         # Fixed geometric objects</span>
+<span class="c1">#         self.n = FacetNormal(self.mesh)</span>
+<span class="c1">#         self.h = CellDiameter(self.mesh)</span>
+<span class="c1">#         self.bc = bc</span>
+<span class="c1">#         self.ds = Measure("ds", domain=self.mesh,</span>
+<span class="c1">#                           subdomain_data=ds.subdomain_data() if hasattr(ds, 'subdomain_data') else ds)</span>
+
+<span class="c1">#         # Solution functions</span>
+<span class="c1">#         self.uh = fem.Function(self.space_displacement)</span>
+<span class="c1">#         self.ph = fem.Function(self.space_displacement)</span>
+
+<span class="c1">#         self.gamma_N = 1e3</span>
+<span class="c1">#         self.gamma   = 1e-5 * (self.lame_mu + self.lame_lambda)</span>
+<span class="c1">#         self.order   = 4</span>
+<span class="c1">#         self.fast_jit = {"cffi_extra_compile_args": ["-O0", "-w"]}</span>
+
+<span class="c1">#         # Initialization of PETSc KSP solvers</span>
+<span class="c1">#         self.solver_primal = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         self.solver_adjoint = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         self._configure_ksp(self.solver_primal)</span>
+<span class="c1">#         self._configure_ksp(self.solver_adjoint)</span>
+
+<span class="c1">#         # Initial CutData</span>
+<span class="c1">#         self.cut_data = cutfemx.cut(self.level_set)</span>
+
+
+<span class="c1">#     def _configure_ksp(self, solver):</span>
+<span class="c1">#         """Configures the PETSc linear solver (MUMPS by default for robustness)."""</span>
+<span class="c1">#         if hasattr(self.parameters, 'linear_solver') and self.parameters.linear_solver == "amg":</span>
+<span class="c1">#             solver.setType(PETSc.KSP.Type.GMRES)</span>
+<span class="c1">#             pc = solver.getPC()</span>
+<span class="c1">#             pc.setType("gamg")</span>
+<span class="c1">#             solver.setTolerances(rtol=1e-6)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             solver.setType(PETSc.KSP.Type.PREONLY)</span>
+<span class="c1">#             pc = solver.getPC()</span>
+<span class="c1">#             pc.setType(PETSc.PC.Type.LU)</span>
+<span class="c1">#             pc.setFactorSolverType("mumps")</span>
+
+
+<span class="c1">#     def _solve_system(self, a_form, L_form, bcs_list, solver_ksp, solution_func):</span>
+<span class="c1">#         """Assembles using the stable CutFEMx method and solves via PETSc KSP."""</span>
+<span class="c1">#         # 1. Stable assembly (from the official tutorial)</span>
+<span class="c1">#         # A_csr = cutfemx.fem.assemble_matrix(a_form, bcs=bcs_list)</span>
+<span class="c1">#         # A_csr.scatter_reverse()</span>
+
+<span class="c1">#         # b = cutfemx.fem.assemble_vector(L_form)</span>
+<span class="c1">#         # cutfemx.fem.apply_lifting(b.array, [a_form], [bcs_list])</span>
+<span class="c1">#         # b.scatter_reverse(la.InsertMode.add)</span>
+<span class="c1">#         # for bc in bcs_list:</span>
+<span class="c1">#         #     bc.set(b.array)</span>
+
+
+<span class="c1">#         # a_cut_reg = cutfemx.fem.form(a_form, bcs=bcs_list, jit_options={"cache_dir": "ffcx-forms"})</span>
+<span class="c1">#         # L_cut_reg = cutfemx.fem.form(L_form)</span>
+
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         # Assembly via cutfemx.petsc (returns PETSc.Mat / PETSc.Vec)</span>
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         b_reg = cf_petsc.assemble_vector(L_form)</span>
+<span class="c1">#         b_reg.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES, mode=PETSc.ScatterMode.REVERSE)</span>
+<span class="c1">#         b_reg.assemble()</span>
+<span class="c1">#         A_reg = cf_petsc.assemble_matrix(a_form, bcs=bcs_list)</span>
+<span class="c1">#         A_reg.assemble()</span>
+
+<span class="c1">#         # # Solve</span>
+<span class="c1">#         # ksp = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         # ksp.setType("cg")</span>
+<span class="c1">#         # pc = ksp.getPC()</span>
+<span class="c1">#         # pc.setType("hypre")</span>
+<span class="c1">#         # ksp.setFromOptions()</span>
+
+<span class="c1">#         # ksp.setOperators(A_reg)</span>
+<span class="c1">#         # ksp.setUp()</span>
+<span class="c1">#         # ksp.setTolerances(rtol=1e-8, atol=1e-12)</span>
+<span class="c1">#         # ksp.solve(b_reg, solution_func.x.petsc_vec)</span>
+<span class="c1">#         # solution_func.x.scatter_forward()</span>
+
+
+<span class="c1">#         # Solve with CG + GAMG (robust iterative solver)</span>
+<span class="c1">#         ksp = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         ksp.setType("cg")</span>
+<span class="c1">#         pc = ksp.getPC()</span>
+<span class="c1">#         pc.setType("gamg")                   # GAMG instead of HYPRE</span>
+<span class="c1">#         ksp.setFromOptions()</span>
+
+<span class="c1">#         ksp.setOperators(A_reg)</span>
+<span class="c1">#         ksp.setUp()</span>
+<span class="c1">#         ksp.setTolerances(rtol=1e-8, atol=1e-12)</span>
+<span class="c1">#         ksp.solve(b_reg, solution_func.x.petsc_vec)</span>
+<span class="c1">#         solution_func.x.scatter_forward()</span>
+
+<span class="c1">#         # active = cutfemx.fem.active_domain(a_form)</span>
+<span class="c1">#         # cutfemx.fem.deactivate_outside(A_csr, b, active)</span>
+
+<span class="c1">#         # # 2. Clean conversion of the CSR matrix (SciPy) to a valid PETSc.Mat</span>
+<span class="c1">#         # scipy_mat = A_csr.to_scipy().tocsr()</span>
+<span class="c1">#         # mat_petsc = PETSc.Mat().createAIJ(</span>
+<span class="c1">#         #     size=scipy_mat.shape,</span>
+<span class="c1">#         #     csr=(scipy_mat.indptr, scipy_mat.indices, scipy_mat.data),</span>
+<span class="c1">#         #     comm=self.mesh.comm</span>
+<span class="c1">#         # )</span>
+<span class="c1">#         # mat_petsc.assemble()</span>
+
+<span class="c1">#         # # 3. Creation of the RHS PETSc vector from the assembled b.array</span>
+<span class="c1">#         # vec_petsc = PETSc.Vec().createWithArray(b.array, comm=self.mesh.comm)</span>
+
+<span class="c1">#         # # 4. Resolution with the configured PETSc KSP</span>
+<span class="c1">#         # solver_ksp.setOperators(mat_petsc)</span>
+<span class="c1">#         # solver_ksp.solve(vec_petsc, solution_func.x.petsc_vec)</span>
+<span class="c1">#         # solution_func.x.scatter_forward()</span>
+
+<span class="c1">#         # # Memory cleanup</span>
+<span class="c1">#         # mat_petsc.destroy()</span>
+<span class="c1">#         # vec_petsc.destroy()</span>
+
+<span class="c1">#         return solution_func</span>
+
+
+<span class="c1">#     def primal_problem(self, level_set, parameters):</span>
+<span class="c1">#         """Exact primal resolution according to the tutorial."""</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+<span class="c1">#         self.level_set.x.scatter_forward()</span>
+
+<span class="c1">#         # Update of the cut geometry</span>
+<span class="c1">#         cutfemx.update(self.cut_data)</span>
+
+<span class="c1">#         # Tutorial measures</span>
+<span class="c1">#         solid_cells = cutfemx.locate_entities(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         solid_rules = cutfemx.runtime_quadrature(self.cut_data, "phi&lt;0", self.order)</span>
+<span class="c1">#         dx_solid = ufl.Measure("dx", domain=self.mesh, subdomain_id=0,</span>
+<span class="c1">#                                subdomain_data=[solid_cells, solid_rules], metadata={"quadrature_degree": self.order})</span>
+<span class="c1">#         self.dxq = dx_solid  # Alias for main.py</span>
+
+<span class="c1">#         ghost_facets = cutfemx.ghost_penalty_facets(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         dS_ghost = ufl.Measure("dS", domain=self.mesh, subdomain_id=1,</span>
+<span class="c1">#                                subdomain_data=ghost_facets)</span>
+
+<span class="c1">#         # UFL forms</span>
+<span class="c1">#         u = ufl.TrialFunction(self.space_displacement)</span>
+<span class="c1">#         v = ufl.TestFunction(self.space_displacement)</span>
+<span class="c1">#         gdim = self.mesh.geometry.dim</span>
+
+<span class="c1">#         a = ufl.inner(sigma_expr(u, self.lame_mu, self.lame_lambda, gdim), epsilon_expr(v)) * dx_solid</span>
+<span class="c1">#         if ghost_facets.size &gt; 0:</span>
+<span class="c1">#             n_facet = FacetNormal(self.mesh)</span>
+<span class="c1">#             h_avg = avg(CellDiameter(self.mesh))</span>
+<span class="c1">#             a += (</span>
+<span class="c1">#                 self.gamma * h_avg</span>
+<span class="c1">#                 * ufl.inner(ufl.jump(ufl.grad(u), n_facet), ufl.jump(ufl.grad(v), n_facet))</span>
+<span class="c1">#                 * dS_ghost</span>
+<span class="c1">#             )</span>
+
+<span class="c1">#         L = ufl.dot(self.shift, v) * self.ds(2)</span>
+<span class="c1">#         bcs_list = self.bc if isinstance(self.bc, list) else [self.bc]</span>
+
+<span class="c1">#         a_form = cutfemx.fem.form(a, jit_options=self.fast_jit)</span>
+<span class="c1">#         L_form = cutfemx.fem.form(L, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         self.uh = self._solve_system(a_form, L_form, bcs_list, self.solver_primal, self.uh)</span>
+<span class="c1">#         return self.uh</span>
+
+
+<span class="c1">#     def adjoint_problem(self, u, level_set, dual_operator):</span>
+<span class="c1">#         """Adjoint resolution aligned with the same scheme."""</span>
+<span class="c1">#         self.uh = u</span>
+<span class="c1">#         cutfemx.update(self.cut_data)</span>
+
+<span class="c1">#         solid_cells = cutfemx.locate_entities(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         solid_rules = cutfemx.runtime_quadrature(self.cut_data, "phi&lt;0", self.order)</span>
+<span class="c1">#         dx_solid = ufl.Measure("dx", domain=self.mesh, subdomain_id=0,</span>
+<span class="c1">#                                subdomain_data=[solid_cells, solid_rules], metadata={"quadrature_degree": self.order})</span>
+<span class="c1">#         ghost_facets = cutfemx.ghost_penalty_facets(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         dS_ghost = ufl.Measure("dS", domain=self.mesh, subdomain_id=1,</span>
+<span class="c1">#                                subdomain_data=ghost_facets)</span>
+
+<span class="c1">#         p = ufl.TrialFunction(self.space_displacement)</span>
+<span class="c1">#         v_adj = ufl.TestFunction(self.space_displacement)</span>
+<span class="c1">#         gdim = self.mesh.geometry.dim</span>
+
+<span class="c1">#         a_adj = ufl.inner(sigma_expr(p, self.lame_mu, self.lame_lambda, gdim), epsilon_expr(v_adj)) * dx_solid</span>
+<span class="c1">#         if ghost_facets.size &gt; 0:</span>
+<span class="c1">#             n_facet = FacetNormal(self.mesh)</span>
+<span class="c1">#             h_avg = avg(CellDiameter(self.mesh))</span>
+<span class="c1">#             a_adj += (</span>
+<span class="c1">#                 self.gamma * h_avg</span>
+<span class="c1">#                 * ufl.inner(ufl.jump(ufl.grad(p), n_facet), ufl.jump(ufl.grad(v_adj), n_facet))</span>
+<span class="c1">#                 * dS_ghost</span>
+<span class="c1">#             )</span>
+
+<span class="c1">#         L_adj = dual_operator</span>
+<span class="c1">#         bcs_list = self.bc if isinstance(self.bc, list) else [self.bc]</span>
+
+<span class="c1">#         a_form_adj = cutfemx.fem.form(a_adj, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         if isinstance(L_adj, fem.Form):</span>
+<span class="c1">#             L_form_adj = fem.form(L_adj, jit_options=self.fast_jit)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             L_form_adj = cutfemx.fem.form(L_adj, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         self.ph = self._solve_system(a_form_adj, L_form_adj, bcs_list, self.solver_adjoint, self.ph)</span>
+<span class="c1">#         return self.ph</span>
+
+
+<span class="c1">#     def cutfem_solver(self, level_set, parameters, problem_topo=0):</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+<span class="c1">#         self.level_set.x.scatter_forward()</span>
+
+<span class="c1">#         self.uh = self.primal_problem(level_set, parameters)</span>
+
+<span class="c1">#         if parameters.cost_func == "compliance":</span>
+<span class="c1">#             self.ph.x.array[:] = self.uh.x.array</span>
+<span class="c1">#             self.ph.x.scatter_forward()</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             if problem_topo.__class__.__name__ in ["VMLp_Problem", "AreaProblem"]:</span>
+<span class="c1">#                 import utils.mechanics_tool as mechanics_tool</span>
+<span class="c1">#                 vm_DG = mechanics_tool.project_von_mises(self.uh, self.lame_mu, self.lame_lambda, self.mesh, self.dxq)</span>
+<span class="c1">#                 adjoint = problem_topo.dual_operator(</span>
+<span class="c1">#                     self.uh, self.lame_mu, self.lame_lambda, parameters, self.mesh, self.dxq, vm_DG=vm_DG</span>
+<span class="c1">#                 )</span>
+<span class="c1">#             else:</span>
+<span class="c1">#                 adjoint = problem_topo.dual_operator(</span>
+<span class="c1">#                     self.uh, self.lame_mu, self.lame_lambda, parameters, self.mesh, self.dxq</span>
+<span class="c1">#                 )</span>
+<span class="c1">#             self.ph = self.adjoint_problem(self.uh, level_set, adjoint)</span>
+
+<span class="c1">#         return self.uh, self.ph</span>
+
+<span class="c1">#     def update_measures_and_quadratures(self, level_set, order=4):</span>
+<span class="c1">#         pass</span>
+
+
+<span class="c1">#     def __del__(self):</span>
+<span class="c1">#         for attr in ("solver_primal", "solver_adjoint"):</span>
+<span class="c1">#             solver = getattr(self, attr, None)</span>
+<span class="c1">#             if solver is not None:</span>
+<span class="c1">#                 try:</span>
+<span class="c1">#                     solver.destroy()</span>
+<span class="c1">#                 except Exception:</span>
+<span class="c1">#                     pass</span>
+
+
+<span class="c1"># def epsilon_expr(u):</span>
+<span class="c1">#     return ufl.sym(ufl.grad(u))</span>
+
+<span class="c1"># def sigma_expr(u, mu: float, lmbda: float, gdim: int):</span>
+<span class="c1">#     eps = epsilon_expr(u)</span>
+<span class="c1">#     return 2.0 * mu * eps + lmbda * ufl.tr(eps) * ufl.Identity(gdim)</span>
+
+
+<span class="c1"># # Copyright (c) 2026 ONERA and MINES Paris, France</span>
+<span class="c1"># #</span>
+<span class="c1"># # All rights reserved.</span>
+<span class="c1"># #</span>
+<span class="c1"># # This file is part of OptiCut.</span>
+<span class="c1"># #</span>
+<span class="c1"># # Author(s)     : Amina El Bachari</span>
+<span class="c1"># #</span>
+<span class="c1"># # Migration note: updated to CutFEMx 0.2 (DOLFINx 0.11)</span>
+<span class="c1"># # Restructured for performance: Persistent KSP solvers &amp; Modular measures.</span>
+
+<span class="c1"># import ufl</span>
+<span class="c1"># from ufl import FacetNormal, Measure, CellDiameter, avg, jump</span>
+
+<span class="c1"># import cutfemx</span>
+<span class="c1"># import cutfemx.petsc as cf_petsc</span>
+
+<span class="c1"># from dolfinx import fem, mesh, la</span>
+<span class="c1"># from dolfinx.fem import petsc as dolfinx_petsc</span>
+<span class="c1"># from dolfinx.mesh import meshtags, locate_entities, locate_entities_boundary</span>
+
+<span class="c1"># from mpi4py import MPI</span>
+<span class="c1"># import numpy as np</span>
+
+<span class="c1"># from petsc4py import PETSc</span>
+<span class="c1"># from petsc4py.PETSc import ScalarType</span>
+
+<span class="c1"># from utils import mechanics_tool</span>
+
+
+<span class="c1"># class CutFEMElasticSolver:</span>
+<span class="c1">#     r"""CutFEM linear-elasticity solver optimized for TopOpt loop (CutFEMx 0.2)."""</span>
+
+<span class="c1">#     def __init__(self, level_set, level_set_space, space_displacement, ds, bc,</span>
+<span class="c1">#                  bc_velocity, parameters, problem_topo, shift):</span>
+
+<span class="c1">#         self.level_set = fem.Function(level_set_space)</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+<span class="c1">#         self.level_set.x.scatter_forward()</span>
+
+<span class="c1">#         self.mesh = self.level_set.function_space.mesh</span>
+<span class="c1">#         self.space_displacement = space_displacement</span>
+<span class="c1">#         self.cutFEM = parameters.cutFEM</span>
+<span class="c1">#         self.parameters = parameters</span>
+<span class="c1">#         self.problem_topo = problem_topo</span>
+
+<span class="c1">#         lame_mu, lame_lambda = mechanics_tool.lame_compute(parameters.young_modulus,</span>
+<span class="c1">#                                                            parameters.poisson)</span>
+<span class="c1">#         self.V_ls = level_set_space</span>
+<span class="c1">#         self.cost_func = parameters.cost_func</span>
+
+<span class="c1">#         self.lame_mu = lame_mu</span>
+<span class="c1">#         self.lame_lambda = lame_lambda</span>
+<span class="c1">#         self.dim = self.mesh.topology.dim</span>
+
+<span class="c1">#         self.bc_velocity = bc_velocity</span>
+<span class="c1">#         self.shift = shift</span>
+
+<span class="c1">#         # Fixed geometric objects</span>
+<span class="c1">#         self.n = FacetNormal(self.mesh)</span>
+<span class="c1">#         self.h = CellDiameter(self.mesh)</span>
+<span class="c1">#         self.bc = bc</span>
+<span class="c1">#         self.ds = Measure("ds", domain=self.mesh,</span>
+<span class="c1">#                           subdomain_data=ds.subdomain_data() if hasattr(ds, 'subdomain_data') else ds)</span>
+
+<span class="c1">#         # Solution functions</span>
+<span class="c1">#         self.uh = fem.Function(self.space_displacement)</span>
+<span class="c1">#         self.ph = fem.Function(self.space_displacement)</span>
+
+<span class="c1">#         self.gamma_N = 1e3</span>
+<span class="c1">#         self.gamma   = 1e-5 * (self.lame_mu + self.lame_lambda)</span>
+<span class="c1">#         self.order   = 4</span>
+<span class="c1">#         self.fast_jit = {"cffi_extra_compile_args": ["-O0", "-w"]}</span>
+
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         # 1. Creation of KSP solvers only once (avoids memory leaks)</span>
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         self.solver_primal = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         self.solver_adjoint = PETSc.KSP().create(self.mesh.comm)</span>
+<span class="c1">#         self._configure_ksp(self.solver_primal)</span>
+<span class="c1">#         self._configure_ksp(self.solver_adjoint)</span>
+
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         # 2. Initialization of cut data</span>
+<span class="c1">#         # ------------------------------------------------------------------</span>
+<span class="c1">#         self.cut_data = cutfemx.cut(self.level_set)</span>
+<span class="c1">#         self._build_measures()</span>
+
+
+<span class="c1">#     def _configure_ksp(self, solver):</span>
+<span class="c1">#         """Solver configuration based on a working setup (CG + GAMG)."""</span>
+<span class="c1">#         solver.setType("cg")</span>
+<span class="c1">#         pc = solver.getPC()</span>
+<span class="c1">#         pc.setType("gamg")  # Very robust for CutFEM</span>
+<span class="c1">#         solver.setFromOptions()</span>
+<span class="c1">#         solver.setTolerances(rtol=1e-6)</span>
+
+
+<span class="c1">#     def update_measures_and_quadratures(self, level_set):</span>
+<span class="c1">#         """Method called at each iteration to update the geometry."""</span>
+<span class="c1">#         self.level_set.x.array[:] = level_set.x.array</span>
+<span class="c1">#         self.level_set.x.scatter_forward()</span>
+
+<span class="c1">#         # Update of the CutFEMx topology</span>
+<span class="c1">#         cutfemx.update(self.cut_data)</span>
+
+<span class="c1">#         # Re-construction of UFL measures</span>
+<span class="c1">#         self._build_measures()</span>
+
+
+<span class="c1">#     def _build_measures(self):</span>
+<span class="c1">#         """Isolates the creation of quadratures and measures to clarify the code."""</span>
+<span class="c1">#         solid_cells = cutfemx.locate_entities(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         solid_rules = cutfemx.runtime_quadrature(self.cut_data, "phi&lt;0", self.order)</span>
+
+<span class="c1">#         self.dx_solid = ufl.Measure("dx", domain=self.mesh, subdomain_id=0,</span>
+<span class="c1">#                                     subdomain_data=[solid_cells, solid_rules], metadata={"quadrature_degree": self.order})</span>
+<span class="c1">#         self.dxq = self.dx_solid  # Alias utilisé par main.py</span>
+
+<span class="c1">#         ghost_facets = cutfemx.ghost_penalty_facets(self.cut_data, "phi&lt;0")</span>
+<span class="c1">#         self.dS_ghost = ufl.Measure("dS", domain=self.mesh, subdomain_id=1,</span>
+<span class="c1">#                                     subdomain_data=ghost_facets)</span>
+
+<span class="c1">#         self.n_facet = FacetNormal(self.mesh)</span>
+<span class="c1">#         self.h_avg = avg(CellDiameter(self.mesh))</span>
+
+
+<span class="c1">#     def _solve_system(self, a_form, L_form, bcs_list, solver_ksp, solution_func):</span>
+<span class="c1">#         """Native PETSc assembly and resolution pipeline."""</span>
+
+<span class="c1">#         # 1. Vector assembly (identical to the working version)</span>
+<span class="c1">#         b_reg = cf_petsc.assemble_vector(L_form)</span>
+<span class="c1">#         b_reg.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES, mode=PETSc.ScatterMode.REVERSE)</span>
+<span class="c1">#         dolfinx_petsc.set_bc(b_reg, bcs_list) # Strict application of BCs</span>
+<span class="c1">#         b_reg.assemble()</span>
+
+<span class="c1">#         # 2. Matrix assembly</span>
+<span class="c1">#         A_reg = cf_petsc.assemble_matrix(a_form, bcs=bcs_list)</span>
+<span class="c1">#         A_reg.assemble()</span>
+
+<span class="c1">#         # (Note: deactivate_outside left commented because the run works without it)</span>
+<span class="c1">#         # active = cutfemx.fem.active_domain(a_form)</span>
+<span class="c1">#         # cf_petsc.deactivate_outside(A_reg, b_reg, active)</span>
+<span class="c1">#         # A_reg.assemble()</span>
+
+<span class="c1">#         # 3. Resolution (reuse of the existing KSP!)</span>
+<span class="c1">#         solver_ksp.setOperators(A_reg)</span>
+<span class="c1">#         solver_ksp.setUp()</span>
+<span class="c1">#         solver_ksp.solve(b_reg, solution_func.x.petsc_vec)</span>
+<span class="c1">#         solution_func.x.scatter_forward()</span>
+
+<span class="c1">#         # 4. Vital memory cleanup</span>
+<span class="c1">#         A_reg.destroy()</span>
+<span class="c1">#         b_reg.destroy()</span>
+
+<span class="c1">#         return solution_func</span>
+
+
+<span class="c1">#     def primal_problem(self, level_set, parameters):</span>
+<span class="c1">#         """Primal resolution with integrated geometric update."""</span>
+
+<span class="c1">#         # 1. Update the Level-Set and measures (dx_solid, dS_ghost...)</span>
+<span class="c1">#         self.update_measures_and_quadratures(level_set)</span>
+
+<span class="c1">#         # 2. Definition of UFL functions</span>
+<span class="c1">#         u = ufl.TrialFunction(self.space_displacement)</span>
+<span class="c1">#         v = ufl.TestFunction(self.space_displacement)</span>
+
+<span class="c1">#         # 3. Bilinear form (with mechanics_tool)</span>
+<span class="c1">#         a = (</span>
+<span class="c1">#             2.0 * self.lame_mu * ufl.inner(mechanics_tool.strain(u), mechanics_tool.strain(v))</span>
+<span class="c1">#             + self.lame_lambda * ufl.inner(ufl.nabla_div(u), ufl.nabla_div(v))</span>
+<span class="c1">#         ) * self.dx_solid</span>
+
+<span class="c1">#         if self.dS_ghost.subdomain_data().size &gt; 0:</span>
+<span class="c1">#             a += (</span>
+<span class="c1">#                 self.gamma * self.h_avg</span>
+<span class="c1">#                 * ufl.inner(ufl.jump(ufl.grad(u), self.n_facet), ufl.jump(ufl.grad(v), self.n_facet))</span>
+<span class="c1">#                 * self.dS_ghost</span>
+<span class="c1">#             )</span>
+
+<span class="c1">#         # 4. Forme linéaire</span>
+<span class="c1">#         L = ufl.dot(self.shift, v) * self.ds(2)</span>
+<span class="c1">#         bcs_list = self.bc if isinstance(self.bc, list) else [self.bc]</span>
+
+<span class="c1">#         # 5. Compilation and resolution</span>
+<span class="c1">#         a_form = cutfemx.fem.form(a, jit_options=self.fast_jit)</span>
+<span class="c1">#         L_form = cutfemx.fem.form(L, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         self.uh = self._solve_system(a_form, L_form, bcs_list, self.solver_primal, self.uh)</span>
+<span class="c1">#         return self.uh</span>
+
+<span class="c1">#     def adjoint_problem(self, u, dual_operator):</span>
+<span class="c1">#         """Adjoint resolution using the mechanics_tool module."""</span>
+<span class="c1">#         self.uh = u</span>
+
+<span class="c1">#         p = ufl.TrialFunction(self.space_displacement)</span>
+<span class="c1">#         v_adj = ufl.TestFunction(self.space_displacement)</span>
+
+<span class="c1">#         # Bilinear form with physics centralized in mechanics_tool</span>
+<span class="c1">#         a_adj = (</span>
+<span class="c1">#             2.0 * self.lame_mu * ufl.inner(mechanics_tool.strain(p), mechanics_tool.strain(v_adj))</span>
+<span class="c1">#             + self.lame_lambda * ufl.inner(ufl.nabla_div(p), ufl.nabla_div(v_adj))</span>
+<span class="c1">#         ) * self.dx_solid</span>
+
+<span class="c1">#         # Ajout Ghost Penalty</span>
+<span class="c1">#         if self.dS_ghost.subdomain_data().size &gt; 0:</span>
+<span class="c1">#             a_adj += (</span>
+<span class="c1">#                 self.gamma * self.h_avg</span>
+<span class="c1">#                 * ufl.inner(ufl.jump(ufl.grad(p), self.n_facet), ufl.jump(ufl.grad(v_adj), self.n_facet))</span>
+<span class="c1">#                 * self.dS_ghost</span>
+<span class="c1">#             )</span>
+
+<span class="c1">#         # Second membre Adjoint</span>
+<span class="c1">#         L_adj = dual_operator</span>
+<span class="c1">#         bcs_list = self.bc if isinstance(self.bc, list) else [self.bc]</span>
+
+<span class="c1">#         # Compilation FFCx</span>
+<span class="c1">#         a_form_adj = cutfemx.fem.form(a_adj, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         if isinstance(L_adj, fem.Form):</span>
+<span class="c1">#             L_form_adj = fem.form(L_adj, jit_options=self.fast_jit)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             L_form_adj = cutfemx.fem.form(L_adj, jit_options=self.fast_jit)</span>
+
+<span class="c1">#         self.ph = self._solve_system(a_form_adj, L_form_adj, bcs_list, self.solver_adjoint, self.ph)</span>
+<span class="c1">#         return self.ph</span>
+
+
+<span class="c1">#     def cutfem_solver(self, level_set, parameters, problem_topo=0):</span>
+<span class="c1">#         """Orchestrator called by the optimization loop."""</span>
+
+<span class="c1">#         # 1. Solves the primal (which will internally update the level_set and measures)</span>
+<span class="c1">#         self.uh = self.primal_problem(level_set, parameters)</span>
+
+<span class="c1">#         # 2. Solves the adjoint (uses the measures updated by step 1)</span>
+<span class="c1">#         if parameters.cost_func == "compliance":</span>
+<span class="c1">#             self.ph.x.array[:] = self.uh.x.array</span>
+<span class="c1">#             self.ph.x.scatter_forward()</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             if problem_topo.__class__.__name__ in ["VMLp_Problem", "AreaProblem"]:</span>
+<span class="c1">#                 import utils.mechanics_tool as mechanics_tool</span>
+<span class="c1">#                 vm_DG = mechanics_tool.project_von_mises(self.uh, self.lame_mu, self.lame_lambda, self.mesh, self.dxq)</span>
+<span class="c1">#                 adjoint = problem_topo.dual_operator(</span>
+<span class="c1">#                     self.uh, self.lame_mu, self.lame_lambda, parameters, self.mesh, self.dxq, vm_DG=vm_DG</span>
+<span class="c1">#                 )</span>
+<span class="c1">#             else:</span>
+<span class="c1">#                 adjoint = problem_topo.dual_operator(</span>
+<span class="c1">#                     self.uh, self.lame_mu, self.lame_lambda, parameters, self.mesh, self.dxq</span>
+<span class="c1">#                 )</span>
+<span class="c1">#             self.ph = self.adjoint_problem(self.uh, adjoint)</span>
+
+<span class="c1">#         return self.uh, self.ph</span>
+
+
+<span class="c1">#     def __del__(self):</span>
+<span class="c1">#         """Ensures proper destruction of persistent KSP solvers."""</span>
+<span class="c1">#         for attr in ("solver_primal", "solver_adjoint"):</span>
+<span class="c1">#             solver = getattr(self, attr, None)</span>
+<span class="c1">#             if solver is not None:</span>
+<span class="c1">#                 try:</span>
+<span class="c1">#                     solver.destroy()</span>
+<span class="c1">#                 except Exception:</span>
+<span class="c1">#                     pass</span>
+
+
+<span class="c1"># Copyright (c) 2026 ONERA and MINES Paris, France</span>
+<span class="c1">#</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of OptiCut.</span>
+<span class="c1">#</span>
+<span class="c1"># Author(s)     : Amina El Bachari</span>
+<span class="c1">#</span>
+<span class="c1"># Migration note: updated to CutFEMx 0.2 (DOLFINx 0.11)</span>
+<span class="c1"># Architecture: Persistent solvers, isolated UFL forms, modular measures.</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ufl</span><span class="w"> </span><span class="kn">import</span> <span class="n">FacetNormal</span><span class="p">,</span> <span class="n">Measure</span><span class="p">,</span> <span class="n">CellDiameter</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="n">jump</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">cutfemx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cutfemx.petsc</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf_petsc</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">fem</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">la</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.fem</span><span class="w"> </span><span class="kn">import</span> <span class="n">petsc</span> <span class="k">as</span> <span class="n">dolfinx_petsc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">meshtags</span><span class="p">,</span> <span class="n">locate_entities</span><span class="p">,</span> <span class="n">locate_entities_boundary</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">PETSc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py.PETSc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarType</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">mechanics_tool</span>
+
+
+<div class="viewcode-block" id="CutFEMElasticSolver">
+<a class="viewcode-back" href="../../cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CutFEMElasticSolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""CutFEM linear-elasticity solver optimized for TopOpt loop (CutFEMx 0.2)."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">level_set</span><span class="p">,</span>
+        <span class="n">level_set_space</span><span class="p">,</span>
+        <span class="n">space_displacement</span><span class="p">,</span>
+        <span class="n">ds</span><span class="p">,</span>
+        <span class="n">bc</span><span class="p">,</span>
+        <span class="n">bc_velocity</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">,</span>
+        <span class="n">problem_topo</span><span class="p">,</span>
+        <span class="n">shift</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">level_set_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">function_space</span><span class="o">.</span><span class="n">mesh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span> <span class="o">=</span> <span class="n">space_displacement</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutFEM</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">cutFEM</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem_topo</span> <span class="o">=</span> <span class="n">problem_topo</span>
+
+        <span class="n">lame_mu</span><span class="p">,</span> <span class="n">lame_lambda</span> <span class="o">=</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">lame_compute</span><span class="p">(</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">young_modulus</span><span class="p">,</span> <span class="n">parameters</span><span class="o">.</span><span class="n">poisson</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span> <span class="o">=</span> <span class="n">level_set_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_func</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">cost_func</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span> <span class="o">=</span> <span class="n">lame_mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">=</span> <span class="n">lame_lambda</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">dim</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bc_velocity</span> <span class="o">=</span> <span class="n">bc_velocity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span>
+
+        <span class="c1"># Fixed geometric objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">FacetNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bc</span> <span class="o">=</span> <span class="n">bc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds</span> <span class="o">=</span> <span class="n">Measure</span><span class="p">(</span>
+            <span class="s2">"ds"</span><span class="p">,</span>
+            <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+            <span class="n">subdomain_data</span><span class="o">=</span><span class="n">ds</span><span class="o">.</span><span class="n">subdomain_data</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"subdomain_data"</span><span class="p">)</span> <span class="k">else</span> <span class="n">ds</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Trial, test and solution functions (defined only once)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u_trial</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_test</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ph</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_displacement</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma_N</span> <span class="o">=</span> <span class="mf">1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="mf">1e-5</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"cffi_extra_compile_args"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"-O0"</span><span class="p">,</span> <span class="s2">"-w"</span><span class="p">]}</span>
+
+        <span class="c1"># Creation of KSP solvers only once (avoids memory leaks)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_configure_ksp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_configure_ksp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="p">)</span>
+
+        <span class="c1"># Initialization of cut data CutFEMx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_data</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_measures</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_configure_ksp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Configuration of the robust iterative PETSc solver for CutFEM."""</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="s2">"cg"</span><span class="p">)</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span>
+        <span class="n">pc</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="s2">"gamg"</span><span class="p">)</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">setFromOptions</span><span class="p">()</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">setTolerances</span><span class="p">(</span><span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CutFEMElasticSolver.update_measures_and_quadratures">
+<a class="viewcode-back" href="../../cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver.update_measures_and_quadratures">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_measures_and_quadratures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Updates the geometry and reconstructs the integration measures."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="n">cutfemx</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_measures</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_measures</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Isolates the creation of quadratures and domains (phi &lt; 0)."""</span>
+        <span class="n">solid_cells</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">locate_entities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_data</span><span class="p">,</span> <span class="s2">"phi&lt;0"</span><span class="p">)</span>
+        <span class="n">solid_rules</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">runtime_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_data</span><span class="p">,</span> <span class="s2">"phi&lt;0"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx_solid</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span>
+            <span class="s2">"dx"</span><span class="p">,</span>
+            <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+            <span class="n">subdomain_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">subdomain_data</span><span class="o">=</span><span class="p">[</span><span class="n">solid_cells</span><span class="p">,</span> <span class="n">solid_rules</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx_solid</span>  <span class="c1"># Alias utilisé par main.py</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ghost_facets</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">ghost_penalty_facets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_data</span><span class="p">,</span> <span class="s2">"phi&lt;0"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dS_ghost</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span>
+            <span class="s2">"dS"</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">subdomain_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ghost_facets</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">"quadrature_degree"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_facet</span> <span class="o">=</span> <span class="n">FacetNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h_avg</span> <span class="o">=</span> <span class="n">avg</span><span class="p">(</span><span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span>
+
+    <span class="c1"># ====================================================================</span>
+    <span class="c1"># FORMULATION MATHÉMATIQUE (UFL) PURE</span>
+    <span class="c1"># ====================================================================</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_primal_forms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Exclusively defines the physics of the primal problem."""</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u_trial</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_test</span>
+
+        <span class="c1"># Forme bilinéaire</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">2.0</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span>
+            <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx_solid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ghost_facets</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_avg</span>
+                <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span>
+                    <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_facet</span><span class="p">),</span>
+                    <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_facet</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dS_ghost</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Forme linéaire</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_primal</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_adjoint_forms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dual_operator</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Exclusively defines the physics of the adjoint problem."""</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u_trial</span>
+        <span class="n">v_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_test</span>
+
+        <span class="c1"># Forme bilinéaire (identique au primal)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_adj</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">2.0</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span>
+            <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">strain</span><span class="p">(</span><span class="n">v_adj</span><span class="p">))</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">nabla_div</span><span class="p">(</span><span class="n">v_adj</span><span class="p">))</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx_solid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ghost_facets</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_adj</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_avg</span>
+                <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span>
+                    <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_facet</span><span class="p">),</span>
+                    <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">v_adj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_facet</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dS_ghost</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Forme linéaire</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span> <span class="o">=</span> <span class="n">dual_operator</span>
+
+    <span class="c1"># ====================================================================</span>
+    <span class="c1"># RESOLUTION (ASSEMBLY AND PETSc)</span>
+    <span class="c1"># ====================================================================</span>
+
+    <span class="c1"># def _solve_system(self, a_form, L_form, bcs_list, solver_ksp, solution_func):</span>
+    <span class="c1">#     """CutFEMx assembly and PETSc KSP resolution pipeline."""</span>
+    <span class="c1">#     b_reg = cf_petsc.assemble_vector(L_form)</span>
+    <span class="c1">#     b_reg.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES, mode=PETSc.ScatterMode.REVERSE)</span>
+    <span class="c1">#     dolfinx_petsc.set_bc(b_reg, bcs_list)</span>
+    <span class="c1">#     b_reg.assemble()</span>
+
+    <span class="c1">#     A_reg = cf_petsc.assemble_matrix(a_form, bcs=bcs_list)</span>
+    <span class="c1">#     A_reg.assemble()</span>
+
+    <span class="c1">#     solver_ksp.setOperators(A_reg)</span>
+    <span class="c1">#     solver_ksp.setUp()</span>
+    <span class="c1">#     solver_ksp.solve(b_reg, solution_func.x.petsc_vec)</span>
+    <span class="c1">#     solution_func.x.scatter_forward()</span>
+
+    <span class="c1">#     A_reg.destroy()</span>
+    <span class="c1">#     b_reg.destroy()</span>
+
+    <span class="c1">#     return solution_func</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_solve_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_form</span><span class="p">,</span> <span class="n">L_form</span><span class="p">,</span> <span class="n">bcs_list</span><span class="p">,</span> <span class="n">solver_ksp</span><span class="p">,</span> <span class="n">solution_func</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""CutFEMx assembly and 100% MPI-robust PETSc KSP resolution pipeline."""</span>
+
+        <span class="c1"># 1. Assemblage du vecteur RHS</span>
+        <span class="n">b_reg</span> <span class="o">=</span> <span class="n">cf_petsc</span><span class="o">.</span><span class="n">assemble_vector</span><span class="p">(</span><span class="n">L_form</span><span class="p">)</span>
+
+        <span class="c1"># --- CORRECTION ICI : Lifting spécifique à CutFEMx ---</span>
+        <span class="k">with</span> <span class="n">b_reg</span><span class="o">.</span><span class="n">localForm</span><span class="p">()</span> <span class="k">as</span> <span class="n">b_local</span><span class="p">:</span>
+            <span class="c1"># array_w allows writing to local memory for PETSc</span>
+            <span class="n">cutfemx</span><span class="o">.</span><span class="n">fem</span><span class="o">.</span><span class="n">apply_lifting</span><span class="p">(</span><span class="n">b_local</span><span class="o">.</span><span class="n">array_w</span><span class="p">,</span> <span class="p">[</span><span class="n">a_form</span><span class="p">],</span> <span class="p">[</span><span class="n">bcs_list</span><span class="p">])</span>
+
+        <span class="n">b_reg</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span>
+            <span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD_VALUES</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span>
+        <span class="p">)</span>
+
+        <span class="c1"># set_bc works in a standard way because bcs_list does not contain a UFL form</span>
+        <span class="n">dolfinx_petsc</span><span class="o">.</span><span class="n">set_bc</span><span class="p">(</span><span class="n">b_reg</span><span class="p">,</span> <span class="n">bcs_list</span><span class="p">)</span>
+
+        <span class="c1"># 2. Matrix assembly</span>
+        <span class="n">A_reg</span> <span class="o">=</span> <span class="n">cf_petsc</span><span class="o">.</span><span class="n">assemble_matrix</span><span class="p">(</span><span class="n">a_form</span><span class="p">,</span> <span class="n">bcs</span><span class="o">=</span><span class="n">bcs_list</span><span class="p">)</span>
+        <span class="n">A_reg</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="c1"># 3. MPI Deactivation (Avoids NaNs in the void)</span>
+        <span class="n">active</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">fem</span><span class="o">.</span><span class="n">active_domain</span><span class="p">(</span><span class="n">a_form</span><span class="p">)</span>
+        <span class="n">cf_petsc</span><span class="o">.</span><span class="n">deactivate_outside</span><span class="p">(</span><span class="n">A_reg</span><span class="p">,</span> <span class="n">b_reg</span><span class="p">,</span> <span class="n">active</span><span class="p">)</span>
+        <span class="n">A_reg</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="c1"># 4. Resolution with existing KSP</span>
+        <span class="n">solver_ksp</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="n">A_reg</span><span class="p">)</span>
+        <span class="n">solver_ksp</span><span class="o">.</span><span class="n">setUp</span><span class="p">()</span>
+        <span class="n">solver_ksp</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b_reg</span><span class="p">,</span> <span class="n">solution_func</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+
+        <span class="c1"># 5. Update of solution ghosts</span>
+        <span class="n">solution_func</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="c1"># 6. Vital memory cleanup</span>
+        <span class="n">A_reg</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="n">b_reg</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">solution_func</span>
+
+<div class="viewcode-block" id="CutFEMElasticSolver.primal_problem">
+<a class="viewcode-back" href="../../cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver.primal_problem">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">primal_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Orchestrateur du primal : Géométrie -&gt; UFL -&gt; FFCx -&gt; Solve."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_measures_and_quadratures</span><span class="p">(</span><span class="n">level_set</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_primal_forms</span><span class="p">()</span>
+
+        <span class="n">bcs_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bc</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">]</span>
+        <span class="n">a_form</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_primal</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span><span class="p">)</span>
+        <span class="n">L_form</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_primal</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_system</span><span class="p">(</span>
+            <span class="n">a_form</span><span class="p">,</span> <span class="n">L_form</span><span class="p">,</span> <span class="n">bcs_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_primal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span></div>
+
+
+<div class="viewcode-block" id="CutFEMElasticSolver.adjoint_problem">
+<a class="viewcode-back" href="../../cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver.adjoint_problem">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">adjoint_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">dual_operator</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Adjoint orchestrator: UFL -&gt; FFCx -&gt; Solve."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span> <span class="o">=</span> <span class="n">u</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_adjoint_forms</span><span class="p">(</span><span class="n">dual_operator</span><span class="p">)</span>
+
+        <span class="n">bcs_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bc</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">]</span>
+        <span class="n">a_form_adj</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_adj</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span><span class="p">,</span> <span class="n">fem</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+            <span class="n">L_form_adj</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">L_form_adj</span> <span class="o">=</span> <span class="n">cutfemx</span><span class="o">.</span><span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L_adj</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_system</span><span class="p">(</span>
+            <span class="n">a_form_adj</span><span class="p">,</span> <span class="n">L_form_adj</span><span class="p">,</span> <span class="n">bcs_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_adjoint</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ph</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ph</span></div>
+
+
+<div class="viewcode-block" id="CutFEMElasticSolver.cutfem_solver">
+<a class="viewcode-back" href="../../cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver.cutfem_solver">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cutfem_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">problem_topo</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Main function called by the optimization loop."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primal_problem</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">cost_func</span> <span class="o">==</span> <span class="s2">"compliance"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ph</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ph</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">problem_topo</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"VMLp_Problem"</span><span class="p">,</span> <span class="s2">"AreaProblem"</span><span class="p">]:</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">utils.mechanics_tool</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mechanics_tool</span>
+
+                <span class="n">vm_DG</span> <span class="o">=</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">project_von_mises</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span>
+                <span class="p">)</span>
+                <span class="n">adjoint</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">dual_operator</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span>
+                    <span class="n">parameters</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span><span class="p">,</span>
+                    <span class="n">vm_DG</span><span class="o">=</span><span class="n">vm_DG</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">adjoint</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">dual_operator</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span>
+                    <span class="n">parameters</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dxq</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjoint_problem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span> <span class="n">adjoint</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">uh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ph</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Cleanup of PETSc solvers."""</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"solver_primal"</span><span class="p">,</span> <span class="s2">"solver_adjoint"</span><span class="p">):</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">solver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">solver</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, ONERA and MINES PARIS - PSL
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=29a6c3e3"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    </body>
+</html>

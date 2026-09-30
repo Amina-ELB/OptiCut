@@ -1,13 +1,13 @@
 Mechanics Tools
 ===================
 
-.. automodule:: mechanics_tool
+.. automodule:: utils.mechanics_tool
 
-.. autofunction:: mechanics_tool.stress
+.. autofunction:: utils.mechanics_tool.stress
 
-.. autofunction:: mechanics_tool.strain
+.. autofunction:: utils.mechanics_tool.strain
 
-.. autofunction:: mechanics_tool.lame_compute
+.. autofunction:: utils.mechanics_tool.lame_compute
 
-.. autofunction:: mechanics_tool.von_mises
+.. autofunction:: utils.mechanics_tool.von_mises
 
