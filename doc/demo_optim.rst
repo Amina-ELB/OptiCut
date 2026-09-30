@@ -20,10 +20,10 @@ The objective function :math:`J` is defined as:
 .. math::
 		:label: eqn:MinCompliance
 
-		\begin{align}
+		\begin{aligned}
 		J:\mathcal{O}&\rightarrow\mathbb{R}\\
 				    \Omega&\rightarrow J(\Omega) = \int_{\Omega}j(u)\text{ }dx
-		\end{align}
+		\end{aligned}
 		
 		
 where :math:`j` is a function defined from :math:`\Omega` to :math:`\mathbb{R}` and  dependent on the displacement field :math:`u` solution of a PDE.
@@ -74,6 +74,8 @@ One will also distinguish  :math:`\Gamma_{D}` , the part of the boundary where D
 
 .. _ALM:
 
+.. _augmented-lagrangian-method:
+
 Augmented lagrangian Method
 -------------------------------
 
@@ -99,13 +101,15 @@ The min-max problem is solved using a gradient iterative method, in which, the L
 
 .. math::
 
-		\begin{align}
+		\begin{aligned}
 		\alpha^{n+1}&=\alpha^{n}+\beta C\left(\Omega_{n} \right) \\
 		\beta^{n+1}&=\min\left(\hat{\beta},k\beta^{n} \right)
-		\end{align}
+		\end{aligned}
 
 where :math:`\Omega^{n}` is the domain at iteration :math:`n`, :math:`\hat{\beta}` is the upper limit of the penalty parameter and :math:`k` is a multiplication coefficient.
 
+
+.. _cea-method:
 
 Céa Method
 -----------------
@@ -154,19 +158,19 @@ Find :math:`p_{\Omega}\in V_{0}` such that:
 According to :eq:`eqn:J_ptn_scelle` and with the definition of the saddle point :math:`\left(u_{\Omega},p_{\Omega}\right)` the shape derivative of cost function in direction :math:`\theta` is written by composition:
 
 .. math::
-		\begin{align}
+		\begin{aligned}
 		J'(\Omega)(\theta)&=\mathcal{L}'_{\Omega}(\Omega,u_{\Omega},p_{\Omega};\theta)\\
 		&=\partial_{\Omega}\mathcal{L}(\Omega,u_{\Omega},p_{\Omega};\theta)+\underset{=0}{\underbrace{\partial_{u}\mathcal{L}(\Omega,u_{\Omega},p_{\Omega};u_{\Omega,\theta}^{'})}}+\underset{=0}{\underbrace{\partial_{p}\mathcal{L}\left(\Omega,u_{\Omega},p_{\Omega};p_{\Omega,\theta}^{'}\right)}}\\
 		&=\partial_{\Omega}J(\Omega)_{\mid u=u_{\Omega}}-\partial_{\Omega}a(u_{\Omega},p_{\Omega})+\partial_{\Omega}l(p_{\Omega}) 
-		\end{align}
+		\end{aligned}
 		
 with :
 
 .. math::
-		\begin{align}
+		\begin{aligned}
 		u'_{\Omega,\theta}(x)&=\lim_{t\rightarrow0}\frac{u_{\left(\text{Id}+t\theta\right)(\Omega)}(x)-u_{\Omega}(x)}{t} \quad \text{ the eulerian derivative of }u\text{ in direction }\theta\\
 		p'_{\Omega,\theta}(x)&=\lim_{t\rightarrow0}\frac{p_{\left(\text{Id}+t\theta\right)(\Omega)}(x)-p_{\Omega}(x)}{t} \quad \text{ the eulerian derivative of }p\text{ in direction }\theta.
-		\end{align}
+		\end{aligned}
 
 
 Mechanical model
@@ -193,13 +197,13 @@ We seek the displacement of the material, :math:`u`, such that :
 .. math::
 		:label: eqn:elasticity_form
 
-		\begin{align}
+		\begin{aligned}
 		\begin{cases}
 			- \text{div} \sigma(u) & \!\!\!\!=0 \text{ in }\Omega\\
 			u& \!\!\!\!=0\text{ on }\Gamma_{D}\\
 			\sigma(u)\cdot n & \!\!\!\!=g\text{ on }\Gamma_{N}
 		\end{cases}
-		\end{align}
+		\end{aligned}
 
 
 .. note::
@@ -222,16 +226,18 @@ where for all :math:`u\in V(\Omega)` and :math:`v \in V_{0}(\Omega)` :
 
 .. math::
 		
-		\begin{align} 
+		\begin{aligned} 
 		a\left(u,v\right)&=2\mu\left(\varepsilon(u),\varepsilon\left(v\right)\right)_{L^{2}(\Omega)}+\lambda\left(\nabla\cdot u,\nabla\cdot v\right)_{L^{2}(\Omega)}\\
 		l\left(v\right)&=\left(g,v\right)_{L^{2}\left(\Gamma_{N}\right)},
-		\end{align}
+		\end{aligned}
 		
 		
 with :math:`\varepsilon(u)=\frac{1}{2}\left(\nabla u+\nabla^{t}u\right)`. 
 
 
 
+
+.. _level-set-method:
 
 Level set method
 --------------------
@@ -267,22 +273,24 @@ There are several level-set functions to define :math:`\Omega`. However, we are 
 A level set function with signed distance property with respect to :math:`\phi(x)=0` is defined as:
 
 .. math::
-		\begin{align}
+		\begin{aligned}
 		\phi(x) =&
 		\begin{cases}
 		-d\left(x,\Gamma\right) & \text{ if }x\in\Omega,\\
 		d\left(x,\Gamma\right) & \text{ if }x\in D\setminus\overline{\Omega},
 		\end{cases}
-		\end{align}
+		\end{aligned}
 		
 		
 where :math:`d` is the euclidean distance function distance defined as: 
 
 .. math::
 	
-		\begin{align}
+		\begin{aligned}
 		d\left(x,\Gamma\right)=\underset{y\in\Gamma}{\inf}d\left(x,y\right)\text{ with }\Gamma=\left\{ x\in D\text{, such that }\phi(x)=0\right\}.
-		\end{align}
+		\end{aligned}
+
+.. _advection:
 
 Advection
 ~~~~~~~~~~~~
@@ -367,4 +375,19 @@ This normalization enables the following equality to hold:
 .. note::
 
 		Then, to respect the small deformation hypothesis of the Hadamard method, we multiply by a constant smaller than 1. Alternatively, we can equivalently choose to use an adaptive time step strategy to ensure convergence.
+
+.. note::
+		**Implementation Note:** The Riesz representation and velocity normalization are computed efficiently using PETSc KSP solvers within the ``velocity_tools.py`` module.
+
+Reinitialization
+~~~~~~~~~~~~~~~~~~
+
+During the advection process, the level-set function inevitably loses its signed-distance property (i.e., the magnitude of the gradient deviates from unity, :math:`|\nabla \phi| \neq 1`). If left uncorrected, this distortion leads to severe numerical instabilities such as the flattening or steepening of the level-set field, compromising both the geometry representation and the boundary integrals.
+
+To maintain robustness, OptiCut periodically restores this metric property by solving a reinitialization problem. Rather than using standard fast-marching or conventional PDE approaches which can shift the interface, OptiCut features a highly accurate finite-element-based predictor-corrector scheme. This approach ensures high fidelity of the zero-isocontour location while effectively recovering the signed distance over the computational domain.
+
+For a comprehensive mathematical description and validation of this reinitialization strategy, we refer the reader to our recent work :cite:`ELBACHARI2026115282`.
+
+.. note::
+		**Implementation Note:** This operation is handled by the ``Reinitialization`` class located in ``levelSet_tool.py``. Users can control the frequency of this step via the ``step_reinit`` parameter.
 

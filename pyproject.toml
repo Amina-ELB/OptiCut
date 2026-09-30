@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OptiCut"
+version = "0.1.0"
+description = "Open Source FEniCSx Framework for Parallel Structural Shape Optimization"
+readme = "README.md"
+authors = [
+  { name = "Amina El Bachari", email = "mimielba@yahoo.fr" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "fenics-dolfinx==0.11.0",
+    "fenics-ufl==2026.1.0",
+    "fenics-basix==0.11.0",
+    "fenics-ffcx==0.11.0",
+    "numpy==2.5.3",
+    "scipy==1.18.1",
+    "matplotlib==3.11.2",
+    "gmsh",
+    "psutil",
+    "mpi4py==4.1.2",
+    "petsc4py==3.25.5"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest"
+]
+
+[project.urls]
+Homepage = "https://amina-elb.github.io/OptiCut/"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

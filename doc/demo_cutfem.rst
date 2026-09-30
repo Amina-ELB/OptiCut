@@ -2,7 +2,7 @@
 
 CutFEM for Immersed geometry discretization
 ==============================================
-The mathematical context of CutFEM method including a detailed description of the implementation aspects is explains in this section.
+The mathematical context of CutFEM method including a detailed description of the implementation aspects is explained in this section.
 
 
 
@@ -43,7 +43,7 @@ Note that these facets are intersected facets as well as facets contained fully 
 
 	.. _schemaCutfemFinal:
 
-	.. figure:: images/cutfem_demo/schema_cutfem_final.png
+	.. figure:: images/cutfem_demo/schema_cutfem_final.*
 		:alt: Exemple d'image
 		:align: center
 		:width: 70%
@@ -104,18 +104,24 @@ where :math:`\beta` is the elasticity tensor of the solid material and :math:`\a
 
 		\chi(x) = 
 		\begin{cases}
-		1 &\mbox{, if } x \in \Omega,\\
-		0 &\mbox{, elsewhere}.
+		1 &\text{, if } x \in \Omega,\\
+		0 &\text{, elsewhere}.
 		\end{cases}
 
 We use the smoothened characteristic function :eq:`eqn:smooth_heaviside`. 
 The Ersatz material method is simple to apply and to implement but it may suffer from a lack of precision in the calculation of mechanical fields, particularly for coarse meshes.
 
+.. note::
+		**Implementation Note:** In OptiCut, this approach is fully implemented in the ``solvers/ersatz_elastic_solver.py`` module. The physical properties are penalized according to the smoothed Heaviside function evaluated on the standard finite element integration points.
+
 
 Zero extension outside of active mesh (Deactivation)  
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An alternative to using the Ersatz material method is to set all unknowns to zero outside of :math:`\Omega`. In practice, we set the unknowns, in our case the displacement, to zero in all degrees of freedom which do not belong to the active mesh.  
+An alternative to using the Ersatz material method is to set all unknowns to zero outside of :math:`\Omega`. In practice, we set the unknowns, in our case the displacement, to zero in all degrees of freedom which do not belong to the active mesh.
+
+.. note::
+		**Implementation Note:** The deactivation of external degrees of freedom is handled automatically in OptiCut when using CutFEM. The linear algebra backend zeroes out the matrix blocks corresponding to the outside domain, maintaining problem sparsity without ill-conditioning.  
 
 Cutting and Integration
 -----------------------------
@@ -142,7 +148,7 @@ To reconstruct the interface in order to integrate over :math:`\Gamma_K` and :ma
 
 		.. _triangleCut:   
 		
-		.. figure:: images/cutfem_demo/triangle_cut.png
+		.. figure:: images/cutfem_demo/triangle_cut.*
 			:width: 100%
 			:align: left
 
@@ -153,7 +159,7 @@ To reconstruct the interface in order to integrate over :math:`\Gamma_K` and :ma
  
 		.. _triangleIn:   
 			
-		.. figure:: images/cutfem_demo/triangle_in.png
+		.. figure:: images/cutfem_demo/triangle_in.*
 			:width: 100%
 			:align: center
 			
@@ -164,7 +170,7 @@ To reconstruct the interface in order to integrate over :math:`\Gamma_K` and :ma
 
 		.. _triangleOut:   
 		
-		.. figure:: images/cutfem_demo/triangle_out.png
+		.. figure:: images/cutfem_demo/triangle_out.*
 			:width: 100%
 			:align: right
 			
@@ -183,8 +189,8 @@ To reconstruct the interface in order to integrate over :math:`\Gamma_K` and :ma
 
 		.. _submesh1:   
 		
-		.. figure:: images/cutfem_demo/subtriangle_1.png
-			:width: 100%
+		.. figure:: images/cutfem_demo/sub_triangle_1.*
+			:width: 70%
 			:align: left
 
 			Triangle cut by the boundary :math:`\Gamma`. 
@@ -195,7 +201,7 @@ To reconstruct the interface in order to integrate over :math:`\Gamma_K` and :ma
 
 		.. _submesh2:   
 				
-		.. figure:: images/cutfem_demo/subtriangle_2.png 
+		.. figure:: images/cutfem_demo/sub_triangle_2.* 
 			:width: 70%
 			:align: center
 
@@ -214,7 +220,7 @@ We define a mapping between the quadrature rule on the reference element and the
 
 	.. _mappingIntegration:
 
-	.. figure:: images/integration/mapping_integration.png
+	.. figure:: images/integration/mapping_integration.*
 		:align: center
 		:width: 70%
 
@@ -233,11 +239,14 @@ To integrate over the interface (or surface) parts :math:`\Gamma_K`, we use a si
 	.. _mappingIntegrationFacet:
 
 
-	.. figure:: images/integration/mapping_integration_facet.png
+	.. figure:: images/integration/mapping_integration_facet.*
 		:align: center
 		:width: 70%
 
 		Illustration of mapping corresponding to sub-integration over :math:`\Gamma`.
 
 	
-We will henceforth refer to these integrals as cut integrals and their mesh parts as cut meshes. 
+We will henceforth refer to these integrals as cut integrals and their mesh parts as cut meshes.
+
+.. note::
+		**Implementation Note:** OptiCut leverages the ``cutfemx`` library to perform this exact sub-triangulation and generate the custom quadrature rules dynamically. The active cells and interface facets are identified and processed seamlessly within the ``_build_measures`` method of the ``CutFEMElasticSolver`` class. 

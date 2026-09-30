@@ -1,7 +1,7 @@
 Ersatz Method
 ====================
 
-.. autoclass:: ersatz_method.ErsatzMethod
+.. autoclass:: solvers.ersatz_elastic_solver.ErsatzElasticSolver
 	:members:
 
 

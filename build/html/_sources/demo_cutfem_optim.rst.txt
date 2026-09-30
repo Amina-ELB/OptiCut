@@ -8,6 +8,8 @@ Given these cut integrals in the interface region, we require two central ingred
 - a way to enforce boundary conditions inside elements through integrals and not classical boundary lifting
 - a stabilization technique to prevent ill-conditioning. 
 
+.. _nitsche-method:
+
 Nitsche's method
 ----------------------------
 Imposing Dirichlet conditions on a boundary that is not meshed explicitly requires enforcing these boundary conditions weakly via integrals. The two main approaches to enforce Dirichlet conditions weakly are Nitsche's method :cite:`Nitsche1971berEV` and the Lagrange multiplier method. In this contribution, we use Nitsche's method because it does not require an additional unknown as in the Lagrange multiplier method. 
@@ -26,7 +28,7 @@ A challenge arises for cut integrals, as they depend only on the physical part o
 
 		.. _exemple1verysmallIntersection:
 
-		.. figure:: images/cutfem_demo/exemple_1_verysmallIntersection.png
+		.. figure:: images/cutfem_demo/exemple_1_verysmallIntersection.*
 			:align: center
 			:width: 70%
 
@@ -39,7 +41,7 @@ A challenge arises for cut integrals, as they depend only on the physical part o
 
 		.. _exemple2verysmallIntersection:   
 		
-		.. figure:: images/cutfem_demo/exemple_2_verysmallIntersection.png 
+		.. figure:: images/cutfem_demo/exemple_2_verysmallIntersection.* 
 			:width: 70%
 			:align: center
 
@@ -91,20 +93,22 @@ Here,
 
 denotes the jump across facet :math:`F` between element :math:`K_{+}` and :math:`K_{-}` and :math:`n_F` is the normal to facet :math:`F`. The term :math:`j_h` 
 is called ghost penalty stabilization and guarantees well conditioned system matrices. 
-The term :math:`N_{\Gamma_D}` are the terms of
-Nitsche's method to impose Dirichlet conditions on :math:`\Gamma_{D}` defined as
+The term :math:`N_{\Gamma_D}` corresponds to Nitsche's method to impose Dirichlet conditions on :math:`\Gamma_{D}`, defined as
 
 
 .. math::
 		:label: eq:23
 
-		\begin{split}
+		\begin{aligned}
 		N_{\Gamma_{D}}\left(u,v\right)=&\left(\sigma(u)\cdot n,v\right)_{L^{2}\left(\Gamma_{D}\right)}-\left(u,\sigma\left(v\right)\cdot n\right)_{L^{2}\left(\Gamma_{D}\right)}\\
 		&+\frac{\gamma_{D}}{h}\left[2\mu\left(u,v\right)_{L^{2}\left(\Gamma_{D}\right)}+\lambda\left(u\cdot n,v\cdot n\right)_{L^{2}\left(\Gamma_{D}\right)}\right],
-		\end{split}
+		\end{aligned}
 
 
-where :math:`\gamma_{D}>0` is a penalty parameter independent of the mesh size :math:`h`. 
+where :math:`\gamma_{D}>0` is a penalty parameter independent of the mesh size :math:`h`.
+
+.. note::
+		**Implementation Note:** In OptiCut, Nitsche's method and the ghost penalty stabilization are assembled in the ``_build_primal_forms`` method of the ``CutFEMElasticSolver``. The facet jumps :math:`[\partial_n u]` are evaluated directly using the ``cutfemx.ghost_penalty_facets`` function, ensuring that the system matrix remains well-conditioned even for highly disproportionate cut elements. 
 
 
 Advection
@@ -119,6 +123,9 @@ and use the inner stabilization proposed in :cite:`CutFEMOptim2018`:
 		:label: eq:advectionCutfem
 
    		\left(\partial_{t}\phi,v\right)_{L^{2}\left(D\right)}+\left(v_{\text{reg}}\left|\nabla\phi\right|, v\right)_{L^{2}\left(D\right)}+\gamma_{\text{Adv}}\sum_{F\in\mathcal{F}_{h,\Omega}}h^{2}\left(\left[\partial_{n_{F}}\phi\right],\left[\partial_{n_{F}}v\right]\right)_{L^{2}\left(F\right)}=0.
+
+.. note::
+		**Implementation Note:** This stabilized transport equation is solved using the ``AdvectionCutFEM`` class in ``levelSet_tool.py``. The parameter :math:`\gamma_{\text{Adv}}` corresponds to the ``ghost_penalty_adv`` attribute in the code.
 
 
 

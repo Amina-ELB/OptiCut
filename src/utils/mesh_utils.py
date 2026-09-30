@@ -19,17 +19,10 @@ from dolfinx import mesh, io
 import ufl
 from dolfinx import fem
 
-
-# Import or define your analytic level-set expressions here.
-# The following placeholders assume you have functions defined elsewhere:
-# - level_set_L_shape
-# - level_set
-# - level_set_3D
-# If you don't, replace with your own expressions.
 try:
     from levelset_expressions import level_set_L_shape, level_set, level_set_3D
-except Exception:
-    # Fallback placeholders; user should replace with real definitions
+except ImportError:
+
     def level_set_L_shape(x):
         return 0.5 - x[0]
 
@@ -39,18 +32,20 @@ except Exception:
     def level_set_3D(x, parameters):
         return x[0] - 0.5
 
+
 from dolfinx import io, mesh
 from mpi4py import MPI
-import create_mesh
+from fem import create_mesh
+
 
 def load_mesh(test_case, parameters, mesh_folder="mesh"):
     """
     Load or create a mesh based on the test case.
-    
+
     :param str test_case: The test case name ("rectangle", "L_shape", or "3D").
     :param Parameters parameters: The object parameters.
     :param str mesh_folder: The folder where mesh files are stored.
-    
+
     :returns: The mesh object.
     :rtype: dolfinx.mesh.Mesh
     """
@@ -61,12 +56,12 @@ def load_mesh(test_case, parameters, mesh_folder="mesh"):
         parameters.lz = 0
         # Create 2D mesh
         msh = create_mesh.create_mesh_2D(
-            parameters.lx, 
-            parameters.ly, 
+            parameters.lx,
+            parameters.ly,
             int(parameters.lx / parameters.h),
-            int(parameters.ly / parameters.h)
+            int(parameters.ly / parameters.h),
         )
-    
+
     elif test_case == "L_shape":
         # Set parameters for L-shape test case
         parameters.lx = 1
@@ -75,13 +70,10 @@ def load_mesh(test_case, parameters, mesh_folder="mesh"):
         # Read mesh from gmsh file
         with io.XDMFFile(MPI.COMM_WORLD, "mesh.xdmf", "w") as xdmf:
             msh, ct, _ = io.gmshio.read_from_msh(
-                f"{mesh_folder}/rectangle.msh", 
-                MPI.COMM_WORLD, 
-                0, 
-                gdim=2
+                f"{mesh_folder}/rectangle.msh", MPI.COMM_WORLD, 0, gdim=2
             )
             xdmf.write_mesh(msh)
-    
+
     elif test_case == "3D":
         # Set parameters for 3D test case
         parameters.lx = 2
@@ -94,16 +86,17 @@ def load_mesh(test_case, parameters, mesh_folder="mesh"):
             parameters.lz,
             int(parameters.lx / parameters.h),
             int(parameters.ly / parameters.h),
-            int(parameters.lz / parameters.h)
+            int(parameters.lz / parameters.h),
         )
-    
+
     else:
         raise ValueError(f"Test case '{test_case}' not implemented")
-    
+
     # Create connectivity for the mesh
     msh.topology.create_connectivity(msh.topology.dim, msh.topology.dim - 1)
-    
+
     return msh
+
 
 def init_level_set(msh: mesh.Mesh, parameters, test_case: str) -> fem.Function:
     r"""
@@ -138,7 +131,9 @@ def init_level_set(msh: mesh.Mesh, parameters, test_case: str) -> fem.Function:
     elif test_case == "3D":
         expr_ufl = level_set_3D(x, parameters)
     else:
-        raise RuntimeError(f"Test case '{test_case}' not implemented for level set initialization.")
+        raise RuntimeError(
+            f"Test case '{test_case}' not implemented for level set initialization."
+        )
 
     expr = fem.Expression(expr_ufl, V_ls.element.interpolation_points())
     ls_func = fem.Function(V_ls)

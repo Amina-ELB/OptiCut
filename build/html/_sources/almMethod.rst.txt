@@ -1,11 +1,11 @@
 Augmented Lagrangian Tools
 ============================
 
-.. automodule:: almMethod
+.. automodule:: optimization.almMethod
 
-.. autofunction:: almMethod.maj_param_constraint_optim_slack
+.. autofunction:: optimization.almMethod.maj_param_constraint_optim_slack
 
-.. autofunction:: almMethod.maj_param_constraint_optim
+.. autofunction:: optimization.almMethod.maj_param_constraint_optim
 
-.. autofunction:: almMethod.init_param_constraint_optim
+.. autofunction:: optimization.almMethod.init_param_constraint_optim
 

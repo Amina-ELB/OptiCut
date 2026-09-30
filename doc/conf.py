@@ -9,7 +9,7 @@
 
 project = 'OptiCut'
 copyright = '2025, ONERA and MINES PARIS - PSL'
-author = 'ONERA and MINES PARIS - PSL'
+author = 'Amina El Bachari (ONERA & MINES Paris - PSL)'
 release = '1'
 
 # -- General configuration ---------------------------------------------------
@@ -18,13 +18,21 @@ release = '1'
 bibtex_bibfiles = ["reference.bib"]
 
 extensions = [
-    'nbsphinx',  # Support pour les notebooks Jupyter
-    'sphinx.ext.mathjax',  # (Optionnel) Pour le support des formules
+    'nbsphinx',  # Support for Jupyter notebooks
+    'sphinx.ext.mathjax',  # (Optional) Support for math formulas
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',  # Pour le support NumPy/Google style
-    'sphinx.ext.viewcode', # Ajoute un lien vers le code source
-    'sphinx.ext.autosectionlabel',  #to add clickable reference for figures
+    'sphinx.ext.napoleon',  # Support for NumPy/Google docstring styles
+    'sphinx.ext.viewcode',  # Adds links to source code
+    'sphinx.ext.autosectionlabel',  # Adds clickable references for figures
     'sphinxcontrib.bibtex', 
+    'myst_parser',  # Support for Markdown
+    'sphinxcontrib.mermaid',  # Support for Mermaid diagrams
+]
+
+myst_enable_extensions = [
+    "dollarmath",
+    "amsmath",
+    "colon_fence",
 ]
 
 autosectionlabel_prefix_document = True
@@ -39,22 +47,33 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'
+html_logo = 'images/opticut-logo-v2.svg'
+html_title = 'OptiCut'
+
+# Optional Furo theme tweaks
+html_theme_options = {
+    "sidebar_hide_name": True,
+    "light_css_variables": {
+        "color-brand-primary": "#000000",
+        "color-brand-content": "#000000",
+    },
+}
 html_static_path = ['_static']
 
 nbsphinx_allow_errors = True
 
 
 import os
-import sphinx_rtd_theme  # Si vous utilisez le thème ReadTheDocs
+
 import sys
 
 sys.path.insert(0, os.path.abspath('../src'))
 
-# Ajouter le chemin du dossier _static
+# Add the static directory path
 html_static_path = ['_static']
 
-# Ajouter le CSS personnalisé
+# Add custom CSS
 html_css_files = [
     'custom.css',
 ]
@@ -63,3 +82,4 @@ numfig = True
 numfig_format = {'figure': 'Figure %s'}
 
 from docutils.parsers.rst import directives
+html_css_files = ['custom.css']

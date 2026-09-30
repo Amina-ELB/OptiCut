@@ -1,0 +1,27 @@
+name: opticut-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.12
+  - c-compiler
+  - cxx-compiler
+  - pkg-config
+  - cmake
+  - ninja
+  - scikit-build-core
+  - nanobind
+  - cffi
+  - fenics-dolfinx=0.11.0
+  - fenics-ufl=2026.1.0
+  - fenics-basix=0.11.0
+  - fenics-ffcx=0.11.0
+  - mpi4py=4.1.2
+  - petsc4py=3.25.5
+  - numpy=2.5.3
+  - scipy=1.18.1
+  - matplotlib=3.11.2
+  - python-gmsh
+  - psutil
+  - pytest=9.1.1
+  - pip

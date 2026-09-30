@@ -9,7 +9,7 @@ This module centralizes the configuration logic used by the main program:
 
 import os
 import shutil
-from Parameters import Parameters
+from config.parameters import Parameters
 
 
 def load_parameters(use_file=1, filename=None):
@@ -59,7 +59,6 @@ def load_parameters(use_file=1, filename=None):
     return parameters
 
 
-
 def init_output_folders(rank):
     r"""
     Create and initialize output folders for the optimization run.
@@ -76,14 +75,11 @@ def init_output_folders(rank):
     This function removes the previous ``res/`` directory if it exists,
     then creates a new one and initializes several result files:
     - cost_func.txt
-    - cost_compliance.txt
-    - lagrangian.txt
     - constraint.txt
     - max_vm.txt
-    - volume.txt
     - param_lagrangian.txt
-    - vm_1_hist.txt
-    - vm_final_hist.txt
+    - memory.txt
+    - memory_per_process.txt
     """
     if rank != 0:
         return
@@ -94,9 +90,12 @@ def init_output_folders(rank):
 
     # Files to initialize
     names = [
-        "cost_func", "cost_compliance", "lagrangian", "constraint",
-        "max_vm", "volume", "param_lagrangian",
-        "vm_1_hist", "vm_final_hist"
+        "cost_func",
+        "constraint",
+        "max_vm",
+        "param_lagrangian",
+        "memory",
+        "memory_per_process",
     ]
 
     # Create empty files

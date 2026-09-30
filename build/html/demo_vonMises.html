@@ -1,221 +1,405 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="High-Performance 3D Compliance Minimization" href="demo_3D_parallel.html"><link rel="prev" title="Compliance minimization" href="demo_compliance.html">
+        <link rel="prefetch" href="_static/opticut-logo-v2.svg" as="image">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Lp norm of Von Mises criteria minimization - OptiCut</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=80f2150b" />
+    
+    
 
 
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lp norm of Von Mises criteria minimization &mdash; OptiCut 1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=bfa8c73d" />
-
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #000000;
+  --color-brand-content: #000000;
   
-      <script src="_static/jquery.js?v=5d32c60e"></script>
-      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=29a6c3e3"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Documentation" href="documentation.html" />
-    <link rel="prev" title="Compliance minimization" href="demo_compliance.html" /> 
-</head>
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
 
-          
-          
-          <a href="index.html" class="icon icon-home">
-            OptiCut
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">OptiCut</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/opticut-logo-v2.svg" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/problem_definition.html">Problem Definition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/parameters.html">Parameters Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Lp norm of Von Mises criteria minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Theory</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="demo_optim.html">Shape optimization method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_cutfem.html">CutFEM for Immersed geometry discretization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="demos.html">Demos</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Lp norm of Von Mises criteria minimization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#problem-definition">Problem definition</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#shape-derivative">Shape derivative</a></li>
 </ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#algorithm">Algorithm</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#application">Application</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#initialization-of-all-parameters">Initialization of all parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh-generation">Mesh Generation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#initialization-of-the-spaces">Initialization of the spaces</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#initialization-of-the-level-set">Initialization of the level set</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#initialization-of-the-boundary-conditions">Initialization of the boundary conditions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#instantiation-of-the-objects">Instantiation of the objects</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#instantiation-of-problem-class">Instantiation of Problem class</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#resolution-of-the-primal-problem">Resolution of the primal problem</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#resolution-of-the-dual-problem">Resolution of the dual problem</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#shape-derivative-computation">Shape derivative computation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#update-alm-parameters">Update ALM parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#compute-the-descent-direction">Compute the descent direction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#advection-of-the-level-set-function">Advection of the level set function</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#reinitialization-of-the-level-set">Reinitialization of the level set</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#update-all-the-parameters">Update all the parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#cutfem-solution">CutFEM solution</a></li>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="developer/architecture.html">Software Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/extending.html">Extending OptiCut</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="documentation.html">Documentation</a><input aria-label="Toggle navigation of Documentation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="almMethod.html">Augmented Lagrangian Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cutfem_method.html">CutFEM Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_init.html">Geometry Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mechanics_tool.html">Mechanics Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem.html">Problem Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reinitialization.html">Level-Set Tools</a></li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+<p class="caption" role="heading"><span class="caption-text">References</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
 </ul>
 
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">OptiCut</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="demos.html">Demos</a></li>
-      <li class="breadcrumb-item active">Lp norm of Von Mises criteria minimization</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/demo_vonMises.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="lp-norm-of-von-mises-criteria-minimization">
-<span id="demovm"></span><h1>Lp norm of Von Mises criteria minimization<a class="headerlink" href="#lp-norm-of-von-mises-criteria-minimization" title="Link to this heading"></a></h1>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/demo_vonMises.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="lp-norm-of-von-mises-criteria-minimization">
+<span id="demovm"></span><h1>Lp norm of Von Mises criteria minimization<a class="headerlink" href="#lp-norm-of-von-mises-criteria-minimization" title="Link to this heading">¶</a></h1>
+<section id="running-the-tutorial">
+<h2>Running the Tutorial<a class="headerlink" href="#running-the-tutorial" title="Link to this heading">¶</a></h2>
+<p>To reproduce this stress-minimization example, navigate to the <cite>src</cite> directory and execute the main script with the Von Mises parameter file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>src
+python3<span class="w"> </span>main.py<span class="w"> </span>parameters/param_vonMises.txt
+</pre></div>
+</div>
+<p><strong>Visualization in ParaView:</strong>
+The results are saved in <cite>src/res/results.xdmf</cite>. Open this file in ParaView, click <strong>Apply</strong>, and use the time-player controls to animate the geometry. The videos below were generated using exactly this method, showing the simultaneous evolution of the topology and the cost function.</p>
+</section>
 <section id="problem-definition">
-<h2>Problem definition<a class="headerlink" href="#problem-definition" title="Link to this heading"></a></h2>
-<p>We seek the optimal shape, <span class="math notranslate nohighlight">\(\widetilde{\Omega}\subset D\)</span>, that minimizes the Lp norm of Von Mises constraint of the structure for a linear elastic material subject to Dirichlet and Neumann boundary conditions.
-We impose a target area on the structure, which results in the addition of an equality constraint.
-The optimization problem is defined as</p>
+<h2>Problem definition<a class="headerlink" href="#problem-definition" title="Link to this heading">¶</a></h2>
+<p>In this tutorial, we aim to find the optimal shape, <span class="math notranslate nohighlight">\(\widetilde{\Omega}\subset D\)</span>, that minimizes the global stress within the structure. To achieve this in a differentiable manner, we minimize the <span class="math notranslate nohighlight">\(L^p\)</span> norm of the Von Mises stress criterion across the linear elastic material, subject to Dirichlet and Neumann boundary conditions and a strict volume constraint.</p>
+<p>The continuous optimization problem is formally defined as:</p>
+<div class="math-wrapper docutils container" id="equation-eq-juvm">
 <div class="math notranslate nohighlight" id="equation-eq-juvm">
-<span class="eqno">(22)<a class="headerlink" href="#equation-eq-juvm" title="Link to this equation"></a></span>\[\begin{split}\begin{cases}
-\underset{\Omega\in\mathcal{O}}{\min}J_{2}(\Omega) &amp; \!\!\!\!
+<span class="eqno">(1)<a class="headerlink" href="#equation-eq-juvm" title="Link to this equation">¶</a></span>\[\begin{split}\begin{cases}
+\underset{\Omega\in\mathcal{O}}{\min}J_{p}(\Omega) &amp; \!\!\!\!
 =\underset{\Omega\in\mathcal{O}}{\min}\left(\int_{\Omega}\left(\frac{\sigma_{\text{VM}}(u)}{\overline{\sigma }}\right)^{p}\text{ }dx\right)^{\frac{1}{p}}\\
 C(\Omega) &amp; \!\!\!\!
 =0\\
 a\left(u,v\right) &amp;
 \!\!\!\!=l\left(v\right)
 \end{cases}\end{split}\]</div>
-<p>with <span class="math notranslate nohighlight">\(\overline{V}\)</span> the target volume, <span class="math notranslate nohighlight">\(\sigma_{VM}(u)\)</span> a positive scalar value corresponding to Von Mises yield criterion defined as:</p>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\overline{V}\)</span> is the target volume constraint, and <span class="math notranslate nohighlight">\(\sigma_{VM}(u)\)</span> is the positive scalar Von Mises yield criterion, defined as:</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[\sigma_{VM}(u)=\sqrt{\frac{2}{3}\left\langle s(u) , s(u)\right \rangle },\]</div>
-<p>where</p>
+</div>
+<p>with the deviatoric stress tensor <span class="math notranslate nohighlight">\(s(u)\)</span>:</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[s(u)=\sigma(u)-\frac{1}{3}\text{Tr}(\sigma(u))\text{Id}.\]</div>
-<p>Here, <span class="math notranslate nohighlight">\(\sigma_{VM}\)</span> is normalized by <span class="math notranslate nohighlight">\(\overline{\sigma }\)</span>, a positive scalar-value.
-u is the displacement field solution to PDE equation and the constraint over the area is defined as:</p>
-<div class="math notranslate nohighlight">
-\[C(\Omega)=\int_{\Omega}dx - \overline{V}\]</div>
-<p>with <span class="math notranslate nohighlight">\(\overline{V}\)</span> the target volume.</p>
+</div>
+<p>To improve numerical conditioning, <span class="math notranslate nohighlight">\(\sigma_{VM}\)</span> is normalized by <span class="math notranslate nohighlight">\(\overline{\sigma}\)</span>, an arbitrary strictly positive scaling factor.</p>
 <section id="shape-derivative">
-<h3>Shape derivative<a class="headerlink" href="#shape-derivative" title="Link to this heading"></a></h3>
-<p>For greater convenience to solve <a class="reference internal" href="#equation-eq-juvm">(22)</a> we define the following function</p>
+<h3>Shape derivative<a class="headerlink" href="#shape-derivative" title="Link to this heading">¶</a></h3>
+<p>To efficiently solve the continuous constrained problem <a class="reference internal" href="#equation-eq-juvm">(1)</a>, we introduce the auxiliary functional:</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[\widetilde{J}(\Omega)=\int_{\Omega}\left(\frac{\sigma_{\text{VM}}(u)}{\overline{\sigma }}\right)^{p}\text{ }dx.\]</div>
-<p>Then, shape derivative of <span class="math notranslate nohighlight">\(J(\Omega)\)</span> can be write by chain rule as:</p>
+</div>
+<p>Using the chain rule, the shape derivative of the actual cost <span class="math notranslate nohighlight">\(J(\Omega)\)</span> is obtained as:</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[J'(\Omega)(\theta)=\frac{1}{p}\Bigl(\widetilde{J}(\Omega)\Bigr)^{\frac{1}{p}-1}\widetilde{J}'(\Omega)(\theta)\]</div>
-<p>Using the Céa method the shape derivative is defined as :</p>
+</div>
+<p>Through Céa’s method (and the introduction of an adjoint state <span class="math notranslate nohighlight">\(p_{\Omega}\)</span> due to the non-self-adjoint nature of the stress functional), the shape derivative reduces to an integral over the boundary <span class="math notranslate nohighlight">\(\partial\Omega\)</span>:</p>
+<div class="math-wrapper docutils container" id="equation-eq-6">
 <div class="math notranslate nohighlight" id="equation-eq-6">
-<span class="eqno">(23)<a class="headerlink" href="#equation-eq-6" title="Link to this equation"></a></span>\[\widetilde{J}'(\Omega)(\theta) = \int_{\partial\Omega}\theta\cdot n \Biggl[\Bigl(\frac{\sigma_{\text{VM}}(u_{\Omega})}{\overline{\sigma}}\Bigr)^{p}-2\mu\varepsilon(u_{\Omega}):\varepsilon(p_{\Omega})-\lambda(\nabla\cdot u_{\Omega})(\nabla\cdot p_{\Omega})\Biggr]\text{ }ds\]</div>
-<p>where <span class="math notranslate nohighlight">\(n\)</span> is the unit normal.</p>
-<p>To account for the constraint in the optimization, the ALM (see <a class="reference internal" href="demo_optim.html#alm"><span class="std std-ref">Augmented lagrangian Method</span></a> ) is used.
-First, we define the modified cost function as:</p>
+<span class="eqno">(2)<a class="headerlink" href="#equation-eq-6" title="Link to this equation">¶</a></span>\[\widetilde{J}'(\Omega)(\theta) = \int_{\partial\Omega}\theta\cdot n \Biggl[\Bigl(\frac{\sigma_{\text{VM}}(u_{\Omega})}{\overline{\sigma}}\Bigr)^{p}-2\mu\varepsilon(u_{\Omega}):\varepsilon(p_{\Omega})-\lambda(\nabla\cdot u_{\Omega})(\nabla\cdot p_{\Omega})\Biggr]\text{ }ds\]</div>
+</div>
+<p>The Augmented Lagrangian Method (ALM) is employed to encapsulate the volume constraints:</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[\begin{align}
-\mathcal{J}(\Omega) &amp;= J(\Omega) +\alpha C(\Omega)+\frac{\beta}{2} C^{2}(\Omega).
-\end{align}\]</div>
-<p>Then, we calculate the shape derivative of this new function.
-We obtain the following shape derivative:</p>
+\[\mathcal{J}(\Omega) = J(\Omega) +\lambda_{ALM} C(\Omega)+\frac{\mu_{ALM}}{2} C^{2}(\Omega).\]</div>
+</div>
+<p>yielding the final augmented shape derivative:</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[\begin{align}
-\mathcal{J}'(\Omega)(\theta) &amp;= J'(\Omega)(\theta) +\alpha C'(\Omega)(\theta) +\beta C(\Omega)C'(\Omega)(\theta).
-\end{align}\]</div>
-<p>Using the shape optimization algorithm, the descent direction is directly defined as:</p>
+\[\mathcal{J}'(\Omega)(\theta) = J'(\Omega)(\theta) +\lambda_{ALM} C'(\Omega)(\theta) +\mu_{ALM} C(\Omega)C'(\Omega)(\theta).\]</div>
+</div>
+<p>The descent direction <span class="math notranslate nohighlight">\(v(u_{\Omega},p_{\Omega})\)</span> directly mirrors the shape derivative boundary integrand, heavily relying on both the primal displacement <span class="math notranslate nohighlight">\(u_{\Omega}\)</span> and the adjoint dual state <span class="math notranslate nohighlight">\(p_{\Omega}\)</span>:</p>
+<div class="math-wrapper docutils container" id="equation-velocity-vm">
 <div class="math notranslate nohighlight" id="equation-velocity-vm">
-<span class="eqno">(24)<a class="headerlink" href="#equation-velocity-vm" title="Link to this equation"></a></span>\[\begin{split}\begin{multline}
+<span class="eqno">(3)<a class="headerlink" href="#equation-velocity-vm" title="Link to this equation">¶</a></span>\[\begin{split}\begin{aligned}
         v\left(u_{\Omega},p_{\Omega}\right)
-        =
+        =&amp;
         \frac{1}{p}\left[\int_{\Omega}\left(\frac{\sigma_{\text{VM}}\left(u_{\Omega}\right)}{\overline{\sigma}}\right)^{p}dx\right]^{\frac{1}{p}-1}\\
-        \times
+        &amp;\times
         \left[
                 \left(\frac{\sigma_{\text{VM}}\left(u_{\Omega}\right)}{\overline{\sigma}}\right)^{p}-2\mu\varepsilon\left(u_{\Omega}\right):\varepsilon\left(p_{\Omega}\right)
                 -
                 \lambda\left(\nabla\cdot u_{\Omega}\right)\left(\nabla\cdot p_{\Omega}\right)
         \right]\\
-        + \alpha+\beta C(\Omega).
-\end{multline}\end{split}\]</div>
+        &amp;+ \lambda_{ALM} + \mu_{ALM} C(\Omega).
+\end{aligned}\end{split}\]</div>
+</div>
 </section>
 </section>
 <section id="algorithm">
-<h2>Algorithm<a class="headerlink" href="#algorithm" title="Link to this heading"></a></h2>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{array}{l}
-\textbf{BEGIN} \\
-    \quad u_{h} \gets \text{Resolution of Primal problem (elasticity linear): } a\left(u,v\right)=l\left(v\right)\\
-\quad p_{h} \gets \text{Resolution of Dual problem : } \partial_{u} J(\Omega;v)\mid_{u=u_{\Omega}}=a(v,p) \\
-    \quad \text{WHILE } \left\Vert J\left(\Omega_{n+1}\right)-J\left(\Omega_{n}\right)\right\Vert &lt;tol \text{:} \\
-\quad \quad n \gets n+1 \\
-    \quad \quad \lambda_{ALM}^{n},\mu_{ALM}^{n} \gets \text{ Update ALM parameters}\\
-    \quad \quad v \gets \text{Explicit calculation of the velocity, defined on }\Gamma \\
-    \quad \quad v_{ext} \gets \text{Extension of the velocity in } D\\
-    \quad \quad v_{\text{reg}} \gets \text{Normalization of the velocity} \\
-    \quad \quad \text{WHILE  adv_NAN}\neq1 \\
-\quad \quad \quad \phi_{\text{temp}} \gets \text{Advection }\\
-    \quad \quad \quad \phi_{\text{temp}} \gets \text{Reinitialization}\\
-    \quad \quad \quad u_{h} \gets \text{Resolution of Primal problem (elasticity linear): } a\left(u,v\right)=l\left(v\right)\\
-    \quad \quad \quad p_{h} \gets \text{Resolution of Dual problem : } \partial_{u} J(\Omega;v)\mid_{u=u_{\Omega}}=a(v,p) \\
-    \quad \quad \quad \text{dt, } j_{\text{max}} \text{, adv_NAN} \gets \text{Update parameters}\\
-    \quad \quad \phi \gets \phi_{temp}\\
-\textbf{END}\\
-\end{array}\end{split}\]</div>
+<h2>Algorithm<a class="headerlink" href="#algorithm" title="Link to this heading">¶</a></h2>
+<p>Unlike compliance minimization, the stress minimization problem is <strong>non-self-adjoint</strong>. This implies that at every iteration, OptiCut must solve both the primal physical problem and a separate adjoint problem to evaluate the sensitivity.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>BEGIN
+    uh ← Solve Primal problem : a(u,v) = l(v)
+    ph ← Solve Dual problem : ∂_u J(Ω;v)|_{u=u_Ω} = a(v,p)
+
+    WHILE not converged:
+        λ_ALM, μ_ALM ← Update ALM parameters
+        v ← Compute descent direction using uh and ph
+        v_ext ← Extend velocity
+
+        WHILE adv_NAN ≠ 1 :
+            φ_temp ← Advection
+            uh ← Solve Primal problem
+            ph ← Solve Dual problem
+
+        φ ← φ_temp
+END
+</pre></div>
+</div>
 </section>
 <section id="application">
-<h2>Application<a class="headerlink" href="#application" title="Link to this heading"></a></h2>
-<p>We study the case of non-self-adjoint problem. We consider an embedded steel beam of L shape  of <span class="math notranslate nohighlight">\(1\text{ m} \times 1\text{ m}\)</span>  subjected to a uniformly distributed tensile load in <span class="math notranslate nohighlight">\(\Gamma_{N}\)</span>, such that <span class="math notranslate nohighlight">\(g=-0.1 e_{y}\)</span> GPa.
-We fixed <span class="math notranslate nohighlight">\(p=10\)</span> for the power of the Lp norm and we defined <span class="math notranslate nohighlight">\(\overline{\sigma } = 3\)</span>.
-The numerical values used as parameters in the mechanical model are detailed in the Table bellow.
-The domain <span class="math notranslate nohighlight">\(\Omega\)</span> included in <span class="math notranslate nohighlight">\(D\)</span> is initialized as shown in <a class="reference internal" href="#domainvm"><span class="std std-numref">Figure 24</span></a>, and it is discretized with mesh size of <span class="math notranslate nohighlight">\(0.01\)</span> m as shown in <a class="reference internal" href="#meshvm"><span class="std std-numref">Figure 25</span></a>.
-The optimization problem is solved with a target area of <span class="math notranslate nohighlight">\(0.3 \text{ m}^{2}\)</span> and an initial area of <span class="math notranslate nohighlight">\(0.45\text{ m}^{2}\)</span>.
-The optimal shape obtained is shown in <a class="reference internal" href="#finalrescutfemvm"><span class="std std-ref">CutFEM solution</span></a>.</p>
+<h2>Application<a class="headerlink" href="#application" title="Link to this heading">¶</a></h2>
+<p>We investigate an embedded steel “L-shape” beam structure of <span class="math notranslate nohighlight">\(1\text{ m} \times 1\text{ m}\)</span> subjected to a uniformly distributed tensile load on <span class="math notranslate nohighlight">\(\Gamma_{N}\)</span>, scaling to <span class="math notranslate nohighlight">\(g=-0.1 e_{y}\text{ GPa}\)</span>.
+We fix the <span class="math notranslate nohighlight">\(L^p\)</span> norm exponent to <span class="math notranslate nohighlight">\(p=10\)</span> and define the scaling factor <span class="math notranslate nohighlight">\(\overline{\sigma } = 3\)</span>.
+The domain <span class="math notranslate nohighlight">\(\Omega \subset D\)</span> is initialized as shown in <a class="reference internal" href="#domainvm"><span class="std std-numref">Figure 11</span></a> and discretized with a mesh resolution of <span class="math notranslate nohighlight">\(0.01\text{ m}\)</span> (<a class="reference internal" href="#meshvm"><span class="std std-numref">Figure 12</span></a>).</p>
 <div class="images-row docutils container">
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id1">
 <span id="domainvm"></span><a class="reference internal image-reference" href="_images/domain1.png"><img alt="_images/domain1.png" src="_images/domain1.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 24 </span><span class="caption-text">Initialization of <span class="math notranslate nohighlight">\(\Omega\subset\text{D}\)</span></span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 11 </span><span class="caption-text">Initialization of <span class="math notranslate nohighlight">\(\Omega\subset\text{D}\)</span></span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -224,299 +408,82 @@ The optimal shape obtained is shown in <a class="reference internal" href="#fina
 <span id="meshvm"></span><a class="reference internal image-reference" href="_images/mesh1.png"><img alt="_images/mesh1.png" src="_images/mesh1.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 25 </span><span class="caption-text">Initialization of the mesh.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 12 </span><span class="caption-text">Initialization of the L-shape mesh.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 </div>
-<span id="parammecavm"></span><table class="docutils align-center" id="id3">
-<caption><span class="caption-number">Table 2 </span><span class="caption-text">Mechanical parameters</span><a class="headerlink" href="#id3" title="Link to this table"></a></caption>
-<thead>
-<tr class="row-odd"><th class="head"><p><strong>Parameter</strong></p></th>
-<th class="head"><p><strong>Value</strong></p></th>
-<th class="head"><p><strong>Unity</strong></p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>E (Young Modulus)</p></td>
-<td><p>210</p></td>
-<td><p><strong>GPa</strong></p></td>
-</tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nu\)</span></p></td>
-<td><p>0.33</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p>Strength</p></td>
-<td><p>0.1</p></td>
-<td><p><strong>GPa</strong></p></td>
-</tr>
-</tbody>
-</table>
-<section id="initialization-of-all-parameters">
-<h3>Initialization of all parameters<a class="headerlink" href="#initialization-of-all-parameters" title="Link to this heading"></a></h3>
-<p>The first step is to instantiate the Parameter object and then initialize all of its attributes using the provided data file
-named “param_VonMises.txt”.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
-<span class="linenos">2</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;param_vonMises.txt&quot;</span>
-<span class="linenos">3</span><span class="n">parameters</span><span class="o">.</span><span class="n">set__paramFolder</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<section id="implementation-highlights">
+<h3>Implementation Highlights<a class="headerlink" href="#implementation-highlights" title="Link to this heading">¶</a></h3>
+<p>The implementation is largely identical to the compliance minimization problem, demonstrating OptiCut’s modular design. The key difference lies in initializing the <cite>VMLp_Problem</cite> class and automatically computing the dual (adjoint) problem.</p>
+<p><strong>1. Problem Initialization</strong></p>
+<p>We load the parameters and explicitly request the Von Mises problem topology solver.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span><span class="w"> </span><span class="nn">utils.config_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_parameters</span>
+<span class="linenos">2</span><span class="kn">from</span><span class="w"> </span><span class="nn">config.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">VMLp_Problem</span>
+<span class="linenos">3</span>
+<span class="linenos">4</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">load_parameters</span><span class="p">(</span><span class="n">use_file</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">"param_VonMises.txt"</span><span class="p">)</span>
+<span class="linenos">5</span><span class="n">problem_topo</span> <span class="o">=</span> <span class="n">VMLp_Problem</span><span class="p">()</span>
 </pre></div>
 </div>
-</section>
-<section id="mesh-generation">
-<h3>Mesh Generation<a class="headerlink" href="#mesh-generation" title="Link to this heading"></a></h3>
-<p>Then we load the mesh:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">XDMFFile</span><span class="p">(</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span> <span class="s2">&quot;mesh.xdmf&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">xdmf</span><span class="p">:</span>
-<span class="linenos">2</span><span class="n">msh</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">gmshio</span><span class="o">.</span><span class="n">read_from_msh</span><span class="p">(</span><span class="s2">&quot;mesh/L_shape.msh&quot;</span><span class="p">,</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">gdim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="linenos">3</span><span class="n">xdmf</span><span class="o">.</span><span class="n">write_mesh</span><span class="p">(</span><span class="n">msh</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="initialization-of-the-spaces">
-<h3>Initialization of the spaces<a class="headerlink" href="#initialization-of-the-spaces" title="Link to this heading"></a></h3>
-<p>Next, we generate the spaces for all the functions that we will use.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">V</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;Lagrange&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">msh</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="p">)))</span>
-<span class="linenos">2</span><span class="n">V_vm</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;Lagrange&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">msh</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="p">)))</span>
-<span class="linenos">3</span><span class="n">V_ls</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;Lagrange&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="linenos">4</span><span class="n">Q</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;DG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="linenos">5</span><span class="n">V_DG</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">functionspace</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;DG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">msh</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="p">)))</span>
-<span class="linenos">6</span>
-<span class="linenos">7</span><span class="c1"># Initialization of the spacial coordinate</span>
-<span class="linenos">8</span><span class="n">x</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">SpatialCoordinate</span><span class="p">(</span><span class="n">msh</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="initialization-of-the-level-set">
-<h3>Initialization of the level set<a class="headerlink" href="#initialization-of-the-level-set" title="Link to this heading"></a></h3>
-<p>To initialize the level set function, we use the module geometry_initialization.
-In this module, we define all the desired initializations for the level set function and adjust the call based on the desired configuration.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span><span class="w"> </span><span class="nn">geometry_initialization</span>
-<span class="linenos">2</span>
-<span class="linenos">3</span><span class="n">ls_func_ufl</span> <span class="o">=</span> <span class="n">geometry_initialization</span><span class="o">.</span><span class="n">level_set_L_shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="linenos">4</span><span class="n">ls_func_expr</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">ls_func_ufl</span><span class="p">,</span> <span class="n">V_ls</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">interpolation_points</span><span class="p">())</span>
-<span class="linenos">5</span><span class="n">ls_func</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">V_ls</span><span class="p">)</span>
-<span class="linenos">6</span><span class="n">ls_func</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">ls_func_expr</span><span class="p">)</span>
+<p><strong>2. Primal and Dual Problem Resolution</strong></p>
+<p>At each optimization step, OptiCut evaluates the linear elasticity state (Primal), computes the dual operator specific to the Von Mises criterion using automatic differentiation via UFL, and solves the adjoint system (Dual).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># Solve Primal (Displacement)</span>
+<span class="linenos"> 2</span><span class="n">uh</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">cutfem_solver</span><span class="p">(</span><span class="n">ls_func</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">problem_topo</span><span class="p">)</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_manipulation</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="c1"># Evaluate Dual Operator specific to the Von Mises topology</span>
+<span class="linenos"> 7</span><span class="n">vm_calculator</span> <span class="o">=</span> <span class="n">data_manipulation</span><span class="o">.</span><span class="n">VonMisesCalculator</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">,</span> <span class="n">spaces</span><span class="p">[</span><span class="s2">"Q"</span><span class="p">],</span> <span class="n">uh</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">level_set</span><span class="p">)</span>
+<span class="linenos"> 8</span><span class="n">vm_list</span> <span class="o">=</span> <span class="n">vm_calculator</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="linenos"> 9</span><span class="n">dual_operator</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">dual_operator</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">msh</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">dxq</span><span class="p">,</span> <span class="n">vm_list</span><span class="p">)</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="c1"># Solve Dual (Adjoint State)</span>
+<span class="linenos">12</span><span class="n">ph</span> <span class="o">=</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">adjoint_problem</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span> <span class="n">dual_operator</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="images-row docutils container">
 <div class="centered-figure docutils container">
+<figure class="align-center" id="id3">
+<span id="dispcutfemvm"></span><a class="reference internal image-reference" href="_images/dispCutFEM1.png"><img alt="_images/dispCutFEM1.png" src="_images/dispCutFEM1.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Figure 13 </span><span class="caption-text">Displacement field of the first iteration with CutFEM.</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+</div>
+<div class="centered-figure docutils container">
 <figure class="align-center" id="id4">
-<span id="levelsetinitvm"></span><a class="reference internal image-reference" href="_images/levelSetInitVM.png"><img alt="Exemple d'image" src="_images/levelSetInitVM.png" style="width: 100%;" />
+<span id="dualcutfem"></span><a class="reference internal image-reference" href="_images/dualCutFEM.png"><img alt="_images/dualCutFEM.png" src="_images/dualCutFEM.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 26 </span><span class="caption-text">Initialization of the level set.</span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-</div>
-<div class="centered-figure docutils container">
-<figure class="align-center" id="id5">
-<span id="levelsetinitwarpvm"></span><a class="reference internal image-reference" href="_images/levelSetInitWarpVM.png"><img alt="Exemple d'image" src="_images/levelSetInitWarpVM.png" style="width: 100%;" />
-</a>
-<figcaption>
-<p><span class="caption-number">Figure 27 </span><span class="caption-text">Initialization of the level set warped.</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 14 </span><span class="caption-text">Adjoint dual state field of the first iteration with CutFEM.</span><a class="headerlink" href="#id4" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 </div>
-</section>
-<section id="initialization-of-the-boundary-conditions">
-<h3>Initialization of the boundary conditions<a class="headerlink" href="#initialization-of-the-boundary-conditions" title="Link to this heading"></a></h3>
-<p>We define the Dirichlet conditions for the linear elasticity problem.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="linenos"> 2</span><span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">fem</span><span class="p">,</span> <span class="n">mesh</span>
-<span class="linenos"> 3</span>
-<span class="linenos"> 4</span><span class="n">fdim</span> <span class="o">=</span> <span class="n">msh</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span> <span class="c1"># facet dimension</span>
-<span class="linenos"> 5</span>
-<span class="linenos"> 6</span><span class="k">def</span><span class="w"> </span><span class="nf">clamped_boundary_cantilever</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-<span class="linenos"> 7</span>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
-<span class="linenos"> 8</span>
-<span class="linenos"> 9</span><span class="n">boundary_facets</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">locate_entities_boundary</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="n">fdim</span><span class="p">,</span><span class="n">clamped_boundary_cantilever</span><span class="p">)</span>
-<span class="linenos">10</span><span class="n">u_D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ScalarType</span><span class="p">)</span>
-<span class="linenos">11</span>
-<span class="linenos">12</span><span class="n">bc</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">dirichletbc</span><span class="p">(</span><span class="n">u_D</span><span class="p">,</span> <span class="n">fem</span><span class="o">.</span><span class="n">locate_dofs_topological</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">fdim</span><span class="p">,</span> <span class="n">boundary_facets</span><span class="p">),</span> <span class="n">V</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>We define the Neumann conditions for the linear elasticity problem and we define Dirichlet boundary condition for the velocity field.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="linenos"> 2</span><span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">meshtags</span>
-<span class="linenos"> 3</span>
-<span class="linenos"> 4</span>
-<span class="linenos"> 5</span><span class="k">def</span><span class="w"> </span><span class="nf">load_marker</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-<span class="linenos"> 6</span>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">lx</span><span class="o">-</span><span class="mf">1e-6</span><span class="p">),</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;</span><span class="mf">0.35</span><span class="p">)</span>
+<p><strong>3. Shape Derivative and Descent</strong></p>
+<p>The velocity field calculation takes into account both <cite>uh</cite> and <cite>ph</cite> seamlessly. OptiCut’s unified <cite>descent_direction</cite> function hides the complexity of assembling these combined non-linear boundary integrals.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span><span class="w"> </span><span class="nn">levelset.velocity_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">prepare_descent</span><span class="p">,</span> <span class="n">descent_direction</span><span class="p">,</span> <span class="n">velocity_normalization</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="c1"># Evaluate constraint and shape derivative integrands</span>
+<span class="linenos"> 4</span><span class="n">constraint</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">constraint</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">dxq</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="linenos"> 5</span><span class="n">shape_derivative_integrand_constraint</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">shape_derivative_integrand_constraint</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span> <span class="n">ph</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">dxq</span><span class="p">)</span>
+<span class="linenos"> 6</span><span class="n">shape_derivative</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">shape_derivative_integrand</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span> <span class="n">ph</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_mu</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">lame_lambda</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">CutFemSolver</span><span class="o">.</span><span class="n">dxq</span><span class="p">)</span>
 <span class="linenos"> 7</span>
-<span class="linenos"> 8</span><span class="c1"># Boundary condition for the velocity field.</span>
-<span class="linenos"> 9</span><span class="n">boundary_dofs</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">locate_dofs_geometrical</span><span class="p">(</span><span class="n">V_ls</span><span class="p">,</span> <span class="n">load_marker</span><span class="p">)</span>
-<span class="linenos">10</span><span class="n">bc_velocity</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">dirichletbc</span><span class="p">(</span><span class="n">ScalarType</span><span class="p">(</span><span class="mf">0.</span><span class="p">),</span> <span class="n">boundary_dofs</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">)</span>
+<span class="linenos"> 8</span><span class="c1"># Regularize and normalize the velocity</span>
+<span class="linenos"> 9</span><span class="n">resources</span> <span class="o">=</span> <span class="n">prepare_descent</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+<span class="linenos">10</span><span class="n">v_reg</span> <span class="o">=</span> <span class="n">descent_direction</span><span class="p">(</span><span class="n">ls_func</span><span class="p">,</span> <span class="n">msh</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">bc_velocity</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">,</span> <span class="n">constraint</span><span class="p">,</span> <span class="n">shape_derivative_integrand_constraint</span><span class="p">,</span> <span class="n">shape_derivative</span><span class="p">,</span> <span class="n">resources</span><span class="p">)</span>
 <span class="linenos">11</span>
-<span class="linenos">12</span><span class="c1"># Neumann boundary condition for the primal problem.</span>
-<span class="linenos">13</span><span class="n">facet_indices</span><span class="p">,</span> <span class="n">facet_markers</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
-<span class="linenos">14</span><span class="n">facets</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">locate_entities</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="n">fdim</span><span class="p">,</span> <span class="n">load_marker</span><span class="p">)</span>
-<span class="linenos">15</span><span class="n">facet_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">facets</span><span class="p">)</span>
-<span class="linenos">16</span><span class="n">facet_markers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">facets</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="linenos">17</span>
-<span class="linenos">18</span><span class="n">facet_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">facet_indices</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-<span class="linenos">19</span><span class="n">facet_markers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">facet_markers</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-<span class="linenos">20</span><span class="n">sorted_facets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">facet_indices</span><span class="p">)</span>
-<span class="linenos">21</span><span class="n">facet_tag</span> <span class="o">=</span> <span class="n">meshtags</span><span class="p">(</span><span class="n">msh</span><span class="p">,</span> <span class="n">fdim</span><span class="p">,</span> <span class="n">facet_indices</span><span class="p">[</span><span class="n">sorted_facets</span><span class="p">],</span> <span class="n">facet_markers</span><span class="p">[</span><span class="n">sorted_facets</span><span class="p">])</span>
-<span class="linenos">22</span><span class="n">ds</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">Measure</span><span class="p">(</span><span class="s2">&quot;ds&quot;</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">msh</span><span class="p">,</span> <span class="n">subdomain_data</span><span class="o">=</span><span class="n">facet_tag</span><span class="p">)</span>
+<span class="linenos">12</span><span class="c1"># Normalize velocity in place</span>
+<span class="linenos">13</span><span class="n">norm_factor</span> <span class="o">=</span> <span class="n">velocity_normalization</span><span class="p">(</span><span class="n">v_reg</span><span class="p">,</span> <span class="n">parameters</span><span class="o">.</span><span class="n">alpha_reg_velocity</span><span class="p">)</span>
+<span class="linenos">14</span><span class="n">v_reg</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">*=</span> <span class="n">norm_factor</span>
+<span class="linenos">15</span><span class="n">v_reg</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
-<section id="instantiation-of-the-objects">
-<h3>Instantiation of the objects<a class="headerlink" href="#instantiation-of-the-objects" title="Link to this heading"></a></h3>
-<dl class="simple">
-<dt>We instantiate the objects of the following classes:</dt><dd><ul class="simple">
-<li><p>Reinitialization (<a class="reference internal" href="reinitialization.html#levelSet_tool.Reinitialization" title="levelSet_tool.Reinitialization"><code class="xref py py-meth docutils literal notranslate"><span class="pre">levelSet_tool.Reinitialization()</span></code></a>),</p></li>
-<li><p>CutFemMethod (<a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod" title="cutfem_method.CutFemMethod"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod()</span></code></a>).</p></li>
-</ul>
-</dd>
-</dl>
-<p>Then, we initialize the coefficients of Lamé with the function <a class="reference internal" href="mechanics_tool.html#mechanics_tool.lame_compute" title="mechanics_tool.lame_compute"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mechanics_tool.lame_compute()</span></code></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">Reinitialization</span> <span class="o">=</span> <span class="n">Reinitialization</span><span class="p">(</span><span class="n">ls_func</span><span class="p">,</span> <span class="n">V_ls</span><span class="o">=</span><span class="n">V_ls</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">l_reinit</span><span class="p">)</span>
-<span class="linenos">2</span>
-<span class="linenos">3</span><span class="n">CutFemMethod</span> <span class="o">=</span> <span class="n">CutFemMethod</span><span class="p">(</span><span class="n">ls_func</span><span class="p">,</span><span class="n">V_ls</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="p">,</span> <span class="n">bc</span> <span class="o">=</span> <span class="n">bc</span><span class="p">,</span> <span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span><span class="p">)</span>
-<span class="linenos">4</span>
-<span class="linenos">5</span><span class="n">lame_mu</span><span class="p">,</span><span class="n">lame_lambda</span> <span class="o">=</span> <span class="n">mechanics_tool</span><span class="o">.</span><span class="n">lame_compute</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">young_modulus</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">poisson</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="instantiation-of-problem-class">
-<h3>Instantiation of Problem class<a class="headerlink" href="#instantiation-of-problem-class" title="Link to this heading"></a></h3>
-<p>We instantiate the problem class.
-Here, we aim to minimize the Lp norm of the Von Mises contraint, so the problem is of the VMLp_Problem class.
-Defining the problem object then allows for automating the call of functions to calculate the cost, its integrand,
-the integrand of the cost’s derivative, the constraint value, the integrand of the constraint, the integrand of the derivative of the constraint,
-and the dual operator if necessary. See <a class="reference internal" href="problem.html#problem.VMLp_Problem" title="problem.VMLp_Problem"><code class="xref py py-meth docutils literal notranslate"><span class="pre">problem.VMLp_Problem()</span></code></a> for clarification.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">problem_topo</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">VMLp_Problem</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-<section id="resolution-of-the-primal-problem">
-<h3>Resolution of the primal problem<a class="headerlink" href="#resolution-of-the-primal-problem" title="Link to this heading"></a></h3>
-<p>First we solve the primal problem, which corresponds to the linear elasticity problem.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">CutFemMethod</span><span class="o">.</span><span class="n">set_measure_dxq</span><span class="p">(</span><span class="n">ls_func</span><span class="p">)</span>
-<span class="linenos">2</span><span class="n">uh</span> <span class="o">=</span> <span class="n">CutFemMethod</span><span class="o">.</span><span class="n">primal_problem</span><span class="p">(</span><span class="n">ls_func_temp</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
-<span class="linenos">3</span>
-<span class="linenos">4</span><span class="n">cost</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span><span class="n">ph</span><span class="p">,</span><span class="n">lame_mu</span><span class="p">,</span><span class="n">lame_lambda</span><span class="p">,</span><span class="n">measure</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="centered-figure docutils container">
-<figure class="align-center" id="id6">
-<span id="dispcutfemvm"></span><a class="reference internal image-reference" href="_images/dispCutFEM1.png"><img alt="Exemple d'image" src="_images/dispCutFEM1.png" style="width: 100%;" />
-</a>
-<figcaption>
-<p><span class="caption-number">Figure 28 </span><span class="caption-text">Displacement field of the first iteration with CutFEM.</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="resolution-of-the-dual-problem">
-<h3>Resolution of the dual problem<a class="headerlink" href="#resolution-of-the-dual-problem" title="Link to this heading"></a></h3>
-<p>Then we solve the dual problem by calling the function <a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod.adjoint_problem" title="cutfem_method.CutFemMethod.adjoint_problem"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.adjoint_problem()</span></code></a>, the autoamtic differentiation is used,
-as describe in <a class="reference internal" href="cutfem_method.html#linearformlpnorm"><span class="std std-ref">Linear form (dual):</span></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">CutFemMethod</span><span class="o">.</span><span class="n">set_measure_dxq</span><span class="p">(</span><span class="n">ls_func</span><span class="p">)</span>
-<span class="linenos">2</span><span class="n">ph</span> <span class="o">=</span> <span class="n">CutFemMethod</span><span class="o">.</span><span class="n">dual_problem</span><span class="p">(</span><span class="n">ls_func_temp</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="centered-figure docutils container">
-<figure class="align-center" id="id7">
-<span id="dualcutfem"></span><a class="reference internal image-reference" href="_images/dualCutFEM.png"><img alt="Exemple d'image" src="_images/dualCutFEM.png" style="width: 100%;" />
-</a>
-<figcaption>
-<p><span class="caption-number">Figure 29 </span><span class="caption-text">Displacement field of the first iteration with CutFEM.</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="shape-derivative-computation">
-<h3>Shape derivative computation<a class="headerlink" href="#shape-derivative-computation" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">shape_derivative</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">shape_derivative_integrand</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span><span class="n">ph</span><span class="p">,</span><span class="n">lame_mu</span><span class="p">,</span><span class="n">lame_lambda</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">measure</span><span class="p">)</span>
-<span class="linenos">2</span>
-<span class="linenos">3</span><span class="n">rest_constraint</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">constraint</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span><span class="n">lame_mu</span><span class="p">,</span><span class="n">lame_lambda</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">measure</span><span class="p">,(</span><span class="mi">1</span><span class="o">-</span><span class="n">parameters</span><span class="o">.</span><span class="n">cutFEM</span><span class="p">)</span><span class="o">*</span><span class="n">xsi</span><span class="p">)</span>
-<span class="linenos">4</span>
-<span class="linenos">5</span><span class="n">shape_derivative_integrand_constraint</span> <span class="o">=</span> <span class="n">problem_topo</span><span class="o">.</span><span class="n">shape_derivative_integrand_constraint</span><span class="p">(</span><span class="n">uh</span><span class="p">,</span><span class="n">ph</span><span class="p">,</span><span class="n">lame_mu</span><span class="p">,</span><span class="n">lame_lambda</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">measure</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="update-alm-parameters">
-<h3>Update ALM parameters<a class="headerlink" href="#update-alm-parameters" title="Link to this heading"></a></h3>
-<p>To update the Augmented Lagrangian parameters we call the <a class="reference internal" href="almMethod.html#almMethod.maj_param_constraint_optim" title="almMethod.maj_param_constraint_optim"><code class="xref py py-meth docutils literal notranslate"><span class="pre">almMethod.maj_param_constraint_optim()</span></code></a>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">almMethod</span><span class="o">.</span><span class="n">maj_param_constraint_optim</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>To simplify, the penalization method can also be used by simply initializing parameters.ALM to 0. The penalization value must be chosen very carefully, depending on the problem.</p>
-</div>
-</section>
-<section id="compute-the-descent-direction">
-<h3>Compute the descent direction<a class="headerlink" href="#compute-the-descent-direction" title="Link to this heading"></a></h3>
-<p>To compute the advection velocity, we first call the function <a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod.descent_direction" title="cutfem_method.CutFemMethod.descent_direction"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.descent_direction()</span></code></a>.
-Then, we normalize the solution field using an adaptation of the H1 norm by calling the function  <a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod.velocity_normalization" title="cutfem_method.CutFemMethod.velocity_normalization"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.velocity_normalization()</span></code></a> .
-Finally, we compute the maximum of the velocity field to determine a time step for advection that satisfies the CFL condition.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">velocity_field</span> <span class="o">=</span> <span class="n">descent_direction</span><span class="p">(</span><span class="n">CutFemMethod</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span><span class="n">msh</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">bc_velocity</span><span class="p">,</span><span class="n">V_ls</span><span class="p">,</span>\
-<span class="linenos">2</span>                                    <span class="n">V_DG</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">,</span><span class="n">shape_derivative_integrand_constraint</span><span class="p">,</span><span class="n">shape_derivative</span><span class="p">)</span>
-<span class="linenos">3</span><span class="n">velocity_field</span> <span class="o">=</span> <span class="n">CutFemMethod</span><span class="o">.</span><span class="n">velocity_normalization</span><span class="p">(</span><span class="n">velocity_field</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">alpha_reg_velocity</span><span class="p">)</span>
-<span class="linenos">4</span>
-<span class="linenos">5</span><span class="n">velocity_expr</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">velocity_field</span><span class="p">,</span> <span class="n">V_ls</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">interpolation_points</span><span class="p">())</span>
-<span class="linenos">6</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">V_ls</span><span class="p">)</span>
-<span class="linenos">7</span><span class="n">velocity</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">velocity_expr</span><span class="p">)</span>
-<span class="linenos">8</span>
-<span class="linenos">9</span><span class="n">max_velocity</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">velocity</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:])),</span><span class="n">op</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">MAX</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="centered-figure docutils container">
-<figure class="align-center" id="id8">
-<span id="velocity-fieldvm"></span><a class="reference internal image-reference" href="_images/velocity_field1.png"><img alt="Exemple d'image" src="_images/velocity_field1.png" style="width: 100%;" />
-</a>
-<figcaption>
-<p><span class="caption-number">Figure 30 </span><span class="caption-text">Velocity field of the first iteration.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="advection-of-the-level-set-function">
-<h3>Advection of the level set function<a class="headerlink" href="#advection-of-the-level-set-function" title="Link to this heading"></a></h3>
-<p>To advect the level set in the computed descent direction, we call the function <a class="reference internal" href="cutfem_method.html#cutfem_method.CutFemMethod.cut_fem_adv" title="cutfem_method.CutFemMethod.cut_fem_adv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutfem_method.CutFemMethod.cut_fem_adv()</span></code></a>.
-To optimize our code, we first call <a class="reference internal" href="opti_tool.html#opti_tool.adapt_c_HJ" title="opti_tool.adapt_c_HJ"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opti_tool.adapt_c_HJ()</span></code></a>, which optimizes the choice of the parameter c when computing the advection time step.
-This function uses the evolution of the convergence criterion to gradually decrease the value of c. Then, the function <a class="reference internal" href="opti_tool.html#opti_tool.adapt_dt" title="opti_tool.adapt_dt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opti_tool.adapt_dt()</span></code></a> is
-called to adjust the advection time step.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">c_param_HJ</span> <span class="o">=</span> <span class="n">cost_func</span><span class="o">.</span><span class="n">adapt_c_HJ</span><span class="p">(</span><span class="n">c_param_HJ</span><span class="p">,</span><span class="n">crit</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">tol_cost_func</span><span class="p">,</span><span class="n">lagrangian</span><span class="p">)</span>
-<span class="linenos">2</span>
-<span class="linenos">3</span><span class="n">parameters</span><span class="o">.</span><span class="n">dt</span>  <span class="o">=</span>  <span class="n">cost_func</span><span class="o">.</span><span class="n">adapt_dt</span><span class="p">(</span><span class="n">lagrangian_cost</span><span class="p">,</span><span class="n">lagrangian_cost_previous</span><span class="p">,</span><span class="n">max_velocity</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">c_param_HJ</span><span class="p">)</span>
-<span class="linenos">4</span>
-<span class="linenos">5</span><span class="n">ls_func_temp</span> <span class="o">=</span> <span class="n">CutFemMethod</span><span class="o">.</span><span class="n">cut_fem_adv</span><span class="p">(</span><span class="n">ls_func_temp</span><span class="p">,(</span><span class="mi">1</span><span class="o">/</span><span class="n">adv_bool</span><span class="p">)</span><span class="o">*</span><span class="n">parameters</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">velocity_field</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="reinitialization-of-the-level-set">
-<h3>Reinitialization of the level set<a class="headerlink" href="#reinitialization-of-the-level-set" title="Link to this heading"></a></h3>
-<p>To reinitialize the level set using the P.C. method after setting the number of frequency for the
-reinitialization to parameters.step_reinit we call the method <a class="reference internal" href="reinitialization.html#levelSet_tool.Reinitialization.reinitializationPC" title="levelSet_tool.Reinitialization.reinitializationPC"><code class="xref py py-meth docutils literal notranslate"><span class="pre">levelSet_tool.Reinitialization.reinitializationPC()</span></code></a></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">if</span> <span class="p">((</span><span class="n">j</span><span class="o">%</span><span class="n">parameters</span><span class="o">.</span><span class="n">freq_reinit</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
-<span class="linenos">2</span>        <span class="n">ls_func_temp</span><span class="p">,</span> <span class="n">temp_func</span> <span class="o">=</span> <span class="n">Reinitialization</span><span class="o">.</span><span class="n">reinitializationPC</span><span class="p">(</span><span class="n">ls_func_temp</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">step_reinit</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The frequency of the reinitialization is the number of iterations of optimization problem we want to do after reinitialized the level set function.
-For this exemple we set it to <span class="math notranslate nohighlight">\(1\)</span>.</p>
-</div>
-</section>
-<section id="update-all-the-parameters">
-<h3>Update all the parameters<a class="headerlink" href="#update-all-the-parameters" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">parameters</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">adv_bool</span> <span class="o">=</span> <span class="n">cost_func</span><span class="o">.</span><span class="n">catch_NAN</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span><span class="n">lagrangian_cost</span><span class="p">,</span><span class="n">rest_constraint</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span><span class="n">adv_bool</span><span class="p">)</span>
-<span class="linenos">2</span>
-<span class="linenos">3</span><span class="k">if</span> <span class="n">adv_bool</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span>
-<span class="linenos">4</span>        <span class="n">parameters</span><span class="o">.</span><span class="n">j_max</span> <span class="o">=</span> <span class="n">cost_func</span><span class="o">.</span><span class="n">vm_adapta_HJ</span><span class="p">(</span><span class="n">lagrangian_cost</span><span class="p">,</span><span class="n">lagrangian_cost_previous</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">j_max</span><span class="p">,</span><span class="n">parameters</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
-<span class="linenos">5</span><span class="k">else</span><span class="p">:</span>
-<span class="linenos">6</span>        <span class="n">parameters</span><span class="o">.</span><span class="n">j_max</span> <span class="o">=</span> <span class="mi">1</span>
-</pre></div>
-</div>
-</section>
-<section id="cutfem-solution">
-<span id="finalrescutfemvm"></span><h3>CutFEM solution<a class="headerlink" href="#cutfem-solution" title="Link to this heading"></a></h3>
-<p>The results of the optimization with the CutFEM method, obtained after a fixed number of iterations set to 1000,
-are provided below.</p>
+<section id="cutfem-solution-for-von-mises">
+<span id="finalrescutfemvm"></span><h3>CutFEM Solution for Von Mises<a class="headerlink" href="#cutfem-solution-for-von-mises" title="Link to this heading">¶</a></h3>
+<p>The results of the stress-minimization optimization with the CutFEM method exhibit a design strictly distinct from pure compliance minimization. Stress concentrations, specifically near the re-entrant L-shape corner, are actively penalized, leading to a much smoother, rounded inner corner characterized by evenly distributed Von Mises stress contours.</p>
 <video width="640" height="480" controls>
     <source src="_static/output_VM.mp4" type="video/mp4">
     Your browser does not support the video tag.
@@ -524,35 +491,90 @@ are provided below.</p>
 </section>
 </section>
 
-
-           </div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="demo_3D_parallel.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">High-Performance 3D Compliance Minimization</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="demo_compliance.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Compliance minimization</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, ONERA and MINES PARIS - PSL
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="demo_compliance.html" class="btn btn-neutral float-left" title="Compliance minimization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="documentation.html" class="btn btn-neutral float-right" title="Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
     </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Lp norm of Von Mises criteria minimization</a><ul>
+<li><a class="reference internal" href="#running-the-tutorial">Running the Tutorial</a></li>
+<li><a class="reference internal" href="#problem-definition">Problem definition</a><ul>
+<li><a class="reference internal" href="#shape-derivative">Shape derivative</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#algorithm">Algorithm</a></li>
+<li><a class="reference internal" href="#application">Application</a><ul>
+<li><a class="reference internal" href="#implementation-highlights">Implementation Highlights</a></li>
+<li><a class="reference internal" href="#cutfem-solution-for-von-mises">CutFEM Solution for Von Mises</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2025, ONERA and MINES PARIS - PSL.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
+          </div>
         </div>
       </div>
-    </section>
+      
+      
+    </aside>
   </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+</div><script src="_static/documentation_options.js?v=29a6c3e3"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
 </html>

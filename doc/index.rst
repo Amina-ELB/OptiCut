@@ -1,40 +1,102 @@
-.. CutOptim documentation master file, created by
-   sphinx-quickstart on Mon Feb  3 11:51:37 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+OptiCut Documentation
+=====================
 
-OptiCut documentation
-========================
 ..  container:: centered-figure
 
-	.. figure:: images/schema_OptiCut.png
-		:alt: Logo
+	.. figure:: images/opticut-logo-v2.svg
+		:alt: OptiCut Logo
 		:align: center
-		:width: 100%
+		:width: 70%
 
+.. raw:: html
 
-OptiCut is a shape optimization framework that combines the **level set** method with the **Cut Finite Element Method** (CutFEM) and the **Ersatz material** approach.
+    <div style="text-align: center; margin-bottom: 30px; color: #333;">
+        <span style="font-size: 1.1em;">Amina El Bachari</span>
+    </div>
 
-Part :ref:`demoOptim` provides a comprehensive overview of the shape optimization strategy employed, including the mathematical formulation and general methodology.
+OptiCut is an open-source Python framework for structural shape optimization, combining the **Level-Set** method with the **Cut Finite Element Method** (CutFEM) and the **Ersatz material** approach. Built upon the `FEniCSx <https://fenicsproject.org/>`_ ecosystem and the `CutFEMx <https://github.com/sclaus2/CutFEMx>`_ extension (developed by S. Claus), it completely decouples the computational mesh from the evolving geometry. Natively parallelized using MPI, OptiCut is designed for High-Performance Computing (HPC) environments in computational solid mechanics.
 
-In Part :ref:`demoCutfem`, we introduce the CutFEM method in a broad sense, emphasizing its fundamental principles and comparing it to the classical fictitious material method, particularly in the context of shape optimization.
+.. raw:: html
 
-Part :ref:`demoCutfemOptim` focuses on the specific adaptations of the CutFEM approach for shape optimization problems for linear elasticity. 
+    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px; margin-bottom: 20px;">
+        <div style="width: 45%;">
+            <video width="100%" autoplay loop muted controls style="border: 1px solid #ccc;">
+                <source src="_static/compliance.mp4" type="video/mp4">
+            </video>
+            <div style="text-align: center; margin-top: 5px; font-style: italic; color: #555; font-size: 0.9em;">
+                Fig 1. <a href="demo_compliance.html">Compliance Minimization</a>
+            </div>
+        </div>
+        <div style="width: 45%;">
+            <video width="100%" autoplay loop muted controls style="border: 1px solid #ccc;">
+                <source src="_static/vonMises.mp4" type="video/mp4">
+            </video>
+            <div style="text-align: center; margin-top: 5px; font-style: italic; color: #555; font-size: 0.9em;">
+                Fig 2. <a href="demo_vonMises.html">Von Mises Minimization (Lp Norm)</a>
+            </div>
+        </div>
+    </div>
 
-These first three sections together offer a theoretical foundation for understanding the inner workings and design principles of the OptiCut code.
+This documentation is organized into the following main sections:
 
-The :ref:`demos` section presents two benchmark problems that illustrate the application and effectiveness of the method, demonstrating the performance and capabilities of OptiCut in practical scenarios.
-
-Finally, the last section :ref:`documentation` contains the complete technical documentation of the code, including usage instructions, input/output specifications, and implementation details.
+* **Getting Started**: Installation instructions and a quick start guide to run your first optimization.
+* **User Guide**: Detailed instructions on defining problems, setting parameters, and configuring boundary conditions.
+* **Tutorials**: Step-by-step benchmark problems illustrating the application and effectiveness of OptiCut.
+* **Theory**: A comprehensive overview of the mathematical formulation, including shape optimization, CutFEM, and the Ersatz material method.
+* **Developer Guide**: Documentation on the software architecture and instructions for extending the code with new physics.
+* **API Reference**: Complete technical documentation of the codebase.
 
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents:
-   
-   ./demo_optim.rst
-   ./demo_cutfem.rst
-   ./demo_cutfem_optim.rst
-   ./demos.rst
-   ./documentation.rst
-   ./bibliography.rst
+   :maxdepth: 2
+   :caption: Getting Started
+   :hidden:
+
+   getting_started/installation.md
+   getting_started/quickstart.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+   :hidden:
+
+   user_guide/problem_definition.md
+   user_guide/parameters.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials
+   :hidden:
+
+   demos.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Theory
+   :hidden:
+
+   demo_optim.rst
+   demo_cutfem.rst
+   demo_cutfem_optim.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer Guide
+   :hidden:
+
+   developer/architecture.md
+   developer/extending.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+   :hidden:
+
+   documentation.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: References
+   :hidden:
+
+   bibliography.rst

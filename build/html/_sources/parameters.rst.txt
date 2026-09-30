@@ -1,7 +1,7 @@
 Parameters Class
 ====================
 
-.. autoclass:: Parameters.Parameters
+.. autoclass:: config.parameters.Parameters
 	:members:
 
 

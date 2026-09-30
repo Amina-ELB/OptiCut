@@ -1,0 +1,130 @@
+# Copyright (c) 2025 ONERA and MINES Paris, France
+#
+# All rights reserved.
+#
+# This file is part of OptiCut.
+#
+# Author(s)     : Amina El Bachari
+
+import numpy as np
+
+from math import *
+
+from decimal import Decimal
+from mpi4py import MPI
+
+
+def maj_param_constraint_optim_slack(parameters, rest_constraint):
+    r"""Update the slack parameter for inequality constraint, as the following equation:
+
+    .. math::
+
+            s^{n+1} = \text{max}(0,-( \frac{\lambda_{ALM}^{n}}{\mu_{ALM}^{n}}+C(\Omega^{n}) ) )
+
+
+    :param Parameter parameters: The parameter object.
+    :param float rest_constraint: The value of :math:`C(\Omega^{n})`.
+
+    """
+    if parameters.ALM == 1:
+        if parameters.type_constraint == "inequality":
+            parameters.ALM_slack_variable = np.maximum(
+                0,
+                -(
+                    parameters.ALM_lagrangian_multiplicator
+                    / parameters.ALM_penalty_parameter
+                    + float(rest_constraint)
+                ),
+            )
+
+
+def maj_param_constraint_optim(parameters, rest_constraint):
+    r"""Update the Augmented Lagrangian parameters of the Parameter object.
+
+    1. *Update the Lagrange multiplier :*
+
+    .. math::
+
+            \lambda_{ALM}^{n+1} = \lambda_{ALM}^{n} + \mu_{ALM}^{n}(C(\Omega^{n}) + s^{n+1})
+
+
+    2. *Update the Lagrange penalty parameter :*
+
+
+    .. math::
+
+        \mu_{ALM}^{n+1} = \text{min}(\overline{\mu},c \mu_{ALM}^{n})
+
+
+
+    where :math:`\overline{\mu}` is the limit of the penalty parameter and :math:`c` is the penalty multiplier coefficient.
+
+
+    :param Parameter parameters: The parameter object.
+    :param float rest_constraint: The value of :math:`C(\Omega)`.
+
+    """
+    if parameters.ALM == 1:
+        parameters.ALM_lagrangian_multiplicator = (
+            parameters.ALM_lagrangian_multiplicator
+            + parameters.ALM_penalty_parameter
+            * (rest_constraint + parameters.ALM_slack_variable)
+        )
+        parameters.ALM_penalty_parameter = min(
+            parameters.ALM_penalty_limit,
+            parameters.ALM_penalty_coef_multiplicator
+            * parameters.ALM_penalty_parameter,
+        )
+
+
+def init_param_constraint_optim(
+    constraint_derivative, parameters, cost_derivative, k=10
+):
+    r"""Initialized the Augmented Lagrangian parameters:
+
+    1. *Initialization of the Lagrange multiplier :*
+
+    .. math::
+
+            \lambda_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}
+
+    with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}`
+
+    2. *Initialization of the Lagrange penalty parameter :*
+
+    .. math::
+
+            \mu_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}
+
+    with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}`
+
+    3. *Initialization of the penalty limit :*
+
+    .. math::
+
+            \overline{\mu}_{ALM}^{0} = \text{denom}*\frac{10^{k}C(\Omega^{0})}{D}
+
+    with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}`
+
+
+    .. note::
+        The set of simulations we conducted allowed us to determine a value for D of approximately 100.
+
+
+    :param Parameter parameters: The parameter object.
+    :param float cost: The cost value :math:`J(\Omega^{0})` at the initialization.
+    :param float denom: The D value, with a default value of :math:`100`.
+
+    """
+    sqrt_tol = 0.00001
+    if MPI.COMM_WORLD.rank == 0:
+        print("vcost_derivative =", cost_derivative)
+        print("constraint derivative = ", constraint_derivative)
+    if parameters.ALM == 1:
+        parameters.ALM_lagrangian_multiplicator = cost_derivative / (
+            constraint_derivative
+        )
+        parameters.ALM_penalty_parameter = cost_derivative / (constraint_derivative**2)
+        parameters.ALM_penalty_limit = (
+            k * cost_derivative / ((constraint_derivative**2))
+        )

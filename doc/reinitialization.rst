@@ -1,9 +1,14 @@
-Reinitialization --- Prediction-Correction method
-=======================================================
+Level-Set Tools
+=================
 
+.. autoclass:: levelset.levelSet_tool.LevelSet
+	:members:
+
+.. autoclass:: levelset.levelSet_tool.Advection
+	:members:
+	:show-inheritance:
    
-.. autoclass:: levelSet_tool.Reinitialization
+.. autoclass:: levelset.levelSet_tool.Reinitialization
 	:members:
 	:private-members:
 	:show-inheritance:
-

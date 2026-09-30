@@ -1,45 +1,87 @@
-# OptiCut: Open Source FEniCSx Framework for Parallel Structural Shape Optimization
+# OptiCut: Parallel Structural Shape Optimization in FEniCSx
 
-> **OptiCut is a cutting-edge, parallel-enabled FEniCSx tool for designing lightweight and high-performance components. It implements advanced optimization algorithms based on immersed boundary methods for numerical simulations in engineering.**
+[![CI Build](https://github.com/Amina-ELB/OptiCut/actions/workflows/tests.yml/badge.svg)](https://github.com/Amina-ELB/OptiCut/actions/workflows/tests.yml)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://amina-elb.github.io/OptiCut/)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **OptiCut** is a cutting-edge, parallel-enabled FEniCSx framework for designing lightweight and high-performance components. It implements advanced optimization algorithms based on immersed boundary methods for numerical simulations in engineering.
 
 <p align="center">
-<img src="./doc/images/schema_OptiCut.png" alt="Diagram illustrating the OptiCut shape optimization process, which combines Level Set, CutFEM, and the Ersatz material method within a parallel FEniCSx framework. The chart shows the evolution of the shape until the optimized solution is reached." width="1000">
+  <img src="./doc/images/opticut-logo-v2.png" alt="OptiCut Logo">
 </p>
 
 ---
 
 ## Framework Overview
 
-OptiCut is a **Structural Shape Optimization** framework designed for engineers and researchers in advanced numerical simulation. It is built upon the **FEniCSx** project, leveraging its capabilities for efficient, **parallel computing**.
+OptiCut is designed for engineers and researchers in advanced numerical simulation. Built upon the **FEniCSx** project, it leverages modern capabilities for efficient, **distributed parallel computing (MPI)**.
 
 It provides a powerful solution for structural design by integrating advanced numerical methods:
-
-1.  The **Level Set** method for geometry representation and evolution.
-2.  The **Cut Finite Element Method (CutFEM)** for solving equations on non-conforming meshes, compatible with parallel execution.
-3.  The **Ersatz Material** approach for simplified modeling.
-
-This combination allows for efficient handling of complex, large-scale optimization problems in **mechanical engineering** and **numerical analysis**.
+1. **Level Set Method**: For seamless geometry representation and topological evolution.
+2. **Cut Finite Element Method (CutFEM)**: For solving equations on non-conforming background meshes without the need for constant remeshing.
+3. **Ersatz Material Approach**: For simplified modeling and fast preliminary design phases.
 
 ---
 
-## Key Features and Extensibility
+## Key Features
 
-OptiCut is designed with **modularity** and **adaptability** in mind, making it a powerful and flexible tool:
+OptiCut is built with **modularity** and **adaptability** in mind:
 
-* **3D Capability:** The core implementation is fully compatible with **3D geometries** and simulations, enabling the optimization of complex, real-world structural components.
-* **Problem Portability:** The design includes a dedicated **Problem Class**. By modifying or extending this single class, users can easily adapt the framework to solve **other optimization problems** (beyond compliance and stress minimization). This modular structure ensures **high code portability** and reuse.
-* **Parallel Computing:** Leverages **FEniCSx** for robust performance on large-scale problems and distributed memory systems.
+- **Full 3D Capability**: The core implementation handles both 2D and 3D geometries, enabling the optimization of complex, real-world structural components.
+- **Parallel Computing (MPI)**: Inherits FEniCSx's robust performance on large-scale problems and distributed memory systems.
+- **High Extensibility**: Features a highly modular `Problem` class architecture. By simply overriding this class, users can easily adapt the framework to solve entirely new optimization problems beyond standard compliance.
+- **Rich Post-Processing**: Automatically exports optimization states, constraints, and physical fields (displacement, Von Mises stress) in XDMF format for seamless visualization in ParaView.
 
 ---
 
-## Documentation and Installation
+## Installation
 
-The **full documentation** for OptiCut, including detailed installation instructions, parallel execution guidance, tutorials, and underlying theory, is available on the official website:
+Installing OptiCut requires a properly configured FEniCSx 0.11.0 environment and the compilation of several C++ dependencies (CutCells, runintgen, CutFEMx). 
 
-**[Access the Complete OptiCut Technical Documentation (Installation, Tutorials, and Theory)](https://amina-elb.github.io/OptiCut/)**
+### Option 1: Automated Installation (Recommended)
+We provide an automated script that creates the Conda environment and handles all C++ compilations for you.
 
-### Dependencies
-The current version of OptiCut is implemented in parallel using the **FEniCSx** environment and relies on the [CutFEMx](https://github.com/sclaus2/CutFEMx) library.
+```bash
+# Clone the repository
+git clone https://github.com/Amina-ELB/OptiCut.git
+cd OptiCut
+
+# Run the automated installation script
+./install_opticut.sh
+```
+
+### Option 2: Manual Installation (For HPC or Advanced Users)
+If you are working on a cluster without Conda or prefer to build the environment manually, you must follow the correct build order (without build isolation):
+
+1. **Environment:** Ensure FEniCSx 0.11.0, MPI, PETSc, and `cmake` are installed and loaded.
+2. **Install runintgen:** Clone [runintgen](https://github.com/sclaus2/runintgen) and install via `pip install --no-build-isolation --no-deps --force-reinstall ./runintgen`.
+3. **Install CutCells:** Clone [CutCells](https://github.com/sclaus2/cutcells). Compile the C++ core using CMake (`cmake -S cpp -B cpp/build ...`), install it, and build the Python wrapper (`pip install --no-build-isolation --no-deps --force-reinstall ./python`).
+4. **Install CutFEMx:** Clone [CutFEMx](https://github.com/sclaus2/CutFEMx) (checkout commit `72fecb8...`) and install via `pip install --no-build-isolation --no-deps --force-reinstall ./CutFEMx`.
+5. **Install OptiCut:** Finally, install this framework using `pip install -e .`.
+
+*(Please refer to `install_opticut.sh` for the exact CMake flags and environment variables required).*
+
+---
+
+## Quick Start (Minimal Example)
+
+Once installed, you can quickly run a 3D structural shape optimization example in parallel (e.g., using 2 MPI processes). Open a new terminal, activate the environment, and execute from the root of the repository:
+
+```bash
+conda activate opticut-env
+mpirun -n 2 python3 src/main.py src/parameters/param_compliance_3D.txt
+```
+
+This will run the compliance minimization demo using the provided parameter file. Output files will be saved in the `res/` directory.
+
+---
+
+## Documentation
+
+The **full documentation**, including parallel execution guidance, tutorials, and underlying mathematical theory, is available on the official website:
+
+**[Access the Complete OptiCut Technical Documentation](https://amina-elb.github.io/OptiCut/)**
 
 ---
 
@@ -47,13 +89,27 @@ The current version of OptiCut is implemented in parallel using the **FEniCSx** 
 
 The framework comes with two main demonstrations illustrating its powerful applications:
 
-* **Structural Compliance Minimization (Stiffness Optimization):**
-    * Utilizes the Ersatz and CutFEMx methods within a parallel setup to **optimize the overall stiffness** of structures.
-* **Minimization of the Lᵖ Norm of the von Mises Stress (Strength):**
-    * Applies the CutFEMx method to design components with **improved stress resistance** by minimizing stress peaks.
+1. **Structural Compliance Minimization (Stiffness Optimization)**: Utilizes the Ersatz and CutFEMx methods within a parallel setup to optimize the overall stiffness of structures.
+2. **Minimization of the $L^p$ Norm of the von Mises Stress (Strength)**: Applies the CutFEMx method to design components with improved stress resistance by minimizing stress peaks.
 
 ---
 
 ## Contributing
 
-This project is **Open Source**. Please refer to the "Contribution" section in the documentation for more details.
+This project is **Open Source**. We welcome contributions, bug reports, and feature requests. Please refer to the `CONTRIBUTING.md` file (or the "Contribution" section in the documentation) for more details.
+
+---
+
+## Citation
+
+If you use OptiCut in your research, please cite our upcoming JOSS paper:
+
+```bibtex
+@article{ElBachari2026OptiCut,
+  title={OptiCut: Open Source FEniCSx Framework for Parallel Structural Shape Optimization},
+  author={El Bachari, Amina},
+  journal={Journal of Open Source Software},
+  year={2026}
+}
+```
+*(Note: Citation details will be updated upon JOSS publication).*

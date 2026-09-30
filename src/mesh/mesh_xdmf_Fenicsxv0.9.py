@@ -1,6 +1,6 @@
 from dolfinx.io import XDMFFile
 import gmsh
-from dolfinx.io.gmshio import model_to_mesh
+from dolfinx.io.gmsh import model_to_mesh
 from mpi4py import MPI
 import math
 mesh_comm = MPI.COMM_WORLD
@@ -42,19 +42,34 @@ if case == "L_shape":
 # Synchroniser la géométrie
 gmsh.model.geo.synchronize()
     
-# Ajouter une entité physique (nécessaire pour FEniCSx)
+# Ajouter une entité physique (le domaine principal)
 gmsh.model.addPhysicalGroup(2, [surface], 1)
 gmsh.model.setPhysicalName(2, 1, "Domain")
+
+# Ajouter les tags physiques pour les frontières
+boundaries = gmsh.model.getBoundary([(2, surface)], combined=False, oriented=False, recursive=False)
+for i, boundary in enumerate(boundaries):
+    gmsh.model.addPhysicalGroup(boundary[0], [boundary[1]], i + 2)
+
+gmsh.option.setNumber("Mesh.SurfaceFaces", 1)
+gmsh.option.setNumber("Mesh.VolumeEdges", 0)
 
 # Générer le maillage 2D
 gmsh.model.mesh.generate(2)
 
-# Sauvegarder le maillage en format Gmsh 4
-gmsh.option.setNumber("Mesh.MshFileVersion", 4.1)
-gmsh.write("rectangle.msh")
+# Conversion vers FEniCSx
+mesh_data = model_to_mesh(gmsh.model, mesh_comm, model_rank, gdim=gdim)
+domain = mesh_data.mesh
+cell_tags = mesh_data.cell_tags
+facet_tags = mesh_data.facet_tags
 
-# Visualiser le maillage dans Gmsh
-gmsh.fltk.run()
-
-# Finaliser Gmsh
+# Finaliser Gmsh avant d'écrire le XDMF
 gmsh.finalize()
+
+# Écrire le fichier XDMF
+with XDMFFile(domain.comm, f"{case}.xdmf", "w") as xdmf:
+    xdmf.write_mesh(domain)
+    xdmf.write_meshtags(cell_tags, domain.geometry)
+    xdmf.write_meshtags(facet_tags, domain.geometry)
+
+print(f"Maillage exporté avec succès : {case}.xdmf")

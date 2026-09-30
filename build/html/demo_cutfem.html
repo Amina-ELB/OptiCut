@@ -1,194 +1,397 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Shape optimization with CutFEM" href="demo_cutfem_optim.html"><link rel="prev" title="Shape optimization method" href="demo_optim.html">
+        <link rel="prefetch" href="_static/opticut-logo-v2.svg" as="image">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>CutFEM for Immersed geometry discretization - OptiCut</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=80f2150b" />
+    
+    
 
 
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CutFEM for Immersed geometry discretization &mdash; OptiCut 1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=bfa8c73d" />
-
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #000000;
+  --color-brand-content: #000000;
   
-      <script src="_static/jquery.js?v=5d32c60e"></script>
-      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=29a6c3e3"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Shape optimization with CutFEM" href="demo_cutfem_optim.html" />
-    <link rel="prev" title="Shape optimization method" href="demo_optim.html" /> 
-</head>
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
 
-          
-          
-          <a href="index.html" class="icon icon-home">
-            OptiCut
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">OptiCut</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/opticut-logo-v2.svg" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/problem_definition.html">Problem Definition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/parameters.html">Parameters Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Theory</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="demo_optim.html">Shape optimization method</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CutFEM for Immersed geometry discretization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#definition-of-mesh-parts">Definition of mesh parts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#interface-discretization">Interface discretization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#smooth-interface-representation">Smooth interface representation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sharp-interface-representation">Sharp interface representation:</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#discretization-of-outside-domain-d-setminus-omega">Discretization of outside domain <span class="math notranslate nohighlight">\(D \setminus \Omega\)</span></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ersatz-material-method">Ersatz material method</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#zero-extension-outside-of-active-mesh-deactivation">Zero extension outside of active mesh (Deactivation)</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#cutting-and-integration">Cutting and Integration</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#element-categorization">Element Categorization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#interface-reconstruction-and-cutting">Interface Reconstruction and Cutting</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sub-integration-for-volume-integral">Sub-integration for volume integral</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sub-integration-for-interface-or-surface-integral">Sub-integration for interface (or surface) integral</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">CutFEM for Immersed geometry discretization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_cutfem_optim.html">Shape optimization with CutFEM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="developer/architecture.html">Software Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/extending.html">Extending OptiCut</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="documentation.html">Documentation</a><input aria-label="Toggle navigation of Documentation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="almMethod.html">Augmented Lagrangian Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cutfem_method.html">CutFEM Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create_mesh.html">Mesher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ersatz_method.html">Ersatz Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_init.html">Geometry Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mechanics_tool.html">Mechanics Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opti_tool.html">Optimization Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameters Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem.html">Problem Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reinitialization.html">Level-Set Tools</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
 </ul>
 
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">OptiCut</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">CutFEM for Immersed geometry discretization</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/demo_cutfem.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="cutfem-for-immersed-geometry-discretization">
-<span id="democutfem"></span><h1>CutFEM for Immersed geometry discretization<a class="headerlink" href="#cutfem-for-immersed-geometry-discretization" title="Link to this heading"></a></h1>
-<p>The mathematical context of CutFEM method including a detailed description of the implementation aspects is explains in this section.</p>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/demo_cutfem.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="cutfem-for-immersed-geometry-discretization">
+<span id="democutfem"></span><h1>CutFEM for Immersed geometry discretization<a class="headerlink" href="#cutfem-for-immersed-geometry-discretization" title="Link to this heading">¶</a></h1>
+<p>The mathematical context of CutFEM method including a detailed description of the implementation aspects is explained in this section.</p>
 <section id="definition-of-mesh-parts">
-<h2>Definition of mesh parts<a class="headerlink" href="#definition-of-mesh-parts" title="Link to this heading"></a></h2>
+<h2>Definition of mesh parts<a class="headerlink" href="#definition-of-mesh-parts" title="Link to this heading">¶</a></h2>
 <p>The fixed working domain <span class="math notranslate nohighlight">\(D\)</span> is discretized using a triangular or tetrahedral mesh denoted by <span class="math notranslate nohighlight">\(\mathcal{K}_{\;h}\)</span>. Let <span class="math notranslate nohighlight">\(K\)</span> denote the elements in the mesh, let <span class="math notranslate nohighlight">\(F\)</span> denote the facets in the mesh (i.e. edges in 2D and faces in 3D) and <span class="math notranslate nohighlight">\(h\)</span> be the element size. Let <span class="math notranslate nohighlight">\(\mathcal{F}_{\;h}\)</span> denote the set of all facets in the mesh.</p>
 <p>We define the set of active elements of the mesh and the set of active facets of the mesh as all
 elements or facets that have at least a part in <span class="math notranslate nohighlight">\(\Omega\)</span></p>
+<div class="math-wrapper docutils container" id="equation-eqn-9">
 <div class="math notranslate nohighlight" id="equation-eqn-9">
-<span class="eqno">(11)<a class="headerlink" href="#equation-eqn-9" title="Link to this equation"></a></span>\[\mathcal{K}_{\;h,\Omega}:=\left\{ K\in\mathcal{K}_{\;h}\mid\overline{K}\cap\Omega\neq\emptyset\right\} \text{ and }  \mathcal{F}_{h,\Omega}=\left\{ F\in\mathcal{F}_{h}\mid F\cap\Omega\neq\emptyset\right\}.\]</div>
+<span class="eqno">(14)<a class="headerlink" href="#equation-eqn-9" title="Link to this equation">¶</a></span>\[\mathcal{K}_{\;h,\Omega}:=\left\{ K\in\mathcal{K}_{\;h}\mid\overline{K}\cap\Omega\neq\emptyset\right\} \text{ and }  \mathcal{F}_{h,\Omega}=\left\{ F\in\mathcal{F}_{h}\mid F\cap\Omega\neq\emptyset\right\}.\]</div>
+</div>
 <p>The union of all active elements forms the active part of the mesh denoted by</p>
+<div class="math-wrapper docutils container" id="equation-eqn-18">
 <div class="math notranslate nohighlight" id="equation-eqn-18">
-<span class="eqno">(12)<a class="headerlink" href="#equation-eqn-18" title="Link to this equation"></a></span>\[\Omega_{h}=\cup_{K\in\mathcal{K}_{\;h,\Omega}}K.\]</div>
-<p>Note that, <span class="math notranslate nohighlight">\(\Omega_{h}\)</span> is in general not aligned with <span class="math notranslate nohighlight">\(\partial\Omega\)</span>. It consists of the smallest set of elements that contains the domain as illustrated by pink elements in <a class="reference internal" href="#schemacutfemfinal"><span class="std std-numref">Figure 3</span></a>.</p>
+<span class="eqno">(15)<a class="headerlink" href="#equation-eqn-18" title="Link to this equation">¶</a></span>\[\Omega_{h}=\cup_{K\in\mathcal{K}_{\;h,\Omega}}K.\]</div>
+</div>
+<p>Note that, <span class="math notranslate nohighlight">\(\Omega_{h}\)</span> is in general not aligned with <span class="math notranslate nohighlight">\(\partial\Omega\)</span>. It consists of the smallest set of elements that contains the domain as illustrated by pink elements in <a class="reference internal" href="#schemacutfemfinal"><span class="std std-numref">Figure 17</span></a>.</p>
 <p>Furthermore, we define a set of facets of intersected elements, which will be used for stabilization terms</p>
+<div class="math-wrapper docutils container" id="equation-eqn-10">
 <div class="math notranslate nohighlight" id="equation-eqn-10">
-<span class="eqno">(13)<a class="headerlink" href="#equation-eqn-10" title="Link to this equation"></a></span>\[\mathcal{F}_{h,G,\Omega}:=\left\{ F\in\mathcal{F}_{h,\Omega}\mid F\cap\overline{\Omega}_{h,N}\neq\emptyset\right\} \text{ where  } \Omega_{h,N}:=\underset{\overline{K}\cap\Gamma \neq\emptyset\text{, }K\in\mathcal{K}_{h,\Omega}}{\cup}K\]</div>
+<span class="eqno">(16)<a class="headerlink" href="#equation-eqn-10" title="Link to this equation">¶</a></span>\[\mathcal{F}_{h,G,\Omega}:=\left\{ F\in\mathcal{F}_{h,\Omega}\mid F\cap\overline{\Omega}_{h,N}\neq\emptyset\right\} \text{ where  } \Omega_{h,N}:=\underset{\overline{K}\cap\Gamma \neq\emptyset\text{, }K\in\mathcal{K}_{h,\Omega}}{\cup}K\]</div>
+</div>
 <p>Note that these facets are intersected facets as well as facets contained fully inside of <span class="math notranslate nohighlight">\(\Omega\)</span> belonging to intersected elements.</p>
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id5">
 <span id="schemacutfemfinal"></span><a class="reference internal image-reference" href="_images/schema_cutfem_final.png"><img alt="Exemple d'image" src="_images/schema_cutfem_final.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 3 </span><span class="caption-text">Illustration of CutFEM domain and face definitions.</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 17 </span><span class="caption-text">Illustration of CutFEM domain and face definitions.</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 <p>For each face <span class="math notranslate nohighlight">\(F\in\mathcal{F}_h\)</span>, we denote by <span class="math notranslate nohighlight">\(K_{+}\)</span> and <span class="math notranslate nohighlight">\(K_{-}\)</span> the two elements shared by <span class="math notranslate nohighlight">\(F\)</span> and <span class="math notranslate nohighlight">\(n_{F}=n_{\partial K_{+}}\)</span> the normal to the face pointing from <span class="math notranslate nohighlight">\(K_{+}\)</span> to <span class="math notranslate nohighlight">\(K_{-}\)</span>.</p>
 </section>
 <section id="interface-discretization">
-<h2>Interface discretization<a class="headerlink" href="#interface-discretization" title="Link to this heading"></a></h2>
+<h2>Interface discretization<a class="headerlink" href="#interface-discretization" title="Link to this heading">¶</a></h2>
 <p>Given a level set function to describe our evolving domain <span class="math notranslate nohighlight">\(\Omega\)</span>, we mainly distinguish between the following two immersed interface discretizations:</p>
 <ul class="simple">
 <li><p>a smooth interface representation</p></li>
 <li><p>a sharp interface representation.</p></li>
 </ul>
 <section id="smooth-interface-representation">
-<h3>Smooth interface representation<a class="headerlink" href="#smooth-interface-representation" title="Link to this heading"></a></h3>
-<p>The boundary of our domain is represented by a smeared out or smoothed interface. The domain described by negative level set values and the domain described by positive level set values are blended by a smoothed Heaviside function <span class="math notranslate nohighlight">\(H_{\eta}\)</span>. To apply interface terms, the derivative of the Heaviside function is taken to obtain a smoothed delta function. This smoothing approach entails two main drawbacks. Firstly, the smoothed interface region requires resolution with a large number of elements. Secondly, smearing out of the interface reduces accuracy. In this article, we use the following approximation of the characteristic function proposed in <span id="id1">[<a class="reference internal" href="bibliography.html#id18" title="Grégoire Allaire, Charles Dapogny, and François Jouve. Shape and topology optimization. Springer, 2021. URL: https://hal.science/hal-02496063, doi:10.1016/bs.hna.2020.10.004.">ADJ21</a>]</span>:</p>
+<h3>Smooth interface representation<a class="headerlink" href="#smooth-interface-representation" title="Link to this heading">¶</a></h3>
+<p>The boundary of our domain is represented by a smeared out or smoothed interface. The domain described by negative level set values and the domain described by positive level set values are blended by a smoothed Heaviside function <span class="math notranslate nohighlight">\(H_{\eta}\)</span>. To apply interface terms, the derivative of the Heaviside function is taken to obtain a smoothed delta function. This smoothing approach entails two main drawbacks. Firstly, the smoothed interface region requires resolution with a large number of elements. Secondly, smearing out of the interface reduces accuracy. In this article, we use the following approximation of the characteristic function proposed in <span class="bibtex-citation" id="id1">[<a class="reference internal" href="bibliography.html#id18" title="Grégoire Allaire, Charles Dapogny, and François Jouve. Shape and topology optimization. Springer, 2021. URL: https://hal.science/hal-02496063, doi:10.1016/bs.hna.2020.10.004.">ADJ21</a>]</span>:</p>
+<div class="math-wrapper docutils container" id="equation-eqn-smooth-heaviside">
 <div class="math notranslate nohighlight" id="equation-eqn-smooth-heaviside">
-<span class="eqno">(14)<a class="headerlink" href="#equation-eqn-smooth-heaviside" title="Link to this equation"></a></span>\[\forall x\in D\text{, }\chi(x)\simeq H_{\eta}\left(\phi(x)\right)
+<span class="eqno">(17)<a class="headerlink" href="#equation-eqn-smooth-heaviside" title="Link to this equation">¶</a></span>\[\forall x\in D\text{, }\chi(x)\simeq H_{\eta}\left(\phi(x)\right)
 \quad \text{ where } \quad
 H_{\eta}\left(t\right)=\frac{1}{2}\left(1-\frac{t}{\sqrt{t^{2}+\eta^{2}}}\right),\]</div>
+</div>
 </section>
 <section id="sharp-interface-representation">
-<h3>Sharp interface representation:<a class="headerlink" href="#sharp-interface-representation" title="Link to this heading"></a></h3>
-<p>For a sharp interface representation, the zero contour line of the level set function is reconstructed and used for integration. A sharp interface representation can either by achieved by re-meshing (<span id="id2">[<a class="reference internal" href="bibliography.html#id2" title="Charles Dapogny and Florian Feppon. Shape optimization using a level set based mesh evolution method: an overview and tutorial. Comptes Rendus. Mathématique, 361(G8):1267–1332, 2023.">DF23</a>]</span>, <span id="id3">[<a class="reference internal" href="bibliography.html#id11" title="G. Allaire, C. Dapogny, and P. Frey. Shape optimization with a level set based mesh evolution method. Computer Methods in Applied Mechanics and Engineering, 282:22-53, 2014. URL: https://www.sciencedirect.com/science/article/pii/S0045782514003077, doi:https://doi.org/10.1016/j.cma.2014.08.028.">ADF14</a>]</span>) to align the mesh with the zero contour line or to “cut” along the zero contour line. The drawback of re-meshing is the cost and complexitiy of re-meshing (especially for parallel computations and 3D) and a major drawback in cutting is the occurrence of “bad” cuts which require stabilization.</p>
+<h3>Sharp interface representation:<a class="headerlink" href="#sharp-interface-representation" title="Link to this heading">¶</a></h3>
+<p>For a sharp interface representation, the zero contour line of the level set function is reconstructed and used for integration. A sharp interface representation can either by achieved by re-meshing (<span class="bibtex-citation" id="id2">[<a class="reference internal" href="bibliography.html#id2" title="Charles Dapogny and Florian Feppon. Shape optimization using a level set based mesh evolution method: an overview and tutorial. Comptes Rendus. Mathématique, 361(G8):1267–1332, 2023.">DF23</a>]</span>, <span class="bibtex-citation" id="id3">[<a class="reference internal" href="bibliography.html#id11" title="G. Allaire, C. Dapogny, and P. Frey. Shape optimization with a level set based mesh evolution method. Computer Methods in Applied Mechanics and Engineering, 282:22-53, 2014. URL: https://www.sciencedirect.com/science/article/pii/S0045782514003077, doi:https://doi.org/10.1016/j.cma.2014.08.028.">ADF14</a>]</span>) to align the mesh with the zero contour line or to “cut” along the zero contour line. The drawback of re-meshing is the cost and complexitiy of re-meshing (especially for parallel computations and 3D) and a major drawback in cutting is the occurrence of “bad” cuts which require stabilization.</p>
 </section>
 </section>
 <section id="discretization-of-outside-domain-d-setminus-omega">
-<h2>Discretization of outside domain <span class="math notranslate nohighlight">\(D \setminus \Omega\)</span><a class="headerlink" href="#discretization-of-outside-domain-d-setminus-omega" title="Link to this heading"></a></h2>
+<h2>Discretization of outside domain <span class="math notranslate nohighlight">\(D \setminus \Omega\)</span><a class="headerlink" href="#discretization-of-outside-domain-d-setminus-omega" title="Link to this heading">¶</a></h2>
 <p>We introduce two main approaches to approximate the material outside of the material domain <span class="math notranslate nohighlight">\(\Omega\)</span>, i.e. <span class="math notranslate nohighlight">\(D \setminus \Omega\)</span>.</p>
 <section id="ersatz-material-method">
-<span id="demoersatz"></span><h3>Ersatz material method<a class="headerlink" href="#ersatz-material-method" title="Link to this heading"></a></h3>
-<p>Proposed in <span id="id4">[<a class="reference internal" href="bibliography.html#id17" title="Grégoire Allaire, François Jouve, and Anca-Maria Toader. Structural optimization using sensitivity analysis and a level-set method. Journal of Computational Physics, 194(1):363-393, 2004. URL: https://www.sciencedirect.com/science/article/pii/S002199910300487X, doi:https://doi.org/10.1016/j.jcp.2003.09.032.">AJT04</a>]</span>, an Ersatz material with small material parameters is introduced in <span class="math notranslate nohighlight">\(D \setminus \Omega\)</span> to extend the problem formulation from domain <span class="math notranslate nohighlight">\(\Omega\)</span> to the fixed working domain <span class="math notranslate nohighlight">\(D\)</span>. Using small material parameters instead of setting material parameters to zero outside of <span class="math notranslate nohighlight">\(\Omega\)</span> avoids singularities in the stiffness matrix. In practice, a characteristic function <span class="math notranslate nohighlight">\(\chi(x)\in\left\{0;1\right\}\)</span>, representing the presence or absence of soft material is defined for each <span class="math notranslate nohighlight">\(x\in D\)</span>. Then we can construct an extension of the elasticity tensor on the entire domain <span class="math notranslate nohighlight">\(D\)</span>:</p>
+<span id="demoersatz"></span><h3>Ersatz material method<a class="headerlink" href="#ersatz-material-method" title="Link to this heading">¶</a></h3>
+<p>Proposed in <span class="bibtex-citation" id="id4">[<a class="reference internal" href="bibliography.html#id17" title="Grégoire Allaire, François Jouve, and Anca-Maria Toader. Structural optimization using sensitivity analysis and a level-set method. Journal of Computational Physics, 194(1):363-393, 2004. URL: https://www.sciencedirect.com/science/article/pii/S002199910300487X, doi:https://doi.org/10.1016/j.jcp.2003.09.032.">AJT04</a>]</span>, an Ersatz material with small material parameters is introduced in <span class="math notranslate nohighlight">\(D \setminus \Omega\)</span> to extend the problem formulation from domain <span class="math notranslate nohighlight">\(\Omega\)</span> to the fixed working domain <span class="math notranslate nohighlight">\(D\)</span>. Using small material parameters instead of setting material parameters to zero outside of <span class="math notranslate nohighlight">\(\Omega\)</span> avoids singularities in the stiffness matrix. In practice, a characteristic function <span class="math notranslate nohighlight">\(\chi(x)\in\left\{0;1\right\}\)</span>, representing the presence or absence of soft material is defined for each <span class="math notranslate nohighlight">\(x\in D\)</span>. Then we can construct an extension of the elasticity tensor on the entire domain <span class="math notranslate nohighlight">\(D\)</span>:</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[A_{\chi}(x):=\alpha\chi(x)+\beta\left(1-\chi(x)\right)\text{ for all }x\in D\]</div>
+</div>
 <p>where <span class="math notranslate nohighlight">\(\beta\)</span> is the elasticity tensor of the solid material and <span class="math notranslate nohighlight">\(\alpha=\varepsilon\beta\)</span> is the elasticity tensor of the soft material. We set <span class="math notranslate nohighlight">\(\varepsilon=10^{-3}\)</span>. <span class="math notranslate nohighlight">\(\chi(x)\)</span> is a characteristic function defined as :</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[\begin{split}\chi(x) =
 \begin{cases}
-1 &amp;\mbox{, if } x \in \Omega,\\
-0 &amp;\mbox{, elsewhere}.
+1 &amp;\text{, if } x \in \Omega,\\
+0 &amp;\text{, elsewhere}.
 \end{cases}\end{split}\]</div>
-<p>We use the smoothened characteristic function <a class="reference internal" href="#equation-eqn-smooth-heaviside">(14)</a>.
+</div>
+<p>We use the smoothened characteristic function <a class="reference internal" href="#equation-eqn-smooth-heaviside">(17)</a>.
 The Ersatz material method is simple to apply and to implement but it may suffer from a lack of precision in the calculation of mechanical fields, particularly for coarse meshes.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Implementation Note:</strong> In OptiCut, this approach is fully implemented in the <code class="docutils literal notranslate"><span class="pre">solvers/ersatz_elastic_solver.py</span></code> module. The physical properties are penalized according to the smoothed Heaviside function evaluated on the standard finite element integration points.</p>
+</div>
 </section>
 <section id="zero-extension-outside-of-active-mesh-deactivation">
-<h3>Zero extension outside of active mesh (Deactivation)<a class="headerlink" href="#zero-extension-outside-of-active-mesh-deactivation" title="Link to this heading"></a></h3>
+<h3>Zero extension outside of active mesh (Deactivation)<a class="headerlink" href="#zero-extension-outside-of-active-mesh-deactivation" title="Link to this heading">¶</a></h3>
 <p>An alternative to using the Ersatz material method is to set all unknowns to zero outside of <span class="math notranslate nohighlight">\(\Omega\)</span>. In practice, we set the unknowns, in our case the displacement, to zero in all degrees of freedom which do not belong to the active mesh.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Implementation Note:</strong> The deactivation of external degrees of freedom is handled automatically in OptiCut when using CutFEM. The linear algebra backend zeroes out the matrix blocks corresponding to the outside domain, maintaining problem sparsity without ill-conditioning.</p>
+</div>
 </section>
 </section>
 <section id="cutting-and-integration">
-<h2>Cutting and Integration<a class="headerlink" href="#cutting-and-integration" title="Link to this heading"></a></h2>
+<h2>Cutting and Integration<a class="headerlink" href="#cutting-and-integration" title="Link to this heading">¶</a></h2>
 <p>In our CutFEM approach, we represent the boundary as a sharp interface. As such, we reconstruct the zero level set contour line by computing linear cuts through the mesh elements. We then integrate on those resulting cuts (volume and boundary cuts) as detailed below. For simplicity explanations are given in detail for dimension two.  As mentioned above, we use a level set function, <span class="math notranslate nohighlight">\(\phi\)</span>, to describe <span class="math notranslate nohighlight">\(\Omega\)</span>. We approximate <span class="math notranslate nohighlight">\(\phi\)</span> in a finite element space by interpolation, which we denote as <span class="math notranslate nohighlight">\(\phi_h\)</span>. This means, using linear Lagrangian elements, <span class="math notranslate nohighlight">\(\phi_h\)</span> has one value in each vertex of the mesh, which we then use for cutting.</p>
 <section id="element-categorization">
-<h3>Element Categorization<a class="headerlink" href="#element-categorization" title="Link to this heading"></a></h3>
-<p>In the first step, the sign of the level-set function is checked in each node of the element to determine if the element is intersected by the interface (changing sign), within the domain (<span class="math notranslate nohighlight">\(\phi_h(x_i)\leq0, \forall i\)</span>), or outside (<span class="math notranslate nohighlight">\(\phi_h(x_i)&gt;0, \forall i\)</span>). An example is given where the elements in  <a class="reference internal" href="#trianglecut"><span class="std std-numref">Figure 4</span></a> is marked as intersected by the interface, the element in <a class="reference internal" href="#trianglein"><span class="std std-numref">Figure 5</span></a> is marked as an element of the active domain and the element in  <a class="reference internal" href="#triangleout"><span class="std std-numref">Figure 6</span></a> is marked as element outside of the active domain.</p>
+<h3>Element Categorization<a class="headerlink" href="#element-categorization" title="Link to this heading">¶</a></h3>
+<p>In the first step, the sign of the level-set function is checked in each node of the element to determine if the element is intersected by the interface (changing sign), within the domain (<span class="math notranslate nohighlight">\(\phi_h(x_i)\leq0, \forall i\)</span>), or outside (<span class="math notranslate nohighlight">\(\phi_h(x_i)&gt;0, \forall i\)</span>). An example is given where the elements in  <a class="reference internal" href="#trianglecut"><span class="std std-numref">Figure 18</span></a> is marked as intersected by the interface, the element in <a class="reference internal" href="#trianglein"><span class="std std-numref">Figure 19</span></a> is marked as an element of the active domain and the element in  <a class="reference internal" href="#triangleout"><span class="std std-numref">Figure 20</span></a> is marked as element outside of the active domain.</p>
 </section>
 <section id="interface-reconstruction-and-cutting">
-<h3>Interface Reconstruction and Cutting<a class="headerlink" href="#interface-reconstruction-and-cutting" title="Link to this heading"></a></h3>
-<p>To reconstruct the interface in order to integrate over <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(\Omega_K = \Omega_h \cap K\)</span>, a simple linear interpolation of level set values is used to calculate the points of intersection between the edges of the element <span class="math notranslate nohighlight">\(K\)</span> and the interface. Then we use these intersection points to obtain a linear approximation of <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(K \cap \Omega_h\)</span> (see <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 7</span></a> and <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 8</span></a>).</p>
+<h3>Interface Reconstruction and Cutting<a class="headerlink" href="#interface-reconstruction-and-cutting" title="Link to this heading">¶</a></h3>
+<p>To reconstruct the interface in order to integrate over <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(\Omega_K = \Omega_h \cap K\)</span>, a simple linear interpolation of level set values is used to calculate the points of intersection between the edges of the element <span class="math notranslate nohighlight">\(K\)</span> and the interface. Then we use these intersection points to obtain a linear approximation of <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(K \cap \Omega_h\)</span> (see <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 21</span></a> and <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 22</span></a>).</p>
 <div class="images-row docutils container">
 <div class="centered-figure docutils container">
 <figure class="align-left" id="id6">
 <span id="trianglecut"></span><a class="reference internal image-reference" href="_images/triangle_cut.png"><img alt="_images/triangle_cut.png" src="_images/triangle_cut.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 4 </span><span class="caption-text">Element cut by the interface.</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 18 </span><span class="caption-text">Element cut by the interface.</span><a class="headerlink" href="#id6" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -197,7 +400,7 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <span id="trianglein"></span><a class="reference internal image-reference" href="_images/triangle_in.png"><img alt="_images/triangle_in.png" src="_images/triangle_in.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 5 </span><span class="caption-text">Element in the active domain.</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 19 </span><span class="caption-text">Element in the active domain.</span><a class="headerlink" href="#id7" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -206,7 +409,7 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <span id="triangleout"></span><a class="reference internal image-reference" href="_images/triangle_out.png"><img alt="_images/triangle_out.png" src="_images/triangle_out.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 6 </span><span class="caption-text">Element outside the active domain.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 20 </span><span class="caption-text">Element outside the active domain.</span><a class="headerlink" href="#id8" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -214,85 +417,151 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <div class="images-row docutils container">
 <div class="centered-figure docutils container">
 <figure class="align-left" id="id9">
-<span id="submesh1"></span><a class="reference internal image-reference" href="_images/subtriangle_1.png"><img alt="_images/subtriangle_1.png" src="_images/subtriangle_1.png" style="width: 100%;" />
+<span id="submesh1"></span><a class="reference internal image-reference" href="_images/sub_triangle_1.png"><img alt="_images/sub_triangle_1.png" src="_images/sub_triangle_1.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 7 </span><span class="caption-text">Triangle cut by the boundary <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id9" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 21 </span><span class="caption-text">Triangle cut by the boundary <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id9" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id10">
-<span id="submesh2"></span><a class="reference internal image-reference" href="_images/subtriangle_2.png"><img alt="_images/subtriangle_2.png" src="_images/subtriangle_2.png" style="width: 70%;" />
+<span id="submesh2"></span><a class="reference internal image-reference" href="_images/sub_triangle_2.png"><img alt="_images/sub_triangle_2.png" src="_images/sub_triangle_2.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 8 </span><span class="caption-text">Sub-triangulation construction.</span><a class="headerlink" href="#id10" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 22 </span><span class="caption-text">Sub-triangulation construction.</span><a class="headerlink" href="#id10" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 </div>
 </section>
 <section id="sub-integration-for-volume-integral">
-<h3>Sub-integration for volume integral<a class="headerlink" href="#sub-integration-for-volume-integral" title="Link to this heading"></a></h3>
-<p>We generate the quadrature rules over <span class="math notranslate nohighlight">\(\Omega_K\)</span> by sub-triangulation. For straight cuts in a triangle, this means either a triangle part or a quadrilateral part which we split into 2 sub-triangles. <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 8</span></a> shows an example of the sub-triangulation of a triangle element <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 7</span></a>.
+<h3>Sub-integration for volume integral<a class="headerlink" href="#sub-integration-for-volume-integral" title="Link to this heading">¶</a></h3>
+<p>We generate the quadrature rules over <span class="math notranslate nohighlight">\(\Omega_K\)</span> by sub-triangulation. For straight cuts in a triangle, this means either a triangle part or a quadrilateral part which we split into 2 sub-triangles. <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 22</span></a> shows an example of the sub-triangulation of a triangle element <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 21</span></a>.
 To generate the integration rule, we map the standard integration rule from a standard reference element onto a cut reference element.
-We define a mapping between the quadrature rule on the reference element and the sub-elements <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span>, which transforms the quadrature rule on the reference element to a quadrature rule on <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span> elements. Note that this means we now need to evaluate shape functions and their derivatives in non-standard points inside the reference element (see <a class="reference internal" href="#mappingintegration"><span class="std std-numref">Figure 9</span></a>).</p>
+We define a mapping between the quadrature rule on the reference element and the sub-elements <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span>, which transforms the quadrature rule on the reference element to a quadrature rule on <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span> elements. Note that this means we now need to evaluate shape functions and their derivatives in non-standard points inside the reference element (see <a class="reference internal" href="#mappingintegration"><span class="std std-numref">Figure 23</span></a>).</p>
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id11">
 <span id="mappingintegration"></span><a class="reference internal image-reference" href="_images/mapping_integration.png"><img alt="_images/mapping_integration.png" src="_images/mapping_integration.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 9 </span><span class="caption-text">Illustration of mapping corresponding to sub-triangulation.</span><a class="headerlink" href="#id11" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 23 </span><span class="caption-text">Illustration of mapping corresponding to sub-triangulation.</span><a class="headerlink" href="#id11" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="sub-integration-for-interface-or-surface-integral">
-<h3>Sub-integration for interface (or surface) integral<a class="headerlink" href="#sub-integration-for-interface-or-surface-integral" title="Link to this heading"></a></h3>
-<p>To integrate over the interface (or surface) parts <span class="math notranslate nohighlight">\(\Gamma_K\)</span>, we use a similar technique to generate the quadrature rules. The important difference is here that the element used to generate the quadrature rule has a different dimension toe the reference element in which the quadrature rule is used. This means, we interpret the interface represented by an interval reference element as part of the triangular element. We map the integration rule from the standard reference interval (1D) to part of the triangle (2D). This mapping is mixed dimensional to generate the quadrature rule. An example of the approximation of the <span class="math notranslate nohighlight">\(\Gamma_K\)</span> integral as part of <span class="math notranslate nohighlight">\(K\)</span> is given in <a class="reference internal" href="#mappingintegrationfacet"><span class="std std-numref">Figure 10</span></a>.</p>
+<h3>Sub-integration for interface (or surface) integral<a class="headerlink" href="#sub-integration-for-interface-or-surface-integral" title="Link to this heading">¶</a></h3>
+<p>To integrate over the interface (or surface) parts <span class="math notranslate nohighlight">\(\Gamma_K\)</span>, we use a similar technique to generate the quadrature rules. The important difference is here that the element used to generate the quadrature rule has a different dimension toe the reference element in which the quadrature rule is used. This means, we interpret the interface represented by an interval reference element as part of the triangular element. We map the integration rule from the standard reference interval (1D) to part of the triangle (2D). This mapping is mixed dimensional to generate the quadrature rule. An example of the approximation of the <span class="math notranslate nohighlight">\(\Gamma_K\)</span> integral as part of <span class="math notranslate nohighlight">\(K\)</span> is given in <a class="reference internal" href="#mappingintegrationfacet"><span class="std std-numref">Figure 24</span></a>.</p>
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id12">
 <span id="mappingintegrationfacet"></span><a class="reference internal image-reference" href="_images/mapping_integration_facet.png"><img alt="_images/mapping_integration_facet.png" src="_images/mapping_integration_facet.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 10 </span><span class="caption-text">Illustration of mapping corresponding to sub-integration over <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id12" title="Link to this image"></a></p>
+<p><span class="caption-number">Figure 24 </span><span class="caption-text">Illustration of mapping corresponding to sub-integration over <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id12" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 <p>We will henceforth refer to these integrals as cut integrals and their mesh parts as cut meshes.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Implementation Note:</strong> OptiCut leverages the <code class="docutils literal notranslate"><span class="pre">cutfemx</span></code> library to perform this exact sub-triangulation and generate the custom quadrature rules dynamically. The active cells and interface facets are identified and processed seamlessly within the <code class="docutils literal notranslate"><span class="pre">_build_measures</span></code> method of the <code class="docutils literal notranslate"><span class="pre">CutFEMElasticSolver</span></code> class.</p>
+</div>
 </section>
 </section>
 </section>
 
-
-           </div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="demo_cutfem_optim.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Shape optimization with CutFEM</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="demo_optim.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Shape optimization method</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, ONERA and MINES PARIS - PSL
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="demo_optim.html" class="btn btn-neutral float-left" title="Shape optimization method" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="demo_cutfem_optim.html" class="btn btn-neutral float-right" title="Shape optimization with CutFEM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
     </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">CutFEM for Immersed geometry discretization</a><ul>
+<li><a class="reference internal" href="#definition-of-mesh-parts">Definition of mesh parts</a></li>
+<li><a class="reference internal" href="#interface-discretization">Interface discretization</a><ul>
+<li><a class="reference internal" href="#smooth-interface-representation">Smooth interface representation</a></li>
+<li><a class="reference internal" href="#sharp-interface-representation">Sharp interface representation:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#discretization-of-outside-domain-d-setminus-omega">Discretization of outside domain <span class="math notranslate nohighlight">\(D \setminus \Omega\)</span></a><ul>
+<li><a class="reference internal" href="#ersatz-material-method">Ersatz material method</a></li>
+<li><a class="reference internal" href="#zero-extension-outside-of-active-mesh-deactivation">Zero extension outside of active mesh (Deactivation)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cutting-and-integration">Cutting and Integration</a><ul>
+<li><a class="reference internal" href="#element-categorization">Element Categorization</a></li>
+<li><a class="reference internal" href="#interface-reconstruction-and-cutting">Interface Reconstruction and Cutting</a></li>
+<li><a class="reference internal" href="#sub-integration-for-volume-integral">Sub-integration for volume integral</a></li>
+<li><a class="reference internal" href="#sub-integration-for-interface-or-surface-integral">Sub-integration for interface (or surface) integral</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2025, ONERA and MINES PARIS - PSL.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
+          </div>
         </div>
       </div>
-    </section>
+      
+      
+    </aside>
   </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+</div><script src="_static/documentation_options.js?v=29a6c3e3"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
 </html>

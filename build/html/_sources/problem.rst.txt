@@ -4,12 +4,12 @@ Problem Class
 Class
 -------
 
-.. autoclass:: problem.Compliance_Problem
+.. autoclass:: config.problem.Compliance_Problem
 	:members:
 
 
-.. autoclass:: problem.VMLp_Problem
+.. autoclass:: config.problem.VMLp_Problem
 	:members:
 	
-.. autoclass:: problem.AreaProblem
+.. autoclass:: config.problem.AreaProblem
 	:members:

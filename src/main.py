@@ -1,85 +1,89 @@
-# Copyright (c) 2025 ONERA and MINES Paris, France 
+# Copyright (c) 2025 ONERA and MINES Paris, France
 #
 # All rights reserved.
 #
 # This file is part of OptiCut.
 #
-# Author(s)     : Amina El Bachari 
+# Author(s)     : Amina El Bachari
 
-# The modules that will be used are imported:
+import os
+
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 import numpy as np
+import gc
+import time as time_module
+
+start_time_total = time_module.time()
+
 
 import ufl
- 
-# mathematical language for FEM, auto differentiation, python
+
 from dolfinx import fem, io, mesh
 from dolfinx.cpp.mesh import h as mesh_size
 import matplotlib.pyplot as plt
-# meshes, assembly, c++, ython, pybind
 from ufl import ds
 
 from petsc4py.PETSc import ScalarType
 from petsc4py import PETSc
 from typing import TYPE_CHECKING
-import pyvista
 
 
 from dolfinx.fem import Function
-import dolfinx.fem.petsc 
+import dolfinx.fem.petsc
 from dolfinx.mesh import meshtags
 from mpi4py import MPI
 from petsc4py.PETSc import ScalarType
 from ufl import *
 
-from Parameters import *
-from create_mesh import *
-from ersatz_elastic_solver import *
-from cutfem_elastic_solver import *
-from levelSet_tool import *
-from velocity_tools import *
-from geometry_initialization import *
-import almMethod 
+from config.parameters import *
+from utils.ls_utils import *
+from solvers.ersatz_elastic_solver import *
+from solvers.cutfem_elastic_solver import *
+from levelset.levelSet_tool import *
+from levelset.velocity_tools import *
+from optimization import almMethod
+from levelset import geometry_initialization
 
 import shutil
 import os
 
-import mechanics_tool
-import data_manipulation
-import opti_tool
-import problem
-import almMethod 
+from utils import mechanics_tool
+from utils import data_manipulation
+from optimization import opti_tool
+from config import problem
+from optimization import almMethod
 
-import gmsh
+# Import the boundary conditions module
+from fem.boundary_conditions import initialize_boundary_conditions, initialize_shift
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-class style():
-    BLACK = '\033[30m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN = '\033[36m'
-    WHITE = '\033[37m'
-    UNDERLINE = '\033[4m'
-    RESET = '\033[0m'
+
+def get_memory_usage():
+    with open("/proc/self/status") as f:
+        for line in f:
+            if "VmRSS" in line:
+                return int(line.split()[1])
+    return 0
 
 
-if rank == 0:
-    shutil.rmtree('res')
-    os.mkdir('res')
-    folder_cost_func = open("res/cost_func.txt", "x")
-    folder_cost_compliance = open("res/cost_compliance.txt", "x")
-    folder_lagrangian = open("res/lagrangian.txt", "x")
-    folder_constraint = open("res/constraint.txt", "x")
-    folder_max_vm = open("res/max_vm.txt", "x")
-    folder_volume = open("res/volume.txt", "x")
-    folder_param_lagrangian = open("res/param_lagrangian.txt", "x")
-    folder_param_hist_vm_1 = open("res/vm_1_hist.txt", "x")
-    folder_param_hist_vm_final = open("res/vm_final_hist.txt", "x")
+class style:
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
+    UNDERLINE = "\033[4m"
+    RESET = "\033[0m"
+
+
+# Limit history size to avoid memory accumulation
+MAX_HISTORY = 1000
 
 
 compliance = 1
@@ -87,18 +91,22 @@ vect_cost = []
 vect_volume = []
 vect_compliance = []
 vect_constraint = []
-vect_constraint = []
 vect_target_constraint = []
 vect_lagrangian = []
 vect_max_vm = []
 
-type_constraint_vm = "PN"
-
-
-i = 0
-from config_utils import load_parameters, init_output_folders
-from function_spaces_utils import init_function_spaces
-from bc_utils import initialize_boundary_conditions, initialize_shift
+from mpi4py import MPI
+from dolfinx import fem, mesh, io
+import ufl
+from utils.config_utils import load_parameters, init_output_folders
+from utils.spaces_utils import init_function_spaces
+from config.problem import Compliance_Problem, VMLp_Problem, AreaProblem
+from solvers.ersatz_elastic_solver import *
+from solvers.cutfem_elastic_solver import *
+from levelset.levelSet_tool import *
+from utils import data_manipulation
+from optimization import almMethod
+import sys
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -108,538 +116,639 @@ rank = comm.Get_rank()
 # ----------------------------
 init_output_folders(rank)
 
+if rank == 0:
+    output_files = {
+        "cost_func": open("res/cost_func.txt", "w"),
+        "constraint": open("res/constraint.txt", "w"),
+        "max_vm": open("res/max_vm.txt", "w"),
+        "param_lagrangian": open("res/param_lagrangian.txt", "w"),
+        "memory": open("res/memory.txt", "w"),
+        "memory_per_process": open("res/memory_per_process.txt", "w"),
+    }
+
 # ----------------------------
 # Load parameters
 # ----------------------------
 use_file = 1
-param_file = "parameters/param_VonMises.txt"
+param_file = sys.argv[1] if len(sys.argv) > 1 else "parameters/param_compliance.txt"
 parameters = load_parameters(use_file=use_file, filename=param_file)
 
 
-###################################
-#### 	Mesh generation 	   ####
-###################################
-print("Choose the test case:")
-print(" - for 3D : '3D' ")
-print(" - for L shape write : 'L_shape' ")
-print(" - for cantilever in 2D : 'rectangle' ")
-test_case = "L_shape"  #input()
-xdmf_filename =  "mesh/L_VM.xdmf"
-
-if test_case=='rectangle':
-    parameters.lx = 2
-    parameters.ly = 1
-    parameters.lz = 0
-    msh = create_mesh_2D(parameters.lx, parameters.ly, int(parameters.lx/parameters.h),int(parameters.ly/parameters.h))
-elif test_case=='L_shape':
-    parameters.lx = 1
-    parameters.ly = 1
-    parameters.lz = 0
-    with io.XDMFFile(MPI.COMM_WORLD, "mesh.xdmf", "w") as xdmf:
-        msh, ct, _ = io.gmshio.read_from_msh("mesh/rectangle.msh", MPI.COMM_WORLD, 0, gdim=2)
-        xdmf.write_mesh(msh)
-elif test_case=='3D':
-    parameters.lx = 2
-    parameters.ly = 1
-    parameters.lz = 1
-    msh = create_mesh_3D(parameters.lx, parameters.ly,  parameters.lz, int(parameters.lx/parameters.h),\
-        int(parameters.ly/parameters.h), int(parameters.lz/parameters.h))
-else :
-    print("not implemented test case")
-
-msh.topology.create_connectivity(msh.topology.dim, msh.topology.dim-1)
-
+# ----------------------------
+# Mesh generation
+# ----------------------------
+# test_case = "L_shape"  # could be user input
+# msh = load_mesh(test_case, parameters, mesh_folder="mesh")
+msh = load_mesh(parameters.mesh_case, parameters, mesh_folder="mesh")
+msh.topology.create_connectivity(msh.topology.dim, msh.topology.dim - 1)
 
 # ----------------------------
 # Initialize function spaces
 # ----------------------------
 spaces = init_function_spaces(msh)
-V, V_vm, V_ls, Q, V_DG = spaces["V"], spaces["V_vm"], spaces["V_ls"], spaces["Q"], spaces["V_DG"]
+V, V_vm, V_ls, Q, V_DG = (
+    spaces["V"],
+    spaces["V_vm"],
+    spaces["V_ls"],
+    spaces["Q"],
+    spaces["V_DG"],
+)
 
 
-# Initialization of the spacial coordinate
+# ----------------------------
+# Initialize level set
+# ----------------------------
 x = ufl.SpatialCoordinate(msh)
-
-## Initialization of the level set function
-# l.s. function is used to defined the geometry
-
-if test_case == "L_shape":
-    ls_func_ufl = level_set_L_shape(x) 
-elif test_case == "rectangle":
-    ls_func_ufl = level_set(x,parameters) 
-elif test_case == "3D":
-    ls_func_ufl = level_set_3D(x,parameters)
-else :
-    print("not implemented test case")
-
-
-ls_func_expr = fem.Expression(ls_func_ufl, V_ls.element.interpolation_points())
-ls_func = Function(V_ls)
-ls_func.interpolate(ls_func_expr)
-
-
-## Initialization of BC   
-# Dirichlet condition initialization
-
-def clamped_boundary_cantilever(x):
-    return np.isclose(x[0], 0)
-
-def clamped_boundary_L_shape(x):
-    return (x[1]>(1. -1e-6))
-
-
-dim = msh.topology.dim
-fdim = msh.topology.dim - 1 #facet dimension
-
-
-if test_case == "L_shape":
-    boundary_facets = mesh.locate_entities_boundary(msh, fdim,clamped_boundary_L_shape)
-    u_D = np.array([0,0], dtype=ScalarType)
-elif test_case =="3D":
-    boundary_facets = mesh.locate_entities_boundary(msh, fdim,clamped_boundary_cantilever)
-    u_D = np.array([0,0,0], dtype=ScalarType)
-elif test_case == "rectangle":
-    boundary_facets = mesh.locate_entities_boundary(msh, fdim,clamped_boundary_cantilever)
-    u_D = np.array([0,0], dtype=ScalarType)
-else :
-    print("not implemented test case")
-
-bc = fem.dirichletbc(u_D, fem.locate_dofs_topological(V, fdim, boundary_facets), V)
-bcs= [bc]
-# Neumann condition initialization for load traction
-
-def load_marker(x):
-    if test_case == "L_shape":
-        return np.logical_and(x[0]>(parameters.lx-1e-6),x[1]>0.35)
-    
-    elif test_case == "3D":
-        R = 0.15
-        return np.logical_and((x[0]>=parameters.lx-1e-6),((x[2]-0.5)**2+(x[1]-0.5)**2-R**2) <0)
-    elif test_case == "rectangle":
-        return np.logical_and(np.isclose(x[0],parameters.lx),np.logical_and(x[1]<(0.55),x[1]>(0.45))) 
-    else:
-        print("not implemented test case")
-
-
-
-facet_indices, facet_markers = [], []
-facets = mesh.locate_entities(msh, fdim, load_marker)
-boundary_dofs = fem.locate_dofs_geometrical(V_ls, load_marker) # collect dofs where Dirichlet bc want to be imposed for the velocity field
-bc_velocity = fem.dirichletbc(ScalarType(0.), boundary_dofs, V_ls) # dirichlet bc fr the velocity field
-facet_indices.append(facets)
-facet_markers.append(np.full_like(facets, 2))
-
-facet_indices = np.hstack(facet_indices).astype(np.int32)
-facet_markers = np.hstack(facet_markers).astype(np.int32)
-sorted_facets = np.argsort(facet_indices)
-facet_tag = meshtags(msh, fdim, facet_indices[sorted_facets], facet_markers[sorted_facets])
-ds = ufl.Measure("ds", domain=msh, subdomain_data=facet_tag)
-
-if test_case=="3D":
-    shift = fem.Constant(msh, ScalarType((0., -parameters.strenght, 0.)))
-elif test_case == "rectangle" or test_case == "L_shape": 
-    shift = fem.Constant(msh, ScalarType((0., -parameters.strenght)))
-else :
-    print("not implemented test case")
-
-if parameters.cost_func=="compliance":
-    problem_topo = problem.Compliance_Problem()
-elif parameters.cost_func == "VonMises":
-    problem_topo = problem.VMLp_Problem()
-elif parameters.cost_func == "Area":
-    problem_topo = problem.AreaProblem()
-else :
-    print("problem not implemented")
-
-Advection = Advection(ls_func, V_ls=V_ls, dt=parameters.dt)
-Reinitialization = Reinitialization(ls_func, V_ls=V_ls, l=parameters.l_reinit)
-ErsatzMethod = ErsatzElasticSolver(ls_func,V_ls, V, ds = ds, bc = bcs, bc_velocity = bc_velocity, parameters = parameters, shift = shift)
-CutFemMethod = CutFEMElasticSolver(ls_func,V_ls, V, ds = ds, bc = bcs, bc_velocity = bc_velocity,  parameters = parameters, problem_topo= problem_topo, shift = shift)
-
-lame_mu,lame_lambda = mechanics_tool.lame_compute(parameters.young_modulus,parameters.poisson)
-
-
-
-velocity_field = Function(V_ls)
-velocity_field.x.array[:] = CutFemMethod.level_set.x.array*0
-
-###################################
-####    Reinitialization       ####
-###################################
-CutFemMethod.level_set = Reinitialization.reinitializationPC(CutFemMethod.level_set,parameters.step_reinit)
-               
-# ls_predict, temp_func = Reinitialization.predictor(CutFemMethod.level_set)
-# CutFemMethod.level_set.x.array[:] = ls_predict.x.array
-
-# num_step = 0
-# while (num_step < 3):
-#     num_step += 1
-#     ls_correct = Reinitialization.corrector(CutFemMethod.level_set)
-#     CutFemMethod.level_set.x.array[:] = ls_correct.x.array
-#     CutFemMethod.level_set.x.scatter_forward() 
-    
-
-
-#Creation of temporary level set function, wich will be used to actualize level_set function if 
-#the direction is a descent direction (ie: J(\Omega_n+1)<J(\Omega_n) ) 
-ls_func_temp = Function(V_ls)
-ls_func_temp.x.array[:] = CutFemMethod.level_set.x.array
-crit_0 = 1e10
-crit =  [1e+3,1e+6,1e+6,1e+6] #criterion of stagnation for the previous 3 iterations
-lagrangian =  [1e+3,1e+6,1e+6,1e+6] #criterion of stagnation of the lagrangian for the previous 3 iterations
-cv = 0 # 0 if convergence is reached ie: J(\Omega_n+1)-J(\Omega_n)>tol_compliance // 1 else 
-
-########################################################
-####    Definition of trial and test function       ####
-########################################################
-
-u = ufl.TrialFunction(V)
-v = ufl.TestFunction(V)
-uh = fem.Function(V)
-ph = fem.Function(V)
-u_r = ufl.TrialFunction(V_ls)
-v_r = ufl.TestFunction(V_ls)
-ls_func_n = ufl.TrialFunction(V_ls)
-ls_func_test = ufl.TestFunction(V_ls)
-
-print(style.RED+'##########################################')
-print(style.RED+'##### Initialization of the problem  #####')
-print(style.RED+'##########################################')
-print(style.WHITE+" ")
-
-##########################################
-## DUAL and PRIMAL problem :
-##########################################
-
-xsi_temp = Function(V_ls)
-
-
-if parameters.cutFEM == 1:
-    uh = CutFemMethod.primal_problem(ls_func_temp)
-    cost_integrand = problem_topo.cost_integrand(uh,lame_mu,lame_lambda,parameters)
-    
-    cost = problem_topo.cost(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,CutFemMethod.dxq,parameters)
-
-    shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,CutFemMethod.dxq)
-    vm_list = data_manipulation.create_list_vm(msh,uh,parameters,lame_mu,lame_lambda,0,CutFemMethod.level_set,V_ls,Q,0)
-
-    constraint = problem_topo.constraint(uh,lame_mu,lame_lambda,parameters,CutFemMethod.dxq,0,vm_list)
-    almMethod.maj_param_constraint_optim_slack(parameters,constraint)
-    if parameters.cost_func != "compliance" : 
-        dual_operator  = problem_topo.dual_operator(uh,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,msh,CutFemMethod.dxq,vm_list)
-        ph = CutFemMethod.adjoint_problem(uh,ls_func_temp,dual_operator)
-    shape_derivative_constraint_integrand = problem_topo.shape_derivative_integrand_constraint(uh,ph,lame_mu,lame_lambda,parameters,CutFemMethod.dxq,vm_list)
-
+if hasattr(parameters, "level_set_init") and hasattr(
+    geometry_initialization, parameters.level_set_init
+):
+    ls_init_func = getattr(geometry_initialization, parameters.level_set_init)
+    try:
+        ls_ufl = ls_init_func(x, parameters)
+    except TypeError:
+        ls_ufl = ls_init_func(x)
 else:
-    uh, ph = ErsatzMethod.ersatz_solver(ls_func, parameters) 
-    cost_integrand = problem_topo.cost_integrand(uh,lame_mu,lame_lambda,parameters)
-    cost = dolfinx.fem.assemble_scalar(fem.form(0.5*(2.0*ErsatzMethod.lame_mu_fic  * ufl.inner(mechanics_tool.strain(uh), mechanics_tool.strain(uh))  + ErsatzMethod.lame_lambda_fic *  ufl.inner(ufl.nabla_div(uh), ufl.nabla_div(uh)) )*ufl.dx))
+    # Fallback to defaults
+    if parameters.mesh_case == "L_shape":
+        ls_ufl = level_set_L_shape(x)
+    elif parameters.mesh_case == "rectangle":
+        ls_ufl = level_set(x, parameters)
+    elif parameters.mesh_case == "3D":
+        ls_ufl = level_set_3D(x, parameters)
+    else:
+        raise ValueError("Test case not implemented")
+pts = (
+    V_ls.element.interpolation_points()
+    if callable(getattr(V_ls.element, "interpolation_points", None))
+    else V_ls.element.interpolation_points
+)
+ls_expr = fem.Expression(ls_ufl, pts)
+ls_func = fem.Function(V_ls)
+ls_func.interpolate(ls_expr)
+ls_func.x.scatter_forward()
 
-    #problem_topo.cost(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,ufl.dx,parameters)
-    shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,ufl.dx)
+# ----------------------------
+# Boundary conditions & shift
+# ----------------------------
+bcs, bc_velocity, ds = initialize_boundary_conditions(
+    parameters.mesh_case, msh, V, V_ls, parameters
+)
+shift = initialize_shift(parameters.mesh_case, msh, parameters)
 
+# ----------------------------
+# Select problem type
+# ----------------------------
+if parameters.cost_func == "compliance":
+    problem_topo = Compliance_Problem()
+elif parameters.cost_func == "VonMises":
+    problem_topo = VMLp_Problem()
+elif parameters.cost_func == "Area":
+    problem_topo = AreaProblem()
+else:
+    raise ValueError("Problem type not implemented")
 
+# ----------------------------
+# Initialize solvers
+# ----------------------------
+AdvectionSolver = Advection(ls_func, V_ls=V_ls, dt=parameters.dt)
+ReinitSolver = Reinitialization(ls_func, V_ls=V_ls, l=parameters.l_reinit)
+ErsatzSolver = ErsatzElasticSolver(
+    ls_func,
+    V_ls,
+    V,
+    ds=ds,
+    bc=bcs,
+    bc_velocity=bc_velocity,
+    parameters=parameters,
+    shift=shift,
+)
+CutFemSolver = CutFEMElasticSolver(
+    ls_func,
+    V_ls,
+    V,
+    ds=ds,
+    bc=bcs,
+    bc_velocity=bc_velocity,
+    parameters=parameters,
+    problem_topo=problem_topo,
+    shift=shift,
+)
 
+# ----------------------------
+# Reinitialization
+# ----------------------------
+ls_func = ReinitSolver.reinitializationPC(ls_func, parameters.step_reinit)
 
-k = 1.
-vm_list = data_manipulation.create_list_vm(msh,uh,parameters,lame_mu,lame_lambda,0,CutFemMethod.level_set,V_ls,Q,0)
-max_vm = k*np.max(vm_list.x.array[:])
-print("parameters.elasticity_limit = ",max_vm/parameters.elasticity_limit)
-
-
-time = 0.
-xdmf_ls = io.XDMFFile(msh.comm, "res/level_set.xdmf", "w")
-xdmf_ls.write_mesh(msh)
-ls_func.name = "ls_func"
-xdmf_ls.write_function(ls_func, time)
-uh.name = "disp"
-xdmf_ls.write_function(uh, time)
-ph.name = "dual"
-xdmf_ls.write_function(ph, time)
-vm_list.name = "vm_list"
-xdmf_ls.write_function(vm_list, time)
-time += 1
-
-time_ls = 0.
-xdmf_ = io.XDMFFile(msh.comm, "res/debogue.xdmf", "w")
-xdmf_.write_mesh(msh)
-ls_func.name = "ls_func"
-xdmf_.write_function(ls_func, time_ls)
-
+# ----------------------------
+# Solve primal & dual
+# ----------------------------
+uh, ph = None, None
 if parameters.cutFEM == 1:
-    measure = CutFemMethod.dxq
-    previous_cost = problem_topo.cost(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,measure,parameters)
-    shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,measure)
-    vm_list = data_manipulation.create_list_vm(msh,uh,parameters,lame_mu,lame_lambda,0,CutFemMethod.level_set,V_ls,Q,0)
-    
-    constraint = problem_topo.constraint(uh,lame_mu,lame_lambda,parameters,measure,0, vm_list)
-    almMethod.maj_param_constraint_optim(parameters,constraint)
-    dual_operator  = problem_topo.dual_operator(uh,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,msh,measure,vm_list)
-    shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,CutFemMethod.dxq)             
-    shape_derivative_integrand_constraint = problem_topo.shape_derivative_integrand_constraint(uh,ph,lame_mu,lame_lambda,parameters,CutFemMethod.dxq,vm_list)
+    uh, ph = CutFemSolver.cutfem_solver(ls_func, parameters, problem_topo)
+else:
+    uh, ph = ErsatzSolver.ersatz_solver(ls_func, parameters)
+
+# ----------------------------
+# Compute initial quantities
+# ----------------------------
+lame_mu, lame_lambda = mechanics_tool.lame_compute(
+    parameters.young_modulus, parameters.poisson
+)
+measure = CutFemSolver.dxq if parameters.cutFEM == 1 else ufl.dx
+
+cost = problem_topo.cost(uh, ph, lame_mu, lame_lambda, measure, parameters)
+shape_derivative = problem_topo.shape_derivative_integrand(
+    uh, ph, lame_mu, lame_lambda, parameters, measure
+)
+vm_list = data_manipulation.create_list_vm(
+    msh, uh, parameters, lame_mu, lame_lambda, 0, ls_func, V_ls, Q, 0
+)
+
+# ----------------------------
+# Save initial results
+# ----------------------------
+time = 0.0
+xdmf_file = io.XDMFFile(msh.comm, "res/results.xdmf", "w")
+xdmf_file.write_mesh(msh)
+velocity_field = fem.Function(V_ls)
+velocity_field.x.array[:] = 0.0
+
+for f, name in zip(
+    [ls_func, uh, ph, vm_list, velocity_field],
+    ["ls_func", "disp", "dual", "vm_list", "velocity"],
+):
+    f.name = name
+    xdmf_file.write_function(f, time)
+
+
+# ---------- Temporary level-set used during line-search / advection ----------
+ls_func_temp = fem.Function(V_ls)
+ls_func_temp.x.array[:] = CutFemSolver.level_set.x.array
+ls_func_temp.x.scatter_forward()
+
+crit_0 = 1e10
+crit = [1e3, 1e6, 1e6, 1e6]  # stagnation criteria history
+lagrangian = [1e3, 1e6, 1e6, 1e6]
+cv = 0  # 0 if convergence is reached, 1 otherwise.
+
+
+if rank == 0:
+    print(style.RED + "##########################################")
+    print(style.RED + "##### Initialization of the problem  #####")
+    print(style.RED + "##########################################")
+    print(style.WHITE + " ")
+
+# temporary placeholder
+xsi_temp = fem.Function(V_ls)
+
+# ---------- Initial vm_list and print ----------
+k = 1.0
+vm_list = data_manipulation.create_list_vm(
+    msh,
+    uh,
+    parameters,
+    lame_mu,
+    lame_lambda,
+    0,
+    CutFemSolver.level_set if parameters.cutFEM == 1 else ls_func_temp,
+    V_ls,
+    Q,
+    0,
+)
+max_vm = k * np.max(vm_list.x.array[:])
+max_vm = comm.allreduce(max_vm, op=MPI.MAX)
+
+# ---------- prepare measures and initial quantities ----------
+if parameters.cutFEM == 1:
+    measure = CutFemSolver.dxq
+    previous_cost = problem_topo.cost(
+        uh, ph, CutFemSolver.lame_mu, CutFemSolver.lame_lambda, measure, parameters
+    )
+    # already computed shape_derivative above
+    previous_constraint = problem_topo.constraint(
+        uh, lame_mu, lame_lambda, parameters, measure, 0, vm_list
+    )
+    almMethod.maj_param_constraint_optim(parameters, previous_constraint)
+    dual_operator = problem_topo.dual_operator(
+        uh,
+        CutFemSolver.lame_mu,
+        CutFemSolver.lame_lambda,
+        parameters,
+        msh,
+        measure,
+        vm_list,
+    )
+    shape_derivative_integrand_constraint = (
+        problem_topo.shape_derivative_integrand_constraint(
+            uh, ph, lame_mu, lame_lambda, parameters, ufl.dx, vm_DG=vm_list
+        )
+    )
 
 else:
     measure = ufl.dx
-    previous_cost = problem_topo.cost(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,measure,parameters)
+    previous_cost = problem_topo.cost(
+        uh,
+        ph,
+        ErsatzSolver.lame_mu_fic,
+        ErsatzSolver.lame_lambda_fic,
+        measure,
+        parameters,
+    )
+    previous_constraint = problem_topo.constraint(
+        uh,
+        ErsatzSolver.lame_mu_fic,
+        ErsatzSolver.lame_lambda_fic,
+        parameters,
+        measure,
+        ErsatzSolver.xsi,
+    )
+    almMethod.maj_param_constraint_optim(parameters, previous_constraint)
+    dual_operator = problem_topo.dual_operator(
+        uh,
+        ErsatzSolver.lame_mu_fic,
+        ErsatzSolver.lame_lambda_fic,
+        parameters,
+        msh,
+        measure,
+    )
+    shape_derivative_integrand_constraint = (
+        problem_topo.shape_derivative_integrand_constraint(
+            uh, ph, lame_mu, lame_lambda, parameters, ufl.dx, vm_DG=vm_list
+        )
+    )
 
-    shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,measure)
-
-    constraint = problem_topo.constraint(uh,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,measure,ErsatzMethod.xsi)
-    almMethod.maj_param_constraint_optim(parameters,constraint)
-    dual_operator  = problem_topo.dual_operator(uh,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,msh,measure)
-    shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,ufl.dx)             
-    shape_derivative_integrand_constraint = problem_topo.shape_derivative_integrand_constraint(uh,ph,lame_mu,lame_lambda,parameters,ufl.dx)
-
-lagrangian_cost_previous = 10**3
-lagrangian_cost = 10**3
+# init counters, parameters
+lagrangian_cost_previous = 1e3
+lagrangian_cost = 1e3
 adv_bool = 1
 c_param_HJ = 0.5
-
 n_k = 1
 c_k = 1
 
-almMethod.init_param_constraint_optim(constraint,parameters,cost)
+velocity_field = fem.Function(V_ls)
+velocity_field.x.array[:] = CutFemSolver.level_set.x.array * 0
+
+# almMethod.init_param_constraint_optim(previous_constraint, parameters, cost)
 resources = prepare_descent(msh, V_ls, parameters)
-while (i<parameters.max_incr) and ((abs(crit[0])>parameters.tol_cost_func) or \
-    (abs(crit[1])>parameters.tol_cost_func) or ((abs(crit[2])>parameters.tol_cost_func)) or (abs(crit[3])>parameters.tol_cost_func)):
-    c_param_HJ = opti_tool.adapt_c_HJ(c_param_HJ,crit,parameters.tol_cost_func,lagrangian)
-    print("c = ",c_param_HJ )
-    cv = 0
-    if adv_bool == 0:
-        adv_bool = 1
 
-    print(style.BLUE+"iteration number : ", i )
-    print(style.WHITE+"")
+# ============================================================
+# MEMORY OPTIMIZATION: Create reusable fem.Function objects
+# ============================================================
+solve = fem.Function(V_ls)
+solve_temp = fem.Function(V_ls)
+ls_new = fem.Function(V_ls)
+v_reg = fem.Function(V_ls)
+velocity_field_temp = fem.Function(V_ls)
 
-    ##########################################
-    ## ALM: parameters update
-    ##########################################
-    almMethod.maj_param_constraint_optim(parameters,constraint)
+# Pre-compile forms for velocity normalization
+L2_form_vel = fem.form(ufl.inner(velocity_field, velocity_field) * ufl.dx)
+grad_form_vel = fem.form(
+    ufl.inner(ufl.grad(velocity_field), ufl.grad(velocity_field)) * ufl.dx
+)
 
-    ##########################################
-    ## Velocity field 
-    ##########################################
-    velocity_field = descent_direction(CutFemMethod.level_set, msh, parameters, bc_velocity, V_ls,
-                              constraint, shape_derivative_integrand_constraint, shape_derivative,
-                              resources)
-    velocity_field = velocity_normalization(velocity_field,parameters.alpha_reg_velocity)
+# Create vm_list once and reuse it
+vm_calculator = data_manipulation.VonMisesCalculator(
+    msh,
+    V_ls,
+    Q,
+    uh,
+    lame_mu,
+    lame_lambda,
+    CutFemSolver.level_set if parameters.cutFEM == 1 else ls_func_temp,
+)
+vm_list = vm_calculator.compute()
 
-    velocity_expr = fem.Expression(velocity_field, V_ls.element.interpolation_points())
-    velocity = fem.Function(V_ls)
-    velocity.interpolate(velocity_expr)
+i = 0
 
-    max_velocity = comm.allreduce(np.max(np.abs(velocity.x.array[:])),op=MPI.MAX)
+# main optimization loop (stop when max iterations or criteria satisfied)
 
-    #parameters.dt  =  opti_tool.compliance_adapt_dt(lagrangian_cost,lagrangian_cost_previous,max_velocity,parameters,c_param_HJ)
-    #print("dt = ",parameters.dt)
 
-    ##########################################
-    ## Advection: HJ equation
-    ##########################################
+def run_optimization_iteration():
+    global c_param_HJ, cv, i, uh, ph, cost, constraint, lagrangian_cost, previous_cost, previous_constraint, lagrangian_cost_previous, time, adv_bool, ls_func_temp, shape_derivative, shape_derivative_integrand_constraint, dual_operator, max_vm, vect_cost, vect_constraint, vect_target_constraint, vm_calculator
 
-    ls_func_n = ufl.TrialFunction(V_ls)
-    ls_func_test = ufl.TestFunction(V_ls)
-    solve = fem.Function(V_ls)
-    solve.x.array[:] = CutFemMethod.level_set.x.array
-    solve_temp = fem.Function(V_ls)
+    # adapt HJ regularization parameter
+    c_param_HJ = opti_tool.adapt_c_HJ(
+        c_param_HJ, crit, parameters.tol_cost_func, lagrangian
+    )
+    if rank == 0:
+        print(style.BLUE + "iteration number : ", i)
+        print(style.WHITE + "")
+        print(f"RAM used: {get_memory_usage() / 1024 / 1024:.3f} GB")
+
+    # update ALM parameters
+    almMethod.maj_param_constraint_optim(parameters, previous_constraint)
+
+    # ---------- Descent direction ----------
+    v_reg = descent_direction(
+        CutFemSolver.level_set,
+        msh,
+        parameters,
+        bc_velocity,
+        V_ls,
+        previous_constraint,
+        shape_derivative_integrand_constraint,
+        shape_derivative,
+        resources,
+    )
+    # v_reg interpolation into velocity_field
+    if isinstance(v_reg, fem.Function):
+        velocity_field.x.array[:] = v_reg.x.array
+    else:
+        try:
+            pts_vel = (
+                V_ls.element.interpolation_points()
+                if callable(getattr(V_ls.element, "interpolation_points", None))
+                else V_ls.element.interpolation_points
+            )
+            vel_expr = fem.Expression(v_reg, pts_vel)
+            velocity_field.interpolate(vel_expr)
+        except Exception:
+            if rank == 0:
+                print(
+                    "Warning: descent direction computation failed, setting velocity to zero"
+                )
+            velocity_field.x.array[:] = 0.0
+    velocity_field.x.scatter_forward()
+
+    # Normalize velocity in place
+    norm_factor = velocity_normalization(v_reg, parameters.alpha_reg_velocity)
+    velocity_field.x.array[:] = v_reg.x.array * norm_factor
+    velocity_field.x.scatter_forward()
+
+    # max velocity across ranks
+    max_velocity_local = np.max(np.abs(velocity_field.x.array[:]))
+    max_velocity = comm.allreduce(max_velocity_local, op=MPI.MAX)
+
+    # ---------- Advection: Hamilton-Jacobi ----------
+    solve.x.array[:] = CutFemSolver.level_set.x.array
+    solve.x.scatter_forward()
     solve_temp.x.array[:] = solve.x.array
-    while (adv_bool != 0):
+    solve_temp.x.scatter_forward()
+
+    adv_inner_loop = True
+    while adv_inner_loop:
         j = 0
         cv = 0
+        # reuse ls_func_temp object in-place
         ls_func_temp.x.array[:] = solve.x.array
-        CutFemMethod.level_set.x.array[:] =  solve.x.array
-        time_ls += 1
-        ls_func_temp.name = "ls_func"
-        xdmf_.write_function(ls_func_temp, time_ls)
-        while j< parameters.j_max:
-            # level_set_new est un fem.Function contenant les nouvelles valeurs
-            Advection.set_level_set(ls_func_temp)
-            ls_func_temp = Advection.cut_fem_adv(velocity_field, (1/adv_bool)*parameters.dt)
-             
+        ls_func_temp.x.scatter_forward()
+        CutFemSolver.level_set.x.array[:] = solve.x.array
+        CutFemSolver.level_set.x.scatter_forward()
+
+        while j < parameters.j_max:
+            AdvectionSolver.set_level_set(ls_func_temp)
+            ls_new_arr = AdvectionSolver.cut_fem_adv(
+                velocity_field, (1.0 / adv_bool) * parameters.dt
+            ).x.array
+            ls_new.x.array[:] = ls_new_arr
+            ls_new.x.scatter_forward()
+
+            # copy values into ls_func_temp in-place
+            ls_func_temp.x.array[:] = ls_new_arr
+            ls_func_temp.x.scatter_forward()
             j += 1
-            
-            ##########################################
-            ## Reinitialization
-            ##########################################
-            if ((j%parameters.freq_reinit)==0):
-                ls_func_temp = Reinitialization.reinitializationPC(ls_func_temp,parameters.step_reinit)
-                # ls_func_temp = Reinitialization.predictor(ls_func_temp)
-                # num_step = 0
-                # while (num_step < parameters.step_reinit):
-                #     num_step += 1                    
-                #     ls_func_temp = Reinitialization.corrector(ls_func_temp)
 
-        ##########################################
-        ## Calculus of new solution of 
-        ##   dual and primal problem
-        ##########################################
+            # periodic reinitialization in-place
+            if (j % parameters.freq_reinit) == 0:
+                ReinitSolver.reinitializationPC_inplace(
+                    ls_func_temp, parameters.step_reinit
+                )
 
-        
-        while ((parameters.adapt_time_step +1) * cv)==0:
-            # if parameters.cutFEM == 1:
-            #    # dual_operator  = problem_topo.dual_operator(uh,cutfem_method.lame_mu,cutfem_method.lame_lambda,parameters,msh,measure)
-            #     uh, ph = CutFemMethod.cutfem_solver(ls_func_temp,parameters,problem_topo)
-            # else:
-            #     xsi_temp = ErsatzMethod.heaviside(ls_func_temp)
-            #     uh, ph = ErsatzMethod.ersatz_solver(ls_func_temp, parameters) 
-
+        # ---------- Recompute primal/adjoint ----------
+        while ((parameters.adapt_time_step + 1) * cv) == 0:
             if parameters.cutFEM == 1:
-                uh = CutFemMethod.primal_problem(ls_func_temp)
-                cost_integrand = problem_topo.cost_integrand(uh,lame_mu,lame_lambda,parameters)
-                CutFemMethod.update_measures_and_quadratures(ls_func_temp)
-                cost = problem_topo.cost(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,CutFemMethod.dxq,parameters)
-    
-                shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,CutFemMethod.dxq)
-                vm_list = data_manipulation.create_list_vm(msh,uh,parameters,lame_mu,lame_lambda,0,CutFemMethod.level_set,V_ls,Q,0)
-                max_vm = np.max(vm_list.x.array[:])
+                uh = CutFemSolver.primal_problem(ls_func_temp, parameters)
+                CutFemSolver.update_measures_and_quadratures(ls_func_temp)
+                cost = problem_topo.cost(
+                    uh,
+                    ph,
+                    CutFemSolver.lame_mu,
+                    CutFemSolver.lame_lambda,
+                    CutFemSolver.dxq,
+                    parameters,
+                )
+                shape_derivative = problem_topo.shape_derivative_integrand(
+                    uh,
+                    ph,
+                    CutFemSolver.lame_mu,
+                    CutFemSolver.lame_lambda,
+                    parameters,
+                    CutFemSolver.dxq,
+                )
 
-                # c_k = (n_k*((max_vm /parameters.elasticity_limit) / previous_cost) + (1-n_k)*c_k)
-                constraint = problem_topo.constraint(uh,lame_mu,lame_lambda,parameters,CutFemMethod.dxq,0,vm_list,c_k)
-                almMethod.maj_param_constraint_optim_slack(parameters,constraint)
-                if parameters.cost_func != "compliance" : 
-                    dual_operator  = problem_topo.dual_operator(uh,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,parameters,msh,CutFemMethod.dxq,vm_list,c_k)
-                    CutFemMethod.update_measures_and_quadratures(ls_func_temp)
-                    ph = CutFemMethod.adjoint_problem(uh,ls_func_temp,dual_operator)
+                vm_list_temp = vm_calculator.compute()
+                vm_list.x.array[:] = vm_list_temp.x.array
+                vm_list.x.scatter_forward()
 
-                shape_derivative_integrand_constraint = problem_topo.shape_derivative_integrand_constraint(uh,ph,lame_mu,lame_lambda,parameters,CutFemMethod.dxq,vm_list,c_k)
+                constraint = problem_topo.constraint(
+                    uh,
+                    lame_mu,
+                    lame_lambda,
+                    parameters,
+                    CutFemSolver.dxq,
+                    0,
+                    vm_list,
+                    c_k,
+                )
+                almMethod.maj_param_constraint_optim_slack(parameters, constraint)
+
+                if parameters.cost_func != "compliance":
+                    dual_operator = problem_topo.dual_operator(
+                        uh,
+                        CutFemSolver.lame_mu,
+                        CutFemSolver.lame_lambda,
+                        parameters,
+                        msh,
+                        CutFemSolver.dxq,
+                        vm_list,
+                        c_k,
+                    )
+                    CutFemSolver.update_measures_and_quadratures(ls_func_temp)
+                    ph = CutFemSolver.adjoint_problem(uh, dual_operator)
+
+                shape_derivative_integrand_constraint = (
+                    problem_topo.shape_derivative_integrand_constraint(
+                        uh,
+                        ph,
+                        lame_mu,
+                        lame_lambda,
+                        parameters,
+                        CutFemSolver.dxq,
+                        vm_list,
+                        c_k,
+                    )
+                )
             else:
-                xsi_temp = ErsatzMethod.heaviside(ls_func_temp)
-                uh, ph = ErsatzMethod.ersatz_solver(ls_func_temp, parameters) 
-
+                ErsatzSolver.heaviside_inplace(ls_func_temp, xsi_temp)
+                uh, ph = ErsatzSolver.ersatz_solver(ls_func_temp, parameters)
                 measure = ufl.dx
-                CutFemMethod.update_measures_and_quadratures(ls_func_temp)
-                cost = problem_topo.cost(uh,ph,ErsatzMethod.lame_mu_fic ,ErsatzMethod.lame_lambda_fic ,measure,parameters)
+                CutFemSolver.update_measures_and_quadratures(ls_func_temp)
+                cost = problem_topo.cost(
+                    uh,
+                    ph,
+                    ErsatzSolver.lame_mu_fic,
+                    ErsatzSolver.lame_lambda_fic,
+                    measure,
+                    parameters,
+                )
+                shape_derivative = problem_topo.shape_derivative_integrand(
+                    uh,
+                    ph,
+                    ErsatzSolver.lame_mu_fic,
+                    ErsatzSolver.lame_lambda_fic,
+                    parameters,
+                    measure,
+                )
+                constraint = problem_topo.constraint(
+                    uh,
+                    ErsatzSolver.lame_mu_fic,
+                    ErsatzSolver.lame_lambda_fic,
+                    parameters,
+                    measure,
+                    xsi_temp,
+                )
+                almMethod.maj_param_constraint_optim_slack(parameters, constraint)
+                dual_operator = problem_topo.dual_operator(
+                    uh,
+                    ErsatzSolver.lame_mu_fic,
+                    ErsatzSolver.lame_lambda_fic,
+                    parameters,
+                    msh,
+                    measure,
+                )
 
-                shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,measure)
+            # compute Lagrangian cost
+            lagrangian_cost = opti_tool.lagrangian_cost(cost, constraint, parameters)
+            if rank == 0:
+                print(style.YELLOW + "cost previous = ", previous_cost)
+                print(style.YELLOW + "cost = ", cost)
+                print(style.WHITE + "C(Ω) = ", float(constraint))
 
-                constraint = problem_topo.constraint(uh,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,measure,ErsatzMethod.xsi)
-    
-                almMethod.maj_param_constraint_optim_slack(parameters,constraint)
-                dual_operator  = problem_topo.dual_operator(uh,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,msh,measure)
-                shape_derivative = problem_topo.shape_derivative_integrand(uh,ph,ErsatzMethod.lame_mu_fic,ErsatzMethod.lame_lambda_fic,parameters,ufl.dx)             
-                shape_derivative_integrand_constraint = problem_topo.shape_derivative_integrand_constraint(uh,ph,lame_mu,lame_lambda,parameters,ufl.dx)
+            cv = (
+                1
+                if cost < (previous_cost * (1.0 + parameters.tol_cost_func))
+                or (parameters.adapt_time_step == 0)
+                else 0
+            )
 
-            lagrangian_cost = opti_tool.lagrangian_cost(cost,constraint,parameters)
-            print(style.YELLOW+"cost previous = ",previous_cost)
-            print(style.YELLOW+"cost = ",cost)
-            print(style.WHITE+"C(\Omega) = ",float(constraint))
+        # if i == 1:
+        #     constraint_derivative = abs(constraint - previous_constraint) / (max_velocity*parameters.dt * parameters.j_max)
+        #     cost_derivative = abs(cost - previous_cost) / (max_velocity*parameters.dt * parameters.j_max)
+        #     almMethod.init_param_constraint_optim(constraint_derivative, parameters, cost_derivative, 100)
 
-            if cost < (previous_cost *(1+parameters.tol_cost_func)) or (parameters.adapt_time_step==0):
-                cv = 1
-            else :
-                cv = 0 
+        parameters.dt, adv_bool = opti_tool.catch_NAN(
+            cost, lagrangian_cost, constraint, parameters.dt, adv_bool
+        )
+        parameters.j_max = (
+            opti_tool.adapt_HJ(
+                lagrangian_cost,
+                lagrangian_cost_previous,
+                parameters.j_max,
+                parameters.dt,
+                parameters,
+            )
+            if adv_bool < 2
+            else 1
+        )
+        adv_inner_loop = False
 
-        ##########################################
-        ## Save parameters
-        ########################################## 
-
-        lagrangian[3] = lagrangian[2]
-        lagrangian[2] = lagrangian[1]
-        lagrangian[1]= lagrangian[0]
-        lagrangian[0] = abs((lagrangian_cost-lagrangian_cost_previous)/lagrangian_cost)
-
-        time_ls += 1
-        ls_func_temp.name = "ls_func"
-        xdmf_.write_function(ls_func_temp, time_ls)
-
-        parameters.dt, adv_bool = opti_tool.catch_NAN(cost,lagrangian_cost,constraint,parameters.dt,adv_bool)
-        
-        if adv_bool<2:
-            parameters.j_max = opti_tool.adapt_HJ(lagrangian_cost,lagrangian_cost_previous,parameters.j_max,parameters.dt,parameters)
-        else: 
-            parameters.j_max = 1
-
-    print("j_max = ", parameters.j_max)
-
-    crit[3] = crit[2]
-    crit[2] = crit[1]
-    crit[1]= crit[0]
-    crit[0] = abs(cost-previous_cost)/previous_cost
-
-    print("criterion of convergence = ", crit[0])
-    CutFemMethod.level_set.x.array[:] = ls_func_temp.x.array
-    CutFemMethod.level_set.x.scatter_forward() 
-
-    ErsatzMethod.xsi= xsi_temp
-
-    lagrangian_cost_previous = lagrangian_cost
-    
-    collected_cost = comm.allreduce(cost,op=MPI.SUM)
-    vect_cost.append(collected_cost)
-    collected_constraint = comm.allreduce(constraint, op=MPI.SUM)
-    vect_constraint.append(collected_constraint)
-    vect_target_constraint.append(parameters.target_constraint)
-    collected_lagrangian_cost_previous = comm.allreduce(lagrangian_cost_previous,op=MPI.SUM)
-    previous_cost = cost
-    k = 1.
-    vm_list = data_manipulation.create_list_vm(msh,uh,parameters,lame_mu,lame_lambda,0,CutFemMethod.level_set,V_ls,Q,0)
-    max_vm = k*np.max(vm_list.x.array[:])
-
-    #  c_k = (n_k*((max_vm /parameters.elasticity_limit) / previous_cost) + (1-n_k)*c_k)
-    
+    # update iteration history
+    crit[3], crit[2], crit[1], crit[0] = (
+        crit[2],
+        crit[1],
+        crit[0],
+        abs(cost - previous_cost) / (previous_cost + 1e-30),
+    )
     if rank == 0:
-        folder_cost_func.write("\n"+str(collected_cost))
-        folder_constraint.write("\n"+str(collected_constraint))
-        folder_param_lagrangian.write("\n"+str(collected_lagrangian_cost_previous))
-        folder_max_vm.write("\n"+str(max_vm))
+        print("criterion of convergence = ", crit[0])
 
+    # accept new level-set
+    CutFemSolver.level_set.x.array[:] = ls_func_temp.x.array
+    CutFemSolver.level_set.x.scatter_forward()
+    ls_func.x.array[:] = ls_func_temp.x.array
+    ls_func.x.scatter_forward()
+    ErsatzSolver.xsi = xsi_temp
+    lagrangian_cost_previous = lagrangian_cost
 
-    if parameters.cutFEM == 0:
-        lame_mu_fic_expr = fem.Expression(ErsatzMethod.lame_mu_fic, V_ls.element.interpolation_points())
-        lame_mu_fic = fem.Function(V_ls)
-        lame_mu_fic.interpolate(lame_mu_fic_expr)
-        lame_lambda_fic_expr = fem.Expression(ErsatzMethod.lame_lambda_fic, V_ls.element.interpolation_points())
-        lame_lambda_fic = fem.Function(V_ls)
-        lame_lambda_fic.interpolate(lame_lambda_fic_expr)
-        xsi_expr = fem.Expression(xsi_temp, V_ls.element.interpolation_points())
-        xsi_temp = fem.Function(V_ls)
-        xsi_temp.interpolate(xsi_expr)
+    # gather results
+    # cost and constraint are already reduced in problem.py
+    vect_cost.append(cost)
+    vect_constraint.append(constraint)
+    vect_target_constraint.append(parameters.target_constraint)
+    previous_cost = cost
+    previous_constraint = constraint
 
-    ls_func_temp.name = "ls_func_temp"
-    xdmf_ls.write_function(ls_func_temp, time)
-    
-    uh.name = "disp"
-    xdmf_ls.write_function(uh, time)
-    ph.name = "dual"
-    xdmf_ls.write_function(ph, time)
-    
-    
-    velocity_expr = fem.Expression(velocity_field, V_ls.element.interpolation_points())
-    velocity = fem.Function(V_ls)
-    velocity.interpolate(velocity_expr)
-    velocity.name = "velocity"
-    xdmf_ls.write_function(velocity, time)
+    # Update vm_list in-place using the optimized calculator
+    vm_list_temp = vm_calculator.compute()
+    vm_list.x.array[:] = vm_list_temp.x.array
+    vm_list.x.scatter_forward()
 
+    # Compute and reduce max_vm
+    max_vm = np.max(vm_list.x.array[:])
+    max_vm = comm.allreduce(max_vm, op=MPI.MAX)
 
-    compliance = - (2.0*lame_mu  * ufl.inner(mechanics_tool.strain(uh), mechanics_tool.strain(ph))  + lame_lambda *  ufl.inner(ufl.nabla_div(uh), ufl.nabla_div(ph)))
-        
-    compliance_expr = fem.Expression(compliance, V_ls.element.interpolation_points())
-    compliance = fem.Function(V_ls)
-    compliance.interpolate(compliance_expr)
-    compliance.name = "compliance cost "
-    xdmf_ls.write_function(compliance, time)
+    # Limit history size
+    if len(vect_cost) > MAX_HISTORY:
+        vect_cost = vect_cost[-MAX_HISTORY:]
+        vect_constraint = vect_constraint[-MAX_HISTORY:]
+        vect_target_constraint = vect_target_constraint[-MAX_HISTORY:]
 
-    vm = mechanics_tool.von_mises(uh,lame_mu, lame_lambda, dim)
-    vm_expr = fem.Expression(vm, Q.element.interpolation_points())
-    vm = fem.Function(Q)
-    vm.interpolate(vm_expr)
-  
-    vm.name = "sigmavm"
-    xdmf_ls.write_function(vm, time)
+    # Collect memory usage from all ranks
+    local_mem = get_memory_usage()
+    all_mems = comm.gather(local_mem, root=0)
 
-    vm_list.name = "manip"
-    xdmf_ls.write_function(vm_list, time)
+    # write results
+    if rank == 0:
+        try:
+            output_files["cost_func"].write("\n" + str(cost))
+            output_files["constraint"].write("\n" + str(constraint))
+            output_files["param_lagrangian"].write("\n" + str(lagrangian_cost_previous))
+            output_files["max_vm"].write("\n" + str(max_vm))
+            output_files["memory"].write("\n" + str(local_mem))
+            output_files["memory_per_process"].write(
+                "\n" + " ".join(map(str, all_mems))
+            )
+            if i % 10 == 0:
+                for f in output_files.values():
+                    f.flush()
+        except Exception as e:
+            print(f"Error writing results: {e}")
 
-
-    
-    vm_expr = fem.Expression(vm-vm_list, Q.element.interpolation_points())
-    vm_diff = fem.Function(Q)
-    vm_diff.interpolate(vm_expr)
-    vm_diff.name = "diff"
-    xdmf_ls.write_function(vm_diff, time)
-
-    # data_manipulation.save_data_compliance(xdmf_ls,CutFemMethod.level_set, V_ls, xsi_temp, velocity_field, V_ls, uh, V, ph, \
-    #     mecanics_tool.von_mises(uh,CutFemMethod.lame_mu,CutFemMethod.lame_lambda,CutFemMethod.dim), Q, time)
-
-    time += 1
+    time += 1.0
+    if i % 1 == 0:
+        for f, name in zip(
+            [ls_func, uh, ph, vm_list, velocity_field],
+            ["ls_func", "disp", "dual", "vm_list", "velocity"],
+        ):
+            f.name = name
+            xdmf_file.write_function(f, time)
     i += 1
+    gc.collect()
+
+
+# main optimization loop
+while (i < parameters.max_incr) and (
+    (abs(crit[0]) > parameters.tol_cost_func)
+    or (abs(crit[1]) > parameters.tol_cost_func)
+    or (abs(crit[2]) > parameters.tol_cost_func)
+    or (abs(crit[3]) > parameters.tol_cost_func)
+):
+    run_optimization_iteration()
+
+# Close all output files
+if rank == 0:
+    for f in output_files.values():
+        f.close()
+
+# Close XDMF file
+xdmf_file.close()
+
+end_time_total = time_module.time()
+execution_time = end_time_total - start_time_total
+
+if rank == 0:
+    print(
+        style.GREEN
+        + f"Total execution time: {execution_time:.2f} seconds ({execution_time/60:.2f} minutes)"
+    )
+    print(style.GREEN + "Optimization completed successfully")
