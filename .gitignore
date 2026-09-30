@@ -16,4 +16,5 @@ res_*/
 *.h5
 *.msh
 ffcx-forms/
+.vscode/
 build/
