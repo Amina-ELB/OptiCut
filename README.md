@@ -13,7 +13,7 @@
 
 **OptiCut** is an open-source research code dedicated to shape optimization using immersed boundary methods CutFEMx. It is implemented on top of the **FEniCSx** computing platform and **CutFEMx**.
 
-The structural boundary is represented implicitly via the **Level Set method**, which governs its geometric evolution through a transport equation. A central contribution of this code is the integration of the **Cut Finite Element Method (CutFEM)**, via the `cutfemx` library, as the underlying PDE solver. This approach yields highly accurate approximations of the mechanical fields in the immediate vicinity of the structural boundary, a key advantage over classical Ersatz material methods, without requiring any mesh conforming or remeshing.
+The structural boundary is represented implicitly via the **Level Set method**, which governs its geometric evolution through a transport equation. A central contribution of this code is the integration of the **Cut Finite Element Method (CutFEM)**, via the [`cutfemx`](https://github.com/sclaus2/CutFEMx) library, as the underlying PDE solver. This approach yields highly accurate approximations of the mechanical fields in the immediate vicinity of the structural boundary, a key advantage over classical Ersatz material methods, without requiring any mesh conforming or remeshing.
 
 OptiCut supports distributed parallel computing (MPI) and is capable of handling fully 3D structural cases.
 
