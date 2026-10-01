@@ -209,7 +209,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">3D Compliance Minimization</a></li>
 </ul>
 </li>
 </ul>
@@ -278,7 +278,7 @@
           
 <section class="genindex-section">
   <h1 id="index">Index</h1>
-  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a></div>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a></div>
 </section>
 <section id="A" class="genindex-section">
   <h2>A</h2>
@@ -293,6 +293,8 @@
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver.adjoint_problem">adjoint_problem() (solvers.cutfem_elastic_solver.CutFEMElasticSolver method)</a>
+</li>
+        <li><a href="reinitialization.html#levelset.levelSet_tool.Advection">Advection (class in levelset.levelSet_tool)</a>
 </li>
         <li><a href="ersatz_method.html#solvers.ersatz_elastic_solver.ErsatzElasticSolver.advection">advection() (solvers.ersatz_elastic_solver.ErsatzElasticSolver method)</a>
 </li>
@@ -351,6 +353,8 @@
         <li><a href="create_mesh.html#fem.create_mesh.create_mesh_2D">create_mesh_2D() (in module fem.create_mesh)</a>
 </li>
         <li><a href="create_mesh.html#fem.create_mesh.create_mesh_3D">create_mesh_3D() (in module fem.create_mesh)</a>
+</li>
+        <li><a href="reinitialization.html#levelset.levelSet_tool.Advection.cut_fem_adv">cut_fem_adv() (levelset.levelSet_tool.Advection method)</a>
 </li>
         <li><a href="cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver.cutfem_solver">cutfem_solver() (solvers.cutfem_elastic_solver.CutFEMElasticSolver method)</a>
 </li>
@@ -453,6 +457,8 @@
 </li>
         <li><a href="geometry_init.html#utils.ls_utils.level_set_L_shape">level_set_L_shape() (in module utils.ls_utils)</a>
 </li>
+        <li><a href="reinitialization.html#levelset.levelSet_tool.LevelSet">LevelSet (class in levelset.levelSet_tool)</a>
+</li>
         <li><a href="geometry_init.html#utils.ls_utils.load_mesh">load_mesh() (in module utils.ls_utils)</a>
 </li>
     </ul></td>
@@ -514,6 +520,10 @@
   <h2>P</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameters.html#config.parameters.Parameters">Parameters (class in config.parameters)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="cutfem_method.html#solvers.cutfem_elastic_solver.CutFEMElasticSolver.primal_problem">primal_problem() (solvers.cutfem_elastic_solver.CutFEMElasticSolver method)</a>
 
         <ul>
@@ -524,11 +534,31 @@
   </tr></table>
 </section>
 
+<section id="R" class="genindex-section">
+  <h2>R</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="reinitialization.html#levelset.levelSet_tool.Reinitialization">Reinitialization (class in levelset.levelSet_tool)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="reinitialization.html#levelset.levelSet_tool.Reinitialization.reinitializationPC">reinitializationPC() (levelset.levelSet_tool.Reinitialization method)</a>
+</li>
+        <li><a href="reinitialization.html#levelset.levelSet_tool.Reinitialization.reinitializationPC_inplace">reinitializationPC_inplace() (levelset.levelSet_tool.Reinitialization method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
 <section id="S" class="genindex-section">
   <h2>S</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameters.html#config.parameters.Parameters.set__paramFolder">set__paramFolder() (config.parameters.Parameters method)</a>
+</li>
         <li><a href="ersatz_method.html#solvers.ersatz_elastic_solver.ErsatzElasticSolver.set_bilin_form">set_bilin_form() (solvers.ersatz_elastic_solver.ErsatzElasticSolver method)</a>
+</li>
+        <li><a href="reinitialization.html#levelset.levelSet_tool.LevelSet.set_level_set">set_level_set() (levelset.levelSet_tool.LevelSet method)</a>
 </li>
         <li><a href="problem.html#config.problem.AreaProblem.shape_derivative_integrand">shape_derivative_integrand() (config.problem.AreaProblem method)</a>
 

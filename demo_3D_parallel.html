@@ -7,7 +7,7 @@
         <link rel="prefetch" href="_static/opticut-logo-v2.svg" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
-        <title>High-Performance 3D Compliance Minimization - OptiCut</title>
+        <title>3D Compliance Minimization - OptiCut</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -211,7 +211,7 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">High-Performance 3D Compliance Minimization</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">3D Compliance Minimization</a></li>
 </ul>
 </li>
 </ul>
@@ -283,81 +283,201 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="high-performance-3d-compliance-minimization">
-<span id="demo3d"></span><h1>High-Performance 3D Compliance Minimization<a class="headerlink" href="#high-performance-3d-compliance-minimization" title="Link to this heading">¶</a></h1>
-<p>A major advantage of OptiCut is its native integration with MPI (Message Passing Interface) and PETSc, inherited from the <cite>dolfinx</cite> backend. This enables structural optimization on massive 3D models using parallel high-performance computing (HPC) clusters.</p>
-<p>In this tutorial, we demonstrate how to minimize compliance on a 3D cantilever beam and solve the elasticity PDEs across multiple processes using scalable Algebraic Multigrid (AMG) solvers.</p>
+          <section id="d-compliance-minimization">
+<span id="demo3d"></span><h1>3D Compliance Minimization<a class="headerlink" href="#d-compliance-minimization" title="Link to this heading">¶</a></h1>
+<p>This tutorial extends the 2D compliance minimization to a three-dimensional
+cantilever beam and illustrates how OptiCut leverages MPI parallelism
+through its <cite>dolfinx</cite> / PETSc backend.</p>
 <section id="problem-definition">
 <h2>Problem definition<a class="headerlink" href="#problem-definition" title="Link to this heading">¶</a></h2>
-<p>The continuous shape optimization problem remains identical to the 2D compliance minimization problem. The goal is to minimize the 3D compliance functional subject to a volume constraint:</p>
+<p>The shape optimization problem is identical in structure to the 2D case.
+Find the domain <span class="math notranslate nohighlight">\(\Omega \subset \mathbb{R}^3\)</span> that minimizes the
+compliance functional subject to a volume constraint:</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}\begin{cases}
-\underset{\Omega\in\mathcal{O}}{\min}\int_{\Omega}\left(\mu\varepsilon(u):\varepsilon(u)+\frac{\lambda}{2}(\nabla\cdot u)^2\right)\text{ }dx\\
-C(\Omega) = \int_{\Omega}dx - \overline{V} = 0
-\end{cases}\end{aligned}\end{split}\]</div>
+\[\begin{split}\begin{cases}
+\underset{\Omega\in\mathcal{O}}{\min}\ J(\Omega)
+= \int_{\Omega}\left(2\mu\,\varepsilon(u):\varepsilon(u)
+  +\lambda\,(\nabla\cdot u)^2\right)dx\\[6pt]
+C(\Omega) = |\Omega| - \overline{V} = 0
+\end{cases}\end{split}\]</div>
 </div>
+<p>The discretization employs the <strong>Cut Finite Element Method</strong> (CutFEM) with
+Ghost Penalty stabilization. The displacement field
+<span class="math notranslate nohighlight">\(u_h\)</span> is sought on the background mesh <span class="math notranslate nohighlight">\(\mathcal{T}_h\)</span>, with
+integration restricted to the physical sub-domain <span class="math notranslate nohighlight">\(\Omega_h = \{x \mid \phi(x) &lt; 0\}\)</span>.
+The stabilized bilinear form reads:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[a_h(u_h, v_h)
+= \underbrace{\int_{\Omega_h}\!\bigl(2\mu\,\varepsilon(u_h):\varepsilon(v_h)
+  + \lambda\,(\nabla\cdot u_h)(\nabla\cdot v_h)\bigr)\,\mathrm{d}x}_{\text{elasticity on cut domain}}
++\underbrace{\gamma \sum_{F\in\mathcal{F}_h^{\Gamma}}\int_F h_F
+  \,\left[\!\left[\nabla u_h\cdot n\right]\!\right]\cdot\left[\!\left[\nabla v_h\cdot n\right]\!\right]\,\mathrm{d}s}_{\text{Ghost Penalty}}
+= \int_{\Gamma_N} g\cdot v_h\,\mathrm{d}s\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\mathcal{F}_h^{\Gamma}\)</span> denotes the set of interior facets
+cut by the interface, <span class="math notranslate nohighlight">\(h_F\)</span> is the local cell diameter, and
+<span class="math notranslate nohighlight">\(\gamma = 10^{-5}(\mu + \lambda)\)</span> is the Ghost Penalty parameter.</p>
 <section id="mesh-mpi-partitioning">
 <h3>Mesh &amp; MPI Partitioning<a class="headerlink" href="#mesh-mpi-partitioning" title="Link to this heading">¶</a></h3>
-<p>When <cite>mpirun</cite> is invoked, OptiCut automatically partitions the 3D mesh (loaded via Gmsh or generated internally) into sub-domains using standard graph partitioners (e.g., ParMETIS). Each MPI process holds only a fraction of the elements and degrees of freedom (DOFs), significantly reducing per-process memory footprints.</p>
+<p>OptiCut relies on <cite>dolfinx</cite>’s built-in mesh distribution: when launched
+with <cite>mpirun</cite>, the mesh is partitioned into sub-domains using SCOTCH
+(dolfinx’s default graph partitioner). Each MPI process owns a disjoint
+subset of cells and the associated DOFs, communicating ghost-layer values
+via PETSc’s scatter operations.</p>
+<p>The figures below show the partition of the 3D cantilever mesh for 2 and
+4 MPI processes respectively.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-center">
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="_images/2proc.png"><img alt="_images/2proc.png" src="_images/2proc.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Figure 15 </span><span class="caption-text">Mesh partitioning — 2 MPI processes.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+<td><figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="_images/4proc.png"><img alt="_images/4proc.png" src="_images/4proc.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Figure 16 </span><span class="caption-text">Mesh partitioning — 4 MPI processes.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
-<section id="iterative-amg-solvers">
-<h3>Iterative AMG Solvers<a class="headerlink" href="#iterative-amg-solvers" title="Link to this heading">¶</a></h3>
-<p>For massive 3D models, standard LU direct solvers become a memory bottleneck. OptiCut seamlessly switches to iterative solvers when configured. By specifying <cite>linear_solver amg</cite> in the parameters, the code employs the Conjugate Gradient (CG) method preconditioned by Geometric-Algebraic Multigrid (GAMG), achieving near-linear scaling for 3D elasticity.</p>
+<section id="iterative-solver-gamg">
+<h3>Iterative Solver (GAMG)<a class="headerlink" href="#iterative-solver-gamg" title="Link to this heading">¶</a></h3>
+<p>Direct LU factorization does not scale to large 3D problems due to memory
+requirements. OptiCut therefore uses the Conjugate Gradient (CG) method
+preconditioned by PETSc’s Geometric-Algebraic Multigrid (GAMG) solver when
+the parameter <cite>linear_solver amg</cite> is set. This is configured as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">linear_solver</span> <span class="o">==</span> <span class="s2">"amg"</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">primal_solver</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CG</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">primal_solver</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="s2">"gamg"</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">primal_solver</span><span class="o">.</span><span class="n">setTolerances</span><span class="p">(</span><span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="implementation">
 <h2>Implementation<a class="headerlink" href="#implementation" title="Link to this heading">¶</a></h2>
-<p>We use the parameter file <cite>param_compliance_3D.txt</cite>. The relevant mechanical and numerical constants are:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>cost_func compliance
-<span class="linenos">2</span>mesh_case 3D
-<span class="linenos">3</span>lx 2
-<span class="linenos">4</span>ly 1
-<span class="linenos">5</span>lz 1
-<span class="linenos">6</span>h 0.05
-<span class="linenos">7</span>linear_solver amg
-<span class="linenos">8</span>target_constraint 0.4
-<span class="linenos">9</span>young_modulus 210000000000
-</pre></div>
-</div>
-<p>Notice that the flag <cite>linear_solver amg</cite> instructs OptiCut to avoid LU factorization.</p>
-<p><strong>Solver Instantiation Snippet</strong>
-Behind the scenes, OptiCut configures the robust <cite>GAMG</cite> preconditioner:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">linear_solver</span> <span class="o">==</span> <span class="s2">"amg"</span><span class="p">:</span>
-<span class="linenos">2</span>    <span class="bp">self</span><span class="o">.</span><span class="n">primal_solver</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CG</span><span class="p">)</span>
-<span class="linenos">3</span>    <span class="bp">self</span><span class="o">.</span><span class="n">primal_solver</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="s2">"gamg"</span><span class="p">)</span>
-<span class="linenos">4</span>    <span class="bp">self</span><span class="o">.</span><span class="n">primal_solver</span><span class="o">.</span><span class="n">setTolerances</span><span class="p">(</span><span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+<p>Two parameter files are provided for this tutorial:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">compliance_3D_coarse.txt</span></code>: coarse mesh with <span class="math notranslate nohighlight">\(h = 0.1\)</span>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compliance_3D.txt</span></code>: finer mesh with <span class="math notranslate nohighlight">\(h = 0.05\)</span> (54,243 DOFs).</p></li>
+</ul>
+<p>Both are designed to run on a standard workstation without a cluster.
+The remainder of this section focuses on the finer configuration.
+The cantilever geometry is a box <span class="math notranslate nohighlight">\([0,2]\times[0,1]\times[0,1]\)</span>;
+the left face is clamped (<span class="math notranslate nohighlight">\(\Gamma_D\)</span>) and a downward traction is
+applied at the centre of the right face (<span class="math notranslate nohighlight">\(\Gamma_N\)</span>).</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>cost_func compliance
+mesh_case 3D
+lx 2
+ly 1
+lz 1
+h 0.05
+linear_solver amg
+target_constraint 0.4
+young_modulus 210000000000
 </pre></div>
 </div>
 </section>
 <section id="running-in-parallel">
 <h2>Running in Parallel<a class="headerlink" href="#running-in-parallel" title="Link to this heading">¶</a></h2>
-<p>To launch the 3D optimization across 8 MPI cores, simply use the <cite>mpirun</cite> launcher:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">8</span><span class="w"> </span>python3<span class="w"> </span>main.py<span class="w"> </span>parameters/param_compliance_3D.txt
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>python3<span class="w"> </span>main.py<span class="w"> </span>parameters/compliance_3D.txt
 </pre></div>
 </div>
-<p>OptiCut’s advection solvers (<cite>AdvectionSolver</cite>), level-set routines, and PETSc sparse matrix assemblies inherently communicate the required ghost-node updates across partition boundaries, completely abstracting the parallel complexity from the user script.</p>
+<p>For the present mesh size (54,243 DOFs), 2 processes is the recommended
+configuration (see performance analysis below).</p>
 </section>
-<section id="results-and-performance">
-<h2>Results and Performance<a class="headerlink" href="#results-and-performance" title="Link to this heading">¶</a></h2>
-<p>After convergence, the XDMF output files can be stitched and viewed in Paraview.
-To visualize the 3D results:
-1. Open <strong>ParaView</strong>.
-2. Go to <cite>File &gt; Open</cite> and select <cite>src/res/results.xdmf</cite>.
-3. Click <strong>Apply</strong>.
-4. Select the <cite>ls_func</cite> or <cite>disp</cite> variables to visualize the solid structure (e.g., using a Contour filter at <cite>phi=0</cite>).</p>
-<p>The optimal topology effectively forms a 3D truss structure bridging the clamped face to the loaded region, minimizing material usage while maintaining strict rigidity.</p>
-<p><strong>Performance and HPC Scaling Note:</strong></p>
-<p>OptiCut is highly optimized for HPC environments. However, scaling efficiency depends strictly on the <em>Degrees of Freedom (DOF) per core</em> ratio.
-As a rule of thumb in parallel finite elements, one needs at least <strong>50,000 to 100,000 DOFs per MPI process</strong> to overcome communication overhead.</p>
-<p>To allow reviewers and users to quickly test the parallel execution on a standard laptop, this tutorial uses a deliberately coarse mesh (<cite>h=0.1</cite>, yielding roughly 15,000 DOFs). For a complete optimization loop (200 iterations) using the CG solver, typical execution times are:</p>
-<ul class="simple">
-<li><p><strong>1 MPI process:</strong> 367.17 seconds (6.12 minutes)</p></li>
-<li><p><strong>2 MPI processes:</strong> 328.68 seconds (5.48 minutes)</p></li>
-<li><p><strong>4 MPI processes:</strong> 310.56 seconds (5.18 minutes)</p></li>
-</ul>
-<p>While there is a visible speedup, the scaling is not linear. This is a well-known HPC phenomenon: because the local problem size per core is so small, MPI network and memory communication overheads begin to rival the actual computation time.</p>
-<p>To truly leverage the parallel AMG solver and observe massive speedups, the mesh size must be drastically reduced (e.g., <cite>h=0.03</cite>), pushing the DOFs into the millions. Under such heavy workloads, a single core would simply run out of memory (OOM), whereas OptiCut’s MPI-partitioned solvers will distribute the memory effectively and solve the problem.</p>
+<section id="results">
+<h2>Results<a class="headerlink" href="#results" title="Link to this heading">¶</a></h2>
+<div style="text-align: center; margin-bottom: 20px; margin-top: 20px;">
+    <video width="80%" autoplay loop muted controls style="border: 1px solid #ccc;">
+        <source src="_static/compliance_3D.mp4" type="video/mp4">
+    </video>
+    <div style="margin-top: 5px; font-style: italic; color: #555; font-size: 0.9em;">
+        Evolution of the level-set zero iso-surface over 600 iterations (h=0.05).
+    </div>
+</div><figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="_images/convergence.png"><img alt="_images/convergence.png" src="_images/convergence.png" style="width: 80%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Figure 17 </span><span class="caption-text">Convergence history: compliance cost function (left axis, blue) and
+constraint <span class="math notranslate nohighlight">\(C(\Omega)\)</span> (right axis, red) over 600 optimization iterations.
+The dashed black line marks the satisfied constraint (<span class="math notranslate nohighlight">\(C(\Omega) = 0\)</span>).</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Post-processing in ParaView:</p>
+<ol class="arabic simple">
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">src/res/results.xdmf</span></code>.</p></li>
+<li><p>Apply a <strong>Contour</strong> filter on <code class="docutils literal notranslate"><span class="pre">ls_func</span></code> at isovalue <span class="math notranslate nohighlight">\(\phi=0\)</span>
+to extract the structural boundary.</p></li>
+<li><p>Apply a <strong>Warp By Vector</strong> filter on <code class="docutils literal notranslate"><span class="pre">disp</span></code> to visualize deformed
+configurations.</p></li>
+</ol>
+</section>
+<section id="performance-analysis">
+<h2>Performance Analysis<a class="headerlink" href="#performance-analysis" title="Link to this heading">¶</a></h2>
+<p>The table below reports wall-clock times for 600 optimization iterations
+on the <span class="math notranslate nohighlight">\(h=0.05\)</span> mesh (54,243 DOFs total), measured on a standard
+8-core workstation.</p>
+<div class="table-wrapper colwidths-given docutils container" id="id4">
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-number">Table 2 </span><span class="caption-text">Wall-clock time and parallel efficiency (600 iterations, h=0.05)</span><a class="headerlink" href="#id4" title="Link to this table">¶</a></caption>
+<colgroup>
+<col style="width: 17.6%" />
+<col style="width: 29.4%" />
+<col style="width: 29.4%" />
+<col style="width: 23.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Processes</p></th>
+<th class="head"><p>DOFs / process</p></th>
+<th class="head"><p>Wall-clock time</p></th>
+<th class="head"><p>Speedup</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>54,243</p></td>
+<td><p>5770.90 s (96.18 min)</p></td>
+<td><p>1.00×</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>~27,100</p></td>
+<td><p>3765.94 s (62.77 min)</p></td>
+<td><p>1.53×</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>~13,560</p></td>
+<td><p>3506.94 s (58.45 min)</p></td>
+<td><p>1.64×</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The speedup from 1 to 2 processes (1.53×, parallel efficiency 76.5%) is
+meaningful but sub-linear. The gain from 2 to 4 processes (1.07×) is
+negligible. This behaviour is consistent with the known communication-to-
+computation ratio in domain-decomposition methods: at ~13,500 DOFs per
+process, the MPI synchronisation overhead — ghost-layer exchanges,
+global reductions for norm computations, and Krylov communication —
+becomes comparable to the local solve time. For parallel efficiency to
+remain acceptable above 4 processes, the mesh size should be increased to
+maintain at least ~20,000–50,000 DOFs per process.</p>
 </section>
 </section>
 
@@ -416,15 +536,16 @@ As a rule of thumb in parallel finite elements, one needs at least <strong>50,00
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">High-Performance 3D Compliance Minimization</a><ul>
+<li><a class="reference internal" href="#">3D Compliance Minimization</a><ul>
 <li><a class="reference internal" href="#problem-definition">Problem definition</a><ul>
 <li><a class="reference internal" href="#mesh-mpi-partitioning">Mesh &amp; MPI Partitioning</a></li>
-<li><a class="reference internal" href="#iterative-amg-solvers">Iterative AMG Solvers</a></li>
+<li><a class="reference internal" href="#iterative-solver-gamg">Iterative Solver (GAMG)</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#implementation">Implementation</a></li>
 <li><a class="reference internal" href="#running-in-parallel">Running in Parallel</a></li>
-<li><a class="reference internal" href="#results-and-performance">Results and Performance</a></li>
+<li><a class="reference internal" href="#results">Results</a></li>
+<li><a class="reference internal" href="#performance-analysis">Performance Analysis</a></li>
 </ul>
 </li>
 </ul>

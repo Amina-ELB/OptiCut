@@ -211,7 +211,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">3D Compliance Minimization</a></li>
 </ul>
 </li>
 </ul>
@@ -300,7 +300,7 @@ elements or facets that have at least a part in <span class="math notranslate no
 <div class="math notranslate nohighlight" id="equation-eqn-18">
 <span class="eqno">(15)<a class="headerlink" href="#equation-eqn-18" title="Link to this equation">¶</a></span>\[\Omega_{h}=\cup_{K\in\mathcal{K}_{\;h,\Omega}}K.\]</div>
 </div>
-<p>Note that, <span class="math notranslate nohighlight">\(\Omega_{h}\)</span> is in general not aligned with <span class="math notranslate nohighlight">\(\partial\Omega\)</span>. It consists of the smallest set of elements that contains the domain as illustrated by pink elements in <a class="reference internal" href="#schemacutfemfinal"><span class="std std-numref">Figure 17</span></a>.</p>
+<p>Note that, <span class="math notranslate nohighlight">\(\Omega_{h}\)</span> is in general not aligned with <span class="math notranslate nohighlight">\(\partial\Omega\)</span>. It consists of the smallest set of elements that contains the domain as illustrated by pink elements in <a class="reference internal" href="#schemacutfemfinal"><span class="std std-numref">Figure 20</span></a>.</p>
 <p>Furthermore, we define a set of facets of intersected elements, which will be used for stabilization terms</p>
 <div class="math-wrapper docutils container" id="equation-eqn-10">
 <div class="math notranslate nohighlight" id="equation-eqn-10">
@@ -312,7 +312,7 @@ elements or facets that have at least a part in <span class="math notranslate no
 <span id="schemacutfemfinal"></span><a class="reference internal image-reference" href="_images/schema_cutfem_final.png"><img alt="Exemple d'image" src="_images/schema_cutfem_final.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 17 </span><span class="caption-text">Illustration of CutFEM domain and face definitions.</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 20 </span><span class="caption-text">Illustration of CutFEM domain and face definitions.</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -380,18 +380,18 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <p>In our CutFEM approach, we represent the boundary as a sharp interface. As such, we reconstruct the zero level set contour line by computing linear cuts through the mesh elements. We then integrate on those resulting cuts (volume and boundary cuts) as detailed below. For simplicity explanations are given in detail for dimension two.  As mentioned above, we use a level set function, <span class="math notranslate nohighlight">\(\phi\)</span>, to describe <span class="math notranslate nohighlight">\(\Omega\)</span>. We approximate <span class="math notranslate nohighlight">\(\phi\)</span> in a finite element space by interpolation, which we denote as <span class="math notranslate nohighlight">\(\phi_h\)</span>. This means, using linear Lagrangian elements, <span class="math notranslate nohighlight">\(\phi_h\)</span> has one value in each vertex of the mesh, which we then use for cutting.</p>
 <section id="element-categorization">
 <h3>Element Categorization<a class="headerlink" href="#element-categorization" title="Link to this heading">¶</a></h3>
-<p>In the first step, the sign of the level-set function is checked in each node of the element to determine if the element is intersected by the interface (changing sign), within the domain (<span class="math notranslate nohighlight">\(\phi_h(x_i)\leq0, \forall i\)</span>), or outside (<span class="math notranslate nohighlight">\(\phi_h(x_i)&gt;0, \forall i\)</span>). An example is given where the elements in  <a class="reference internal" href="#trianglecut"><span class="std std-numref">Figure 18</span></a> is marked as intersected by the interface, the element in <a class="reference internal" href="#trianglein"><span class="std std-numref">Figure 19</span></a> is marked as an element of the active domain and the element in  <a class="reference internal" href="#triangleout"><span class="std std-numref">Figure 20</span></a> is marked as element outside of the active domain.</p>
+<p>In the first step, the sign of the level-set function is checked in each node of the element to determine if the element is intersected by the interface (changing sign), within the domain (<span class="math notranslate nohighlight">\(\phi_h(x_i)\leq0, \forall i\)</span>), or outside (<span class="math notranslate nohighlight">\(\phi_h(x_i)&gt;0, \forall i\)</span>). An example is given where the elements in  <a class="reference internal" href="#trianglecut"><span class="std std-numref">Figure 21</span></a> is marked as intersected by the interface, the element in <a class="reference internal" href="#trianglein"><span class="std std-numref">Figure 22</span></a> is marked as an element of the active domain and the element in  <a class="reference internal" href="#triangleout"><span class="std std-numref">Figure 23</span></a> is marked as element outside of the active domain.</p>
 </section>
 <section id="interface-reconstruction-and-cutting">
 <h3>Interface Reconstruction and Cutting<a class="headerlink" href="#interface-reconstruction-and-cutting" title="Link to this heading">¶</a></h3>
-<p>To reconstruct the interface in order to integrate over <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(\Omega_K = \Omega_h \cap K\)</span>, a simple linear interpolation of level set values is used to calculate the points of intersection between the edges of the element <span class="math notranslate nohighlight">\(K\)</span> and the interface. Then we use these intersection points to obtain a linear approximation of <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(K \cap \Omega_h\)</span> (see <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 21</span></a> and <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 22</span></a>).</p>
+<p>To reconstruct the interface in order to integrate over <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(\Omega_K = \Omega_h \cap K\)</span>, a simple linear interpolation of level set values is used to calculate the points of intersection between the edges of the element <span class="math notranslate nohighlight">\(K\)</span> and the interface. Then we use these intersection points to obtain a linear approximation of <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(K \cap \Omega_h\)</span> (see <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 24</span></a> and <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 25</span></a>).</p>
 <div class="images-row docutils container">
 <div class="centered-figure docutils container">
 <figure class="align-left" id="id6">
 <span id="trianglecut"></span><a class="reference internal image-reference" href="_images/triangle_cut.png"><img alt="_images/triangle_cut.png" src="_images/triangle_cut.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 18 </span><span class="caption-text">Element cut by the interface.</span><a class="headerlink" href="#id6" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 21 </span><span class="caption-text">Element cut by the interface.</span><a class="headerlink" href="#id6" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -400,7 +400,7 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <span id="trianglein"></span><a class="reference internal image-reference" href="_images/triangle_in.png"><img alt="_images/triangle_in.png" src="_images/triangle_in.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 19 </span><span class="caption-text">Element in the active domain.</span><a class="headerlink" href="#id7" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 22 </span><span class="caption-text">Element in the active domain.</span><a class="headerlink" href="#id7" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -409,7 +409,7 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <span id="triangleout"></span><a class="reference internal image-reference" href="_images/triangle_out.png"><img alt="_images/triangle_out.png" src="_images/triangle_out.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 20 </span><span class="caption-text">Element outside the active domain.</span><a class="headerlink" href="#id8" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 23 </span><span class="caption-text">Element outside the active domain.</span><a class="headerlink" href="#id8" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -420,7 +420,7 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <span id="submesh1"></span><a class="reference internal image-reference" href="_images/sub_triangle_1.png"><img alt="_images/sub_triangle_1.png" src="_images/sub_triangle_1.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 21 </span><span class="caption-text">Triangle cut by the boundary <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id9" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 24 </span><span class="caption-text">Triangle cut by the boundary <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id9" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -429,7 +429,7 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 <span id="submesh2"></span><a class="reference internal image-reference" href="_images/sub_triangle_2.png"><img alt="_images/sub_triangle_2.png" src="_images/sub_triangle_2.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 22 </span><span class="caption-text">Sub-triangulation construction.</span><a class="headerlink" href="#id10" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 25 </span><span class="caption-text">Sub-triangulation construction.</span><a class="headerlink" href="#id10" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -437,28 +437,28 @@ The Ersatz material method is simple to apply and to implement but it may suffer
 </section>
 <section id="sub-integration-for-volume-integral">
 <h3>Sub-integration for volume integral<a class="headerlink" href="#sub-integration-for-volume-integral" title="Link to this heading">¶</a></h3>
-<p>We generate the quadrature rules over <span class="math notranslate nohighlight">\(\Omega_K\)</span> by sub-triangulation. For straight cuts in a triangle, this means either a triangle part or a quadrilateral part which we split into 2 sub-triangles. <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 22</span></a> shows an example of the sub-triangulation of a triangle element <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 21</span></a>.
+<p>We generate the quadrature rules over <span class="math notranslate nohighlight">\(\Omega_K\)</span> by sub-triangulation. For straight cuts in a triangle, this means either a triangle part or a quadrilateral part which we split into 2 sub-triangles. <a class="reference internal" href="#submesh2"><span class="std std-numref">Figure 25</span></a> shows an example of the sub-triangulation of a triangle element <a class="reference internal" href="#submesh1"><span class="std std-numref">Figure 24</span></a>.
 To generate the integration rule, we map the standard integration rule from a standard reference element onto a cut reference element.
-We define a mapping between the quadrature rule on the reference element and the sub-elements <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span>, which transforms the quadrature rule on the reference element to a quadrature rule on <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span> elements. Note that this means we now need to evaluate shape functions and their derivatives in non-standard points inside the reference element (see <a class="reference internal" href="#mappingintegration"><span class="std std-numref">Figure 23</span></a>).</p>
+We define a mapping between the quadrature rule on the reference element and the sub-elements <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span>, which transforms the quadrature rule on the reference element to a quadrature rule on <span class="math notranslate nohighlight">\(K_1\)</span> and <span class="math notranslate nohighlight">\(K_2\)</span> elements. Note that this means we now need to evaluate shape functions and their derivatives in non-standard points inside the reference element (see <a class="reference internal" href="#mappingintegration"><span class="std std-numref">Figure 26</span></a>).</p>
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id11">
 <span id="mappingintegration"></span><a class="reference internal image-reference" href="_images/mapping_integration.png"><img alt="_images/mapping_integration.png" src="_images/mapping_integration.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 23 </span><span class="caption-text">Illustration of mapping corresponding to sub-triangulation.</span><a class="headerlink" href="#id11" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 26 </span><span class="caption-text">Illustration of mapping corresponding to sub-triangulation.</span><a class="headerlink" href="#id11" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="sub-integration-for-interface-or-surface-integral">
 <h3>Sub-integration for interface (or surface) integral<a class="headerlink" href="#sub-integration-for-interface-or-surface-integral" title="Link to this heading">¶</a></h3>
-<p>To integrate over the interface (or surface) parts <span class="math notranslate nohighlight">\(\Gamma_K\)</span>, we use a similar technique to generate the quadrature rules. The important difference is here that the element used to generate the quadrature rule has a different dimension toe the reference element in which the quadrature rule is used. This means, we interpret the interface represented by an interval reference element as part of the triangular element. We map the integration rule from the standard reference interval (1D) to part of the triangle (2D). This mapping is mixed dimensional to generate the quadrature rule. An example of the approximation of the <span class="math notranslate nohighlight">\(\Gamma_K\)</span> integral as part of <span class="math notranslate nohighlight">\(K\)</span> is given in <a class="reference internal" href="#mappingintegrationfacet"><span class="std std-numref">Figure 24</span></a>.</p>
+<p>To integrate over the interface (or surface) parts <span class="math notranslate nohighlight">\(\Gamma_K\)</span>, we use a similar technique to generate the quadrature rules. The important difference is here that the element used to generate the quadrature rule has a different dimension toe the reference element in which the quadrature rule is used. This means, we interpret the interface represented by an interval reference element as part of the triangular element. We map the integration rule from the standard reference interval (1D) to part of the triangle (2D). This mapping is mixed dimensional to generate the quadrature rule. An example of the approximation of the <span class="math notranslate nohighlight">\(\Gamma_K\)</span> integral as part of <span class="math notranslate nohighlight">\(K\)</span> is given in <a class="reference internal" href="#mappingintegrationfacet"><span class="std std-numref">Figure 27</span></a>.</p>
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id12">
 <span id="mappingintegrationfacet"></span><a class="reference internal image-reference" href="_images/mapping_integration_facet.png"><img alt="_images/mapping_integration_facet.png" src="_images/mapping_integration_facet.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 24 </span><span class="caption-text">Illustration of mapping corresponding to sub-integration over <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id12" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 27 </span><span class="caption-text">Illustration of mapping corresponding to sub-integration over <span class="math notranslate nohighlight">\(\Gamma\)</span>.</span><a class="headerlink" href="#id12" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>

@@ -211,7 +211,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">3D Compliance Minimization</a></li>
 </ul>
 </li>
 </ul>
@@ -297,14 +297,14 @@
 </section>
 <section id="ghost-penalty">
 <h2>Ghost penalty<a class="headerlink" href="#ghost-penalty" title="Link to this heading">¶</a></h2>
-<p>A challenge arises for cut integrals, as they depend only on the physical part of elements <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(\Omega_K\)</span>. Certain elements may have minimal intersection with the physical domain <span class="math notranslate nohighlight">\(\Omega\)</span>, as depicted in <a class="reference internal" href="#exemple1verysmallintersection"><span class="std std-numref">Figure 25</span></a>. For Nitsche’s method this can result in a penalty parameter tending to <span class="math notranslate nohighlight">\(\infty\)</span> (see <a class="reference internal" href="#exemple1verysmallintersection"><span class="std std-numref">Figure 25</span></a>). Furthermore, cut elements like those shown in <a class="reference internal" href="#exemple2verysmallintersection"><span class="std std-numref">Figure 26</span></a> result in ill-conditioning of the system matrix.</p>
+<p>A challenge arises for cut integrals, as they depend only on the physical part of elements <span class="math notranslate nohighlight">\(\Gamma_K\)</span> and <span class="math notranslate nohighlight">\(\Omega_K\)</span>. Certain elements may have minimal intersection with the physical domain <span class="math notranslate nohighlight">\(\Omega\)</span>, as depicted in <a class="reference internal" href="#exemple1verysmallintersection"><span class="std std-numref">Figure 28</span></a>. For Nitsche’s method this can result in a penalty parameter tending to <span class="math notranslate nohighlight">\(\infty\)</span> (see <a class="reference internal" href="#exemple1verysmallintersection"><span class="std std-numref">Figure 28</span></a>). Furthermore, cut elements like those shown in <a class="reference internal" href="#exemple2verysmallintersection"><span class="std std-numref">Figure 29</span></a> result in ill-conditioning of the system matrix.</p>
 <div class="images-row docutils container">
 <div class="centered-figure docutils container">
 <figure class="align-center" id="id4">
 <span id="exemple1verysmallintersection"></span><a class="reference internal image-reference" href="_images/exemple_1_verysmallIntersection.png"><img alt="_images/exemple_1_verysmallIntersection.png" src="_images/exemple_1_verysmallIntersection.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 25 </span><span class="caption-text">Example of very small intersections with the physical domain <span class="math notranslate nohighlight">\(\Omega\)</span> leading to a lack of stability.</span><a class="headerlink" href="#id4" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 28 </span><span class="caption-text">Example of very small intersections with the physical domain <span class="math notranslate nohighlight">\(\Omega\)</span> leading to a lack of stability.</span><a class="headerlink" href="#id4" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
@@ -313,12 +313,12 @@
 <span id="exemple2verysmallintersection"></span><a class="reference internal image-reference" href="_images/exemple_2_verysmallIntersection.png"><img alt="_images/exemple_2_verysmallIntersection.png" src="_images/exemple_2_verysmallIntersection.png" style="width: 70%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Figure 26 </span><span class="caption-text">Example of very small intersections with the physical domain <span class="math notranslate nohighlight">\(\Omega\)</span> leading to an ill-conditioning.</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
+<p><span class="caption-number">Figure 29 </span><span class="caption-text">Example of very small intersections with the physical domain <span class="math notranslate nohighlight">\(\Omega\)</span> leading to an ill-conditioning.</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </div>
 </div>
-<p>To address these issues, one approach is to modify the formulation to depend on the active domain <span class="math notranslate nohighlight">\(\Omega_{h}\)</span>, as illustrated by the green domain in <a class="reference internal" href="demo_cutfem.html#schemacutfemfinal"><span class="std std-numref">Figure 17</span></a>.This extension of the problem formulation from the physical domain (<span class="math notranslate nohighlight">\(\Omega\)</span>) to the active domain (<span class="math notranslate nohighlight">\(\Omega_{h}\)</span>) should be done accurately, ensuring that terms vanish optimally with mesh refinement and smoothness of the solution. One way to achieve such an extension is the ghost penalty stabilization method <span class="bibtex-citation" id="id2">[<a class="reference internal" href="bibliography.html#id23" title="Erik Burman. Ghost penalty. Comptes Rendus Mathematique, 348(21):1217-1220, 2010. URL: https://www.sciencedirect.com/science/article/pii/S1631073X10002827, doi:https://doi.org/10.1016/j.crma.2010.10.006.">Bur10</a>]</span>. The concept involves introducing a penalization term on the elements intersected by the interface <span class="math notranslate nohighlight">\(\Gamma\)</span>. This method extends coercivity to the entire domain without compromising convergence properties.</p>
+<p>To address these issues, one approach is to modify the formulation to depend on the active domain <span class="math notranslate nohighlight">\(\Omega_{h}\)</span>, as illustrated by the green domain in <a class="reference internal" href="demo_cutfem.html#schemacutfemfinal"><span class="std std-numref">Figure 20</span></a>.This extension of the problem formulation from the physical domain (<span class="math notranslate nohighlight">\(\Omega\)</span>) to the active domain (<span class="math notranslate nohighlight">\(\Omega_{h}\)</span>) should be done accurately, ensuring that terms vanish optimally with mesh refinement and smoothness of the solution. One way to achieve such an extension is the ghost penalty stabilization method <span class="bibtex-citation" id="id2">[<a class="reference internal" href="bibliography.html#id23" title="Erik Burman. Ghost penalty. Comptes Rendus Mathematique, 348(21):1217-1220, 2010. URL: https://www.sciencedirect.com/science/article/pii/S1631073X10002827, doi:https://doi.org/10.1016/j.crma.2010.10.006.">Bur10</a>]</span>. The concept involves introducing a penalization term on the elements intersected by the interface <span class="math notranslate nohighlight">\(\Gamma\)</span>. This method extends coercivity to the entire domain without compromising convergence properties.</p>
 </section>
 <section id="cutfem-weak-formulation-of-linear-elasticity">
 <h2>CutFEM Weak formulation of Linear elasticity<a class="headerlink" href="#cutfem-weak-formulation-of-linear-elasticity" title="Link to this heading">¶</a></h2>

@@ -6,7 +6,7 @@
         <link rel="prefetch" href="../../_static/opticut-logo-v2.svg" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
-        <title>optimization.almMethod - OptiCut</title>
+        <title>levelset.levelSet_tool - OptiCut</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -276,7 +276,7 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <h1>Source code for optimization.almMethod</h1><div class="highlight"><pre>
+          <h1>Source code for levelset.levelSet_tool</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (c) 2025 ONERA and MINES Paris, France</span>
 <span class="c1">#</span>
 <span class="c1"># All rights reserved.</span>
@@ -284,137 +284,292 @@
 <span class="c1"># This file is part of OptiCut.</span>
 <span class="c1">#</span>
 <span class="c1"># Author(s)     : Amina El Bachari</span>
+<span class="c1">#</span>
+<span class="c1"># Migration note: updated to CutFEMx 0.2 (DOLFINx 0.11)</span>
+<span class="c1">#   - Reinitialization class replaced by cutfemx.distance.reinitialize()</span>
+<span class="c1">#   - Advection class: removed unused CutFEMx imports (cut_entities, create_cut_mesh, etc.)</span>
+
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ufl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx</span><span class="w"> </span><span class="kn">import</span> <span class="n">fem</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">plot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ufl</span><span class="w"> </span><span class="kn">import</span> <span class="n">ds</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">inner</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">dS</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py.PETSc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">PETSc</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.fem</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Constant</span><span class="p">,</span>
+    <span class="n">Function</span><span class="p">,</span>
+    <span class="n">FunctionSpace</span><span class="p">,</span>
+    <span class="n">assemble_scalar</span><span class="p">,</span>
+    <span class="n">dirichletbc</span><span class="p">,</span>
+    <span class="n">form</span><span class="p">,</span>
+    <span class="n">locate_dofs_topological</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.fem.petsc</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearProblem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_unit_square</span><span class="p">,</span> <span class="n">meshtags</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">petsc4py.PETSc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ufl</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FacetNormal</span><span class="p">,</span>
+    <span class="n">Measure</span><span class="p">,</span>
+    <span class="n">SpatialCoordinate</span><span class="p">,</span>
+    <span class="n">TestFunction</span><span class="p">,</span>
+    <span class="n">TrialFunction</span><span class="p">,</span>
+    <span class="n">div</span><span class="p">,</span>
+    <span class="n">dot</span><span class="p">,</span>
+    <span class="n">dx</span><span class="p">,</span>
+    <span class="n">grad</span><span class="p">,</span>
+    <span class="n">inner</span><span class="p">,</span>
+    <span class="n">lhs</span><span class="p">,</span>
+    <span class="n">rhs</span><span class="p">,</span>
+    <span class="n">dc</span><span class="p">,</span>
+    <span class="n">FacetNormal</span><span class="p">,</span>
+    <span class="n">CellDiameter</span><span class="p">,</span>
+    <span class="n">dot</span><span class="p">,</span>
+    <span class="n">avg</span><span class="p">,</span>
+    <span class="n">jump</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dolfinx.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">XDMFFile</span>
+
+<span class="c1"># CutFEMx 0.2 imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cutfemx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cutfemx.distance</span><span class="w"> </span><span class="kn">import</span> <span class="n">reinitialize</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">mechanics_tool</span>
+
+<span class="c1">############################################</span>
+<span class="c1"># HJ Reinitialization</span>
+<span class="c1">############################################</span>
 
 
-<div class="viewcode-block" id="maj_param_constraint_optim_slack">
-<a class="viewcode-back" href="../../almMethod.html#optimization.almMethod.maj_param_constraint_optim_slack">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">maj_param_constraint_optim_slack</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">rest_constraint</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Update the slack parameter for inequality constraint, as the following equation:</span>
+<div class="viewcode-block" id="LevelSet">
+<a class="viewcode-back" href="../../reinitialization.html#levelset.levelSet_tool.LevelSet">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LevelSet</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        LevelSet class to define a level-set function.</span>
 
-<span class="sd">    .. math::</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        level_set : fem.Function</span>
+<span class="sd">            Initial level-set function.</span>
+<span class="sd">        space : fem.FunctionSpace</span>
+<span class="sd">            Function space of the level-set.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">=</span> <span class="n">space</span>
 
-<span class="sd">            s^{n+1} = \text{max}(0,-( \frac{\lambda_{ALM}^{n}}{\mu_{ALM}^{n}}+C(\Omega^{n}) ) )</span>
+<div class="viewcode-block" id="LevelSet.set_level_set">
+<a class="viewcode-back" href="../../reinitialization.html#levelset.levelSet_tool.LevelSet.set_level_set">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_level_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Update the level-set function."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span></div>
+</div>
 
 
-<span class="sd">    :param Parameter parameters: The parameter object.</span>
-<span class="sd">    :param float rest_constraint: The value of :math:`C(\Omega^{n})`.</span>
 
+<div class="viewcode-block" id="Advection">
+<a class="viewcode-back" href="../../reinitialization.html#levelset.levelSet_tool.Advection">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Advection</span><span class="p">(</span><span class="n">LevelSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Class to perform level-set advection using a standard FEM scheme (no CutFEM).</span>
+<span class="sd">    Inherits from LevelSet.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">type_constraint</span> <span class="o">==</span> <span class="s2">"inequality"</span><span class="p">:</span>
-            <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_slack_variable</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="o">-</span><span class="p">(</span>
-                    <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span>
-                    <span class="o">/</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span>
-                    <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rest_constraint</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Initialize the Advection solver for a level-set.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        level_set : fem.Function</span>
+<span class="sd">            Initial level-set function.</span>
+<span class="sd">        V_ls : fem.FunctionSpace</span>
+<span class="sd">            Function space of the level-set.</span>
+<span class="sd">        dt : float, optional</span>
+<span class="sd">            Time step for advection (default: 1e-3).</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span> <span class="o">=</span> <span class="n">V_ls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">V_ls</span><span class="o">.</span><span class="n">mesh</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_n</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TrialFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">1e-3</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">CellDiameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dS</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">FacetNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">const</span> <span class="o">=</span> <span class="mf">1e-3</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"cffi_extra_compile_args"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"-O0"</span><span class="p">,</span> <span class="s2">"-w"</span><span class="p">]}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt_const</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">ScalarType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">))</span>
+
+        <span class="n">a_adv</span> <span class="o">=</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">)</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dx</span>
+        <span class="n">a_adv</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">const</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">avg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span>
+            <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span>
+                <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_n</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>
+                <span class="n">ufl</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dS</span>
+        <span class="p">)</span>
+        <span class="n">a_std_adv</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="n">a_adv</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">petsc</span><span class="o">.</span><span class="n">assemble_matrix</span><span class="p">(</span><span class="n">a_std_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span><span class="o">.</span><span class="n">assemble</span><span class="p">()</span>
+
+        <span class="n">L_adv</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">)</span> <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dx</span>
+            <span class="o">+</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">dt_const</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span>
+                <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="n">ufl</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">),</span> <span class="n">ufl</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">))</span>
                 <span class="p">),</span>
-            <span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="maj_param_constraint_optim">
-<a class="viewcode-back" href="../../almMethod.html#optimization.almMethod.maj_param_constraint_optim">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">maj_param_constraint_optim</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">rest_constraint</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Update the Augmented Lagrangian parameters of the Parameter object.</span>
-
-<span class="sd">    1. *Update the Lagrange multiplier :*</span>
-
-<span class="sd">    .. math::</span>
-
-<span class="sd">            \lambda_{ALM}^{n+1} = \lambda_{ALM}^{n} + \mu_{ALM}^{n}(C(\Omega^{n}) + s^{n+1})</span>
-
-
-<span class="sd">    2. *Update the Lagrange penalty parameter :*</span>
-
-
-<span class="sd">    .. math::</span>
-
-<span class="sd">        \mu_{ALM}^{n+1} = \text{min}(\overline{\mu},c \mu_{ALM}^{n})</span>
-
-
-
-<span class="sd">    where :math:`\overline{\mu}` is the limit of the penalty parameter and :math:`c` is the penalty multiplier coefficient.</span>
-
-
-<span class="sd">    :param Parameter parameters: The parameter object.</span>
-<span class="sd">    :param float rest_constraint: The value of :math:`C(\Omega)`.</span>
-
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span>
-            <span class="o">+</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span>
-            <span class="o">*</span> <span class="p">(</span><span class="n">rest_constraint</span> <span class="o">+</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_slack_variable</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">phi_test</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">*</span> <span class="n">ufl</span><span class="o">.</span><span class="n">dx</span>
         <span class="p">)</span>
-        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-            <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_limit</span><span class="p">,</span>
-            <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_coef_multiplicator</span>
-            <span class="o">*</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="init_param_constraint_optim">
-<a class="viewcode-back" href="../../almMethod.html#optimization.almMethod.init_param_constraint_optim">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">init_param_constraint_optim</span><span class="p">(</span>
-    <span class="n">constraint_derivative</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">cost_derivative</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Initialized the Augmented Lagrangian parameters:</span>
-
-<span class="sd">    1. *Initialization of the Lagrange multiplier :*</span>
-
-<span class="sd">    .. math::</span>
-
-<span class="sd">            \lambda_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}</span>
-
-<span class="sd">    with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}`</span>
-
-<span class="sd">    2. *Initialization of the Lagrange penalty parameter :*</span>
-
-<span class="sd">    .. math::</span>
-
-<span class="sd">            \mu_{ALM}^{0} = \frac{10^{k}C(\Omega^{0})}{D}</span>
-
-<span class="sd">    with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}`</span>
-
-<span class="sd">    3. *Initialization of the penalty limit :*</span>
-
-<span class="sd">    .. math::</span>
-
-<span class="sd">            \overline{\mu}_{ALM}^{0} = \text{denom}*\frac{10^{k}C(\Omega^{0})}{D}</span>
-
-<span class="sd">    with :math:`k=10^{\text{round}(\log_{10}(\text{cost}))}`</span>
-
-
-<span class="sd">    .. note::</span>
-<span class="sd">        The set of simulations we conducted allowed us to determine a value for D of approximately 100.</span>
-
-
-<span class="sd">    :param Parameter parameters: The parameter object.</span>
-<span class="sd">    :param float cost: The cost value :math:`J(\Omega^{0})` at the initialization.</span>
-<span class="sd">    :param float denom: The D value, with a default value of :math:`100`.</span>
-
-<span class="sd">    """</span>
-    <span class="n">sqrt_tol</span> <span class="o">=</span> <span class="mf">0.00001</span>
-    <span class="k">if</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"vcost_derivative ="</span><span class="p">,</span> <span class="n">cost_derivative</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"constraint derivative = "</span><span class="p">,</span> <span class="n">constraint_derivative</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">ALM</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_lagrangian_multiplicator</span> <span class="o">=</span> <span class="n">cost_derivative</span> <span class="o">/</span> <span class="p">(</span>
-            <span class="n">constraint_derivative</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L_std_adv</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="n">L_adv</span><span class="p">,</span> <span class="n">jit_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast_jit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">petsc</span><span class="o">.</span><span class="n">create_vector</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">])</span>
+        <span class="n">fem</span><span class="o">.</span><span class="n">petsc</span><span class="o">.</span><span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L_std_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span>
+            <span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span>
         <span class="p">)</span>
-        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_parameter</span> <span class="o">=</span> <span class="n">cost_derivative</span> <span class="o">/</span> <span class="p">(</span><span class="n">constraint_derivative</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">parameters</span><span class="o">.</span><span class="n">ALM_penalty_limit</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">k</span> <span class="o">*</span> <span class="n">cost_derivative</span> <span class="o">/</span> <span class="p">((</span><span class="n">constraint_derivative</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
-        <span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span>
+            <span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span> <span class="o">=</span> <span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="p">()</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">setOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">KSP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PREONLY</span><span class="p">)</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">getPC</span><span class="p">()</span>
+        <span class="n">pc</span><span class="o">.</span><span class="n">setType</span><span class="p">(</span><span class="n">PETSc</span><span class="o">.</span><span class="n">PC</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LU</span><span class="p">)</span>
+        <span class="n">pc</span><span class="o">.</span><span class="n">setFactorSolverType</span><span class="p">(</span><span class="s2">"mumps"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">setUp</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_adv</span> <span class="o">=</span> <span class="n">fem</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Advection.cut_fem_adv">
+<a class="viewcode-back" href="../../reinitialization.html#levelset.levelSet_tool.Advection.cut_fem_adv">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cut_fem_adv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velocity_field</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Perform one advection step of the level-set function."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">velocity_field</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_field</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt_const</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">dt</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">localForm</span><span class="p">()</span> <span class="k">as</span> <span class="n">loc</span><span class="p">:</span>
+            <span class="n">loc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">fem</span><span class="o">.</span><span class="n">petsc</span><span class="o">.</span><span class="n">assemble_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L_std_adv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span>
+            <span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">REVERSE</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="o">.</span><span class="n">ghostUpdate</span><span class="p">(</span>
+            <span class="n">addv</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">InsertMode</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">PETSc</span><span class="o">.</span><span class="n">ScatterMode</span><span class="o">.</span><span class="n">FORWARD</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_adv</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_adv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_adv</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">petsc_vec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_adv</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_adv</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_adv</span></div>
+</div>
+
+
+
+<span class="c1">############################################</span>
+<span class="c1"># Reinitialization — CutFEMx 0.2 API</span>
+<span class="c1">############################################</span>
+
+
+<div class="viewcode-block" id="Reinitialization">
+<a class="viewcode-back" href="../../reinitialization.html#levelset.levelSet_tool.Reinitialization">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Reinitialization</span><span class="p">(</span><span class="n">LevelSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Reinitialization wrapper using cutfemx.distance.reinitialize().</span>
+
+<span class="sd">    Replaces the old Predictor-Corrector scheme that relied on the now-obsolete</span>
+<span class="sd">    cut_form / update_runtime_domains API. The new CutFEMx 0.2 exposes a single</span>
+<span class="sd">    ``cutfemx.distance.reinitialize(phi)`` call that handles signed-distance</span>
+<span class="sd">    reinitialization internally.</span>
+
+<span class="sd">    The public interface (``reinitializationPC``, ``reinitializationPC_inplace``)</span>
+<span class="sd">    is kept identical so that callers in main.py do not need to change.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        level_set : fem.Function</span>
+<span class="sd">            Initial level-set function.</span>
+<span class="sd">        V_ls : fem.FunctionSpace</span>
+<span class="sd">            Function space of the level-set.</span>
+<span class="sd">        l : float</span>
+<span class="sd">            Characteristic length (kept for interface compatibility; not used</span>
+<span class="sd">            by the new reinitialize() backend).</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">level_set</span><span class="p">,</span> <span class="n">V_ls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">function_space</span><span class="o">.</span><span class="n">mesh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="n">l</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_ls</span> <span class="o">=</span> <span class="n">V_ls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">dim</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Public interface (same as before)</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Reinitialization.reinitializationPC">
+<a class="viewcode-back" href="../../reinitialization.html#levelset.levelSet_tool.Reinitialization.reinitializationPC">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reinitializationPC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">step_reinit</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return a reinitialized level-set (signed-distance field).</span>
+
+<span class="sd">        :param fem.Function level_set: The level-set function :math:`\phi`.</span>
+<span class="sd">        :param int step_reinit: Ignored (kept for API compatibility with old PC scheme).</span>
+
+<span class="sd">        :returns: Reinitialized level-set.</span>
+<span class="sd">        :rtype: fem.Function</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="c1"># CutFEMx 0.2: one call handles everything</span>
+        <span class="n">reinitialize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+
+        <span class="c1"># Propagate result back to the caller's function</span>
+        <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">array</span>
+        <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">level_set</span></div>
+
+
+<div class="viewcode-block" id="Reinitialization.reinitializationPC_inplace">
+<a class="viewcode-back" href="../../reinitialization.html#levelset.levelSet_tool.Reinitialization.reinitializationPC_inplace">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reinitializationPC_inplace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level_set</span><span class="p">,</span> <span class="n">step_reinit</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Reinitialize in-place (modifies level_set directly).</span>
+
+<span class="sd">        :param fem.Function level_set: The level-set function to reinitialize.</span>
+<span class="sd">        :param int step_reinit: Ignored (kept for API compatibility).</span>
+<span class="sd">        """</span>
+        <span class="n">reinitialize</span><span class="p">(</span><span class="n">level_set</span><span class="p">)</span>
+        <span class="n">level_set</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">scatter_forward</span><span class="p">()</span></div>
+</div>
 
 </pre></div>
         </article>

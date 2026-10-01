@@ -211,7 +211,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">3D Compliance Minimization</a></li>
 </ul>
 </li>
 </ul>
@@ -299,7 +299,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cost_value</strong> (<em>float</em>) – The cost value, <span class="math notranslate nohighlight">\(J(\Omega^{n})\)</span>.</p></li>
 <li><p><strong>constraint_value</strong> (<em>float</em>) – The value of <span class="math notranslate nohighlight">\(C(\Omega^{n})\)</span>.</p></li>
-<li><p><strong>parameters</strong> (<em>Parameters</em>) – The parameter object.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference internal" href="parameters.html#config.parameters.Parameters" title="config.parameters.Parameters"><em>Parameters</em></a>) – The parameter object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -346,7 +346,7 @@ The minimum value of <cite>dt</cite> is taken to ensure numerical stability.</p>
 <li><p><strong>_lagrangian_cost</strong> (<em>float</em>) – The current Lagrangian cost (not used in the function but likely relevant for future modifications).</p></li>
 <li><p><strong>lagrangian_cost_previous</strong> (<em>float</em>) – The Lagrangian cost from the previous iteration.</p></li>
 <li><p><strong>max_velocity</strong> (<em>float</em>) – The maximum velocity in the system.</p></li>
-<li><p><strong>parameters</strong> (<em>Parameters</em>) – An object containing various simulation parameters, including <cite>h</cite>.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference internal" href="parameters.html#config.parameters.Parameters" title="config.parameters.Parameters"><em>Parameters</em></a>) – An object containing various simulation parameters, including <cite>h</cite>.</p></li>
 <li><p><strong>c</strong> (<em>float</em>) – A scaling factor to control the time step size.</p></li>
 </ul>
 </dd>

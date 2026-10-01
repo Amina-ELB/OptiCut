@@ -176,7 +176,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
@@ -211,7 +211,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="demos.html">Demos</a><input aria-label="Toggle navigation of Demos" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="demo_compliance.html">Compliance minimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo_vonMises.html">Lp norm of Von Mises criteria minimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">High-Performance 3D Compliance Minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_3D_parallel.html">3D Compliance Minimization</a></li>
 </ul>
 </li>
 </ul>
@@ -278,13 +278,85 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
         <article role="main" id="furo-main-content">
           <section id="level-set-tools">
 <h1>Level-Set Tools<a class="headerlink" href="#level-set-tools" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="levelset.levelSet_tool.LevelSet">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">levelset.levelSet_tool.</span></span><span class="sig-name descname"><span class="pre">LevelSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelset/levelSet_tool.html#LevelSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelset.levelSet_tool.LevelSet" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="levelset.levelSet_tool.LevelSet.set_level_set">
+<span class="sig-name descname"><span class="pre">set_level_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelset/levelSet_tool.html#LevelSet.set_level_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelset.levelSet_tool.LevelSet.set_level_set" title="Link to this definition">¶</a></dt>
+<dd><p>Update the level-set function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="levelset.levelSet_tool.Advection">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">levelset.levelSet_tool.</span></span><span class="sig-name descname"><span class="pre">Advection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V_ls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelset/levelSet_tool.html#Advection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelset.levelSet_tool.Advection" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#levelset.levelSet_tool.LevelSet" title="levelset.levelSet_tool.LevelSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">LevelSet</span></code></a></p>
+<p>Class to perform level-set advection using a standard FEM scheme (no CutFEM).
+Inherits from LevelSet.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="levelset.levelSet_tool.Advection.cut_fem_adv">
+<span class="sig-name descname"><span class="pre">cut_fem_adv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">velocity_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelset/levelSet_tool.html#Advection.cut_fem_adv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelset.levelSet_tool.Advection.cut_fem_adv" title="Link to this definition">¶</a></dt>
+<dd><p>Perform one advection step of the level-set function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="levelset.levelSet_tool.Reinitialization">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">levelset.levelSet_tool.</span></span><span class="sig-name descname"><span class="pre">Reinitialization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V_ls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelset/levelSet_tool.html#Reinitialization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelset.levelSet_tool.Reinitialization" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#levelset.levelSet_tool.LevelSet" title="levelset.levelSet_tool.LevelSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">LevelSet</span></code></a></p>
+<p>Reinitialization wrapper using cutfemx.distance.reinitialize().</p>
+<p>Replaces the old Predictor-Corrector scheme that relied on the now-obsolete
+cut_form / update_runtime_domains API. The new CutFEMx 0.2 exposes a single
+<code class="docutils literal notranslate"><span class="pre">cutfemx.distance.reinitialize(phi)</span></code> call that handles signed-distance
+reinitialization internally.</p>
+<p>The public interface (<code class="docutils literal notranslate"><span class="pre">reinitializationPC</span></code>, <code class="docutils literal notranslate"><span class="pre">reinitializationPC_inplace</span></code>)
+is kept identical so that callers in main.py do not need to change.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="levelset.levelSet_tool.Reinitialization.reinitializationPC">
+<span class="sig-name descname"><span class="pre">reinitializationPC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_reinit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelset/levelSet_tool.html#Reinitialization.reinitializationPC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelset.levelSet_tool.Reinitialization.reinitializationPC" title="Link to this definition">¶</a></dt>
+<dd><p>Return a reinitialized level-set (signed-distance field).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_set</strong> (<em>fem.Function</em>) – The level-set function <span class="math notranslate nohighlight">\(\phi\)</span>.</p></li>
+<li><p><strong>step_reinit</strong> (<em>int</em>) – Ignored (kept for API compatibility with old PC scheme).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Reinitialized level-set.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fem.Function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="levelset.levelSet_tool.Reinitialization.reinitializationPC_inplace">
+<span class="sig-name descname"><span class="pre">reinitializationPC_inplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_reinit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/levelset/levelSet_tool.html#Reinitialization.reinitializationPC_inplace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#levelset.levelSet_tool.Reinitialization.reinitializationPC_inplace" title="Link to this definition">¶</a></dt>
+<dd><p>Reinitialize in-place (modifies level_set directly).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_set</strong> (<em>fem.Function</em>) – The level-set function to reinitialize.</p></li>
+<li><p><strong>step_reinit</strong> (<em>int</em>) – Ignored (kept for API compatibility).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -330,8 +402,39 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Level-Set Tools</a><ul>
+<li><a class="reference internal" href="#levelset.levelSet_tool.LevelSet"><code class="docutils literal notranslate"><span class="pre">LevelSet</span></code></a><ul>
+<li><a class="reference internal" href="#levelset.levelSet_tool.LevelSet.set_level_set"><code class="docutils literal notranslate"><span class="pre">LevelSet.set_level_set()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#levelset.levelSet_tool.Advection"><code class="docutils literal notranslate"><span class="pre">Advection</span></code></a><ul>
+<li><a class="reference internal" href="#levelset.levelSet_tool.Advection.cut_fem_adv"><code class="docutils literal notranslate"><span class="pre">Advection.cut_fem_adv()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#levelset.levelSet_tool.Reinitialization"><code class="docutils literal notranslate"><span class="pre">Reinitialization</span></code></a><ul>
+<li><a class="reference internal" href="#levelset.levelSet_tool.Reinitialization.reinitializationPC"><code class="docutils literal notranslate"><span class="pre">Reinitialization.reinitializationPC()</span></code></a></li>
+<li><a class="reference internal" href="#levelset.levelSet_tool.Reinitialization.reinitializationPC_inplace"><code class="docutils literal notranslate"><span class="pre">Reinitialization.reinitializationPC_inplace()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
@@ -341,5 +444,7 @@
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     </body>
 </html>
