@@ -54,6 +54,7 @@ autodoc_mock_imports = [
     "scipy",
     "gmsh",
     "psutil",
+    "matplotlib",
 ]
 
 templates_path = ['_templates']

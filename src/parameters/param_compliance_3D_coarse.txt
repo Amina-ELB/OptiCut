@@ -2,7 +2,7 @@ cost_func compliance # compliance / VonMises / volume
 ALM 1 # 1 if Augmented Lagrangian method is used, 0 if not.
 uzawa 0 # 1 if Uzawa method is used, 0 if not
 ALM_slack_variable 0 # here is always 0
-ALM_lagrangian_multiplicator 0.0001 # first value of lagrangian multiplicator if ALM = 1, sugestion for VonMises cost func with volume constraint = 0.01, 0.1 for volume cost function and VonMises constraint
+ALM_lagrangian_multiplicator 0.01 # first value of lagrangian multiplicator if ALM = 1, sugestion for VonMises cost func with volume constraint = 0.01, 0.1 for volume cost function and VonMises constraint
 ALM_penalty_parameter 0.001 # first value of penalty parameter if ALM = 1, sigection for VonMises = 0.01
 ALM_penalty_coef_multiplicator 1.1 # first value of penalty coefficient mutiplicator if ALM = 1, sugestion for VonMises = 1.1
 ALM_penalty_limit 10 # value of penalty coefficient mutiplicator limit if ALM = 1, sugestion for VonMises = 3

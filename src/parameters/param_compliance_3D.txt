@@ -12,7 +12,7 @@ type_constraint equal # only "equal constraint" is implemented here
 descent_direction_Riesz 1 # 1 if descent direction is extended with Riez Theorem and CutFEM, else 0
 tol_cost_func 0.0001 # value of the tolerance for stopped condition
 p_const 6 # 
-max_incr 600 # Value of the maximum iteration
+max_incr 1 # Value of the maximum iteration
 mesh_case 3D # L_shape / rectangle / 3D
 lx 2 # measure of the x direction area
 ly 1 # mesure of the y direction area
