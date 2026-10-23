@@ -67,15 +67,4 @@ For a comprehensive overview of the mathematical formulations, numerical methods
 
 We welcome contributions from the research community. Please refer to `CONTRIBUTING.md` for guidelines on submitting issues or pull requests.
 
-## Citation
 
-If you use this code in your academic research, please cite our upcoming JOSS publication:
-
-```bibtex
-@article{ElBachari2026OptiCut,
-  title={OptiCut: Open Source FEniCSx Framework for Parallel Structural Shape Optimization},
-  author={El Bachari, Amina},
-  journal={Journal of Open Source Software},
-  year={2026}
-}
-```
