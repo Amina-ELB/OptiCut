@@ -29,6 +29,9 @@ echo "2. Installing runintgen"
 echo "=========================================="
 if [ ! -d "runintgen" ]; then
     git clone https://github.com/sclaus2/runintgen.git
+    cd runintgen
+    git checkout d6e300755f295218371caf592fb32db70051041a
+    cd ..
 fi
 python -m pip install --no-build-isolation --no-deps --force-reinstall ./runintgen
 
@@ -37,6 +40,13 @@ echo "3. Installing CutCells"
 echo "=========================================="
 if [ ! -d "CutCells" ]; then
     git clone https://github.com/sclaus2/cutcells.git CutCells
+    cd CutCells
+    git checkout 8550c7047150a01d20384e3a3ad256343788c670
+    cd ..
+else
+    cd CutCells
+    git checkout 8550c7047150a01d20384e3a3ad256343788c670 2>/dev/null || true
+    cd ..
 fi
 cd CutCells
 rm -rf cpp/build
