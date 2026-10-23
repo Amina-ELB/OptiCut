@@ -16,6 +16,9 @@ export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
 export PYTHONNOUSERSITE=1
 export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
 export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+export CPATH="$CONDA_PREFIX/include:${CPATH:-}"
+export LIBRARY_PATH="$CONDA_PREFIX/lib:${LIBRARY_PATH:-}"
+export CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$CONDA_PREFIX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX"
 
 echo "=========================================="
 echo "2. Installing runintgen"
