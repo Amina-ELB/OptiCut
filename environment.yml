@@ -7,7 +7,7 @@ dependencies:
   - c-compiler
   - cxx-compiler
   - pkg-config
-  - cmake
+  - cmake<4
   - ninja
   - scikit-build-core
   - nanobind
