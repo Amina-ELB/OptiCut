@@ -1,0 +1,7 @@
+--- Area Sensitivity Test ---
+J0: 3.214812e+00
+J1: 3.015016e+00
+dJ0: -3.214812e+00
+FD (J1-J0)/dt: -3.329929e+00
+u0 norm: 6.64e+00
+Relative Error: 3.58e-02

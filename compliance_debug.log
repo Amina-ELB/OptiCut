@@ -1,0 +1,7 @@
+--- compliance Sensitivity Test ---
+J0: 1.205500e-01
+J1: 1.488023e-01
+dJ0: 1.205500e-01
+FD (J1-J0)/dt: 4.708716e-01
+u0 norm: 6.64e+00
+Relative Error: 2.91e+00

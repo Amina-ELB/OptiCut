@@ -1,0 +1,7 @@
+--- VonMises Sensitivity Test ---
+J0: 4.449919e+00
+J1: 5.088439e+00
+dJ0: 3.893678e+00
+FD (J1-J0)/dt: 1.064201e+01
+u0 norm: 6.64e+00
+Relative Error: 1.73e+00

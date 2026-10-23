@@ -4,7 +4,11 @@ set -e
 echo "=========================================="
 echo "1. Creating Conda Environment"
 echo "=========================================="
-conda env create -f environment.yml -y || echo "Environment already exists or failed to create."
+if ! conda info --envs 2>/dev/null | grep -q "opticut-env"; then
+    conda env create -f environment.yml -y
+else
+    echo "Environment opticut-env already exists."
+fi
 
 # Activate conda env
 source "$(conda info --base)/etc/profile.d/conda.sh"
@@ -35,9 +39,23 @@ if [ ! -d "CutCells" ]; then
     git clone https://github.com/sclaus2/cutcells.git CutCells
 fi
 cd CutCells
+rm -rf cpp/build
 cmake -G Ninja -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" -DCUTCELLS_WITH_ALGOIM=OFF
 cmake --build cpp/build
 cmake --install cpp/build
+
+# Ensure all CutCells headers are guaranteed to be present in $CONDA_PREFIX/include/cutcells
+mkdir -p "$CONDA_PREFIX/include/cutcells"
+cp -r cpp/src/*.h "$CONDA_PREFIX/include/cutcells/" 2>/dev/null || true
+if [ -d "cpp/src/generated" ]; then
+    mkdir -p "$CONDA_PREFIX/include/cutcells/generated"
+    cp -r cpp/src/generated/*.h "$CONDA_PREFIX/include/cutcells/generated/" 2>/dev/null || true
+fi
+if [ -d "cpp/build/include/cutcells" ]; then
+    cp -r cpp/build/include/cutcells/*.h "$CONDA_PREFIX/include/cutcells/" 2>/dev/null || true
+fi
+
+rm -rf python/build
 python -m pip install --no-build-isolation --no-deps --force-reinstall ./python
 cd ..
 
@@ -50,7 +68,8 @@ if [ ! -d "CutFEMx" ]; then
     git checkout 422658f20355f6078f3d9a620b53cac50bbb8d27
     cd ..
 fi
-python -m pip install --no-build-isolation --no-deps --force-reinstall ./CutFEMx
+rm -rf CutFEMx/build
+(cd CutFEMx && python -m pip install --no-build-isolation --no-deps --force-reinstall .)
 
 echo "=========================================="
 echo "5. Installing OptiCut"
