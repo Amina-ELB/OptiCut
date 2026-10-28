@@ -194,7 +194,7 @@ class ErsatzElasticSolver:
         self.a_primal = fem.form(self.a)
         self.L_primal = fem.form(self.L)
 
-        self.b_primal = fem.petsc.create_vector([self.space_displacement])
+        self.b_primal = fem.petsc.create_vector(self.space_displacement)
 
         self.A_primal = fem.petsc.assemble_matrix(self.a_primal, bcs=self.bc)
         self.A_primal.assemble()
@@ -349,7 +349,7 @@ class ErsatzElasticSolver:
         a_cut_adv = fem.form(a_adv)
         L_cut_adv = fem.form(L_adv)
 
-        b_adv = fem.petsc.create_vector([self.V_ls])
+        b_adv = fem.petsc.create_vector(self.V_ls)
         fem.petsc.assemble_vector(b_adv, L_cut_adv)
 
         A_adv = fem.petsc.assemble_matrix(a_cut_adv, bcs=self.bc)
@@ -436,7 +436,7 @@ class ErsatzElasticSolver:
         fem.petsc.assemble_matrix(self.A_adjoint, self.a_adjoint, bcs=self.bc)
         self.A_adjoint.assemble()
 
-        b_adjoint = fem.petsc.create_vector([self.space_displacement])
+        b_adjoint = fem.petsc.create_vector(self.space_displacement)
 
         fem.petsc.assemble_vector(b_adjoint, self.L_adjoint)
 
@@ -540,7 +540,7 @@ class ErsatzElasticSolver:
         a_form = fem.form(a)
         L_form = fem.form(L)
 
-        b = fem.petsc.create_vector([self.V_ls])
+        b = fem.petsc.create_vector(self.V_ls)
 
         fem.petsc.assemble_vector(b, L_form)
 

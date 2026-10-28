@@ -7,8 +7,8 @@
 # Author(s)     : Amina El Bachari
 #
 # Migration note: updated to CutFEMx 0.2 (DOLFINx 0.11)
-#   - Reinitialization class replaced by cutfemx.distance.reinitialize()
-#   - Advection class: removed unused CutFEMx imports (cut_entities, create_cut_mesh, etc.)
+#   - Reinitialization: Predictor-Corrector (PC) scheme using CutFEM Nitsche forms
+#   - Advection class: standard FEM scheme (no CutFEM)
 
 
 import numpy as np
@@ -60,7 +60,7 @@ from dolfinx.io import XDMFFile
 
 # CutFEMx 0.2 imports
 import cutfemx
-from cutfemx.distance import reinitialize
+import cutfemx.petsc as cf_petsc
 
 from utils import mechanics_tool
 
@@ -81,7 +81,7 @@ class LevelSet:
         space : fem.FunctionSpace
             Function space of the level-set.
         """
-        self.level_set = fem.Function(space)
+        self.level_set = fem.Function(space, name="phi")
         self.level_set.x.array[:] = level_set.x.array
         self.space = space
 
@@ -157,7 +157,7 @@ class Advection(LevelSet):
             * ufl.dx
         )
         self.L_std_adv = fem.form(L_adv, jit_options=self.fast_jit)
-        self.b_adv = fem.petsc.create_vector([self.V_ls])
+        self.b_adv = fem.petsc.create_vector(self.V_ls)
         fem.petsc.assemble_vector(self.b_adv, self.L_std_adv)
         self.b_adv.ghostUpdate(
             addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE
@@ -171,7 +171,8 @@ class Advection(LevelSet):
         self.solver_adv.setType(PETSc.KSP.Type.PREONLY)
         pc = self.solver_adv.getPC()
         pc.setType(PETSc.PC.Type.LU)
-        pc.setFactorSolverType("mumps")
+        if self.mesh.comm.size > 1:
+            pc.setFactorSolverType("mumps")
         self.solver_adv.setUp()
 
         self.sol_adv = fem.Function(self.V_ls)
@@ -204,20 +205,24 @@ class Advection(LevelSet):
 
 
 ############################################
-# Reinitialization — CutFEMx 0.2 API
+# Reinitialization — Predictor-Corrector (PC) Scheme
 ############################################
 
 
 class Reinitialization(LevelSet):
-    r"""Reinitialization wrapper using cutfemx.distance.reinitialize().
+    r"""Reinitialization class using the Predictor-Corrector (PC) scheme with CutFEM Nitsche penalty.
 
-    Replaces the old Predictor-Corrector scheme that relied on the now-obsolete
-    cut_form / update_runtime_domains API. The new CutFEMx 0.2 exposes a single
-    ``cutfemx.distance.reinitialize(phi)`` call that handles signed-distance
-    reinitialization internally.
+    Predictor problem:
+    Find \phi_p \in V such that:
+        -\Delta \phi_p = \psi(x) in D
+        \phi_p = 0 on \Gamma
+        \nabla \phi_p \cdot n = \psi(x) on \partial D
 
-    The public interface (``reinitializationPC``, ``reinitializationPC_inplace``)
-    is kept identical so that callers in main.py do not need to change.
+    Corrector problem (step_reinit iterations):
+    Find \phi^{n+1} \in V such that:
+        \nabla \cdot (\nabla \phi^{n+1} - n_K) = 0 in D
+        \phi^{n+1} = 0 on \Gamma
+        (\nabla \phi^{n+1} - n_K) \cdot n = 0 on \partial D
     """
 
     def __init__(self, level_set, V_ls, l):
@@ -229,45 +234,127 @@ class Reinitialization(LevelSet):
         V_ls : fem.FunctionSpace
             Function space of the level-set.
         l : float
-            Characteristic length (kept for interface compatibility; not used
-            by the new reinitialize() backend).
+            Characteristic length parameter.
         """
         super().__init__(level_set, V_ls)
         self.mesh = level_set.function_space.mesh
         self.l = l
         self.V_ls = V_ls
         self.dim = self.mesh.topology.dim
+        self.order = 1
+        self.gamma_r = 1e4
+        self.eps = 1e-6
 
-    # ------------------------------------------------------------------
-    # Public interface (same as before)
-    # ------------------------------------------------------------------
+    def reinitializationPC(self, level_set, step_reinit=5):
+        r"""Compute the Predictor-Corrector reinitialization.
 
-    def reinitializationPC(self, level_set, step_reinit):
-        r"""Return a reinitialized level-set (signed-distance field).
-
-        :param fem.Function level_set: The level-set function :math:`\phi`.
-        :param int step_reinit: Ignored (kept for API compatibility with old PC scheme).
-
-        :returns: Reinitialized level-set.
-        :rtype: fem.Function
+        :param fem.Function level_set: The level-set function to reinitialize.
+        :param int step_reinit: Number of correction iterations.
+        :returns: Reinitialized level-set function.
         """
         self.level_set.x.array[:] = level_set.x.array
         self.level_set.x.scatter_forward()
 
-        # CutFEMx 0.2: one call handles everything
-        reinitialize(self.level_set)
+        msh = self.mesh
+        u_r = ufl.TrialFunction(self.V_ls)
+        v_r = ufl.TestFunction(self.V_ls)
+        h_r = ufl.CellDiameter(msh)
+
+        # 1. Cut the interface from the current level set
+        self.level_set.name = "phi"
+        cut_data = cutfemx.cut(self.level_set)
+        interface_quad = cutfemx.runtime_quadrature(cut_data, "phi=0", self.order)
+
+        # Measures
+        dx_full = ufl.Measure("dx", domain=msh)
+        ds_bnd = ufl.Measure("ds", domain=msh)
+        dsq = ufl.Measure("dx", domain=msh, subdomain_data=interface_quad)
+
+        # 2. Bilinear form: Operator split (Poisson on D + Nitsche penalty on Gamma)
+        # Standard Poisson part on whole domain D
+        a_poisson_ufl = ufl.inner(ufl.grad(u_r), ufl.grad(v_r)) * dx_full
+        a_poisson = fem.form(a_poisson_ufl)
+        A_poisson = fem.petsc.assemble_matrix(a_poisson)
+        A_poisson.assemble()
+
+        # Nitsche interface part on Gamma
+        norm_ls = ufl.sqrt(ufl.inner(ufl.grad(self.level_set), ufl.grad(self.level_set)) + 1e-12)
+        n_K = ufl.grad(self.level_set) / norm_ls
+
+        a_nitsche_ufl = (
+            - ufl.dot(ufl.grad(u_r), n_K) * v_r * dsq
+            - ufl.dot(ufl.grad(v_r), n_K) * u_r * dsq
+            + (self.gamma_r / h_r) * u_r * v_r * dsq
+        )
+        a_nitsche = cutfemx.fem.form(a_nitsche_ufl)
+        A_nitsche = cf_petsc.assemble_matrix(a_nitsche)
+        A_nitsche.assemble()
+
+        # Combine operators: A = A_poisson + A_nitsche
+        A = A_poisson.copy()
+        A.axpy(1.0, A_nitsche, structure=PETSc.Mat.Structure.SUBSET_NONZERO_PATTERN)
+        A.assemble()
+
+        A_poisson.destroy()
+        A_nitsche.destroy()
+
+        # Solver KSP setup with matrix A
+        ksp = PETSc.KSP().create(msh.comm)
+        ksp.setOperators(A)
+        ksp.setType(PETSc.KSP.Type.PREONLY)
+        pc = ksp.getPC()
+        pc.setType(PETSc.PC.Type.LU)
+        if msh.comm.size > 1:
+            pc.setFactorSolverType("mumps")
+        ksp.setUp()
+
+        # 3. Predictor step
+        sign_ls = self.level_set / ufl.sqrt(self.level_set**2 + self.eps**2)
+        L_predict_ufl = (
+            ufl.inner(self.l**2 * sign_ls, v_r) * dx_full
+            + ufl.dot(sign_ls, v_r) * ds_bnd
+        )
+        L_predict_form = fem.form(L_predict_ufl)
+        b_predict = fem.petsc.create_vector(self.V_ls)
+        fem.petsc.assemble_vector(b_predict, L_predict_form)
+        b_predict.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+        b_predict.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
+
+        # Solve Predictor
+        phi_sol = fem.Function(self.V_ls)
+        ksp.solve(b_predict, phi_sol.x.petsc_vec)
+        phi_sol.x.scatter_forward()
+        b_predict.destroy()
+
+        self.level_set.x.array[:] = phi_sol.x.array
         self.level_set.x.scatter_forward()
 
-        # Propagate result back to the caller's function
-        level_set.x.array[:] = self.level_set.x.array
-        level_set.x.scatter_forward()
-        return level_set
+        # 4. Corrector steps
+        for _ in range(step_reinit):
+            norm_ls_c = ufl.sqrt(ufl.inner(ufl.grad(self.level_set), ufl.grad(self.level_set)) + 1e-12)
+            n_K_c = ufl.grad(self.level_set) / norm_ls_c
+            L_correct_ufl = ufl.inner(n_K_c, ufl.grad(v_r)) * dx_full
+            L_correct_form = fem.form(L_correct_ufl)
+            b_correct = fem.petsc.create_vector(self.V_ls)
+            fem.petsc.assemble_vector(b_correct, L_correct_form)
+            b_correct.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+            b_correct.ghostUpdate(addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD)
 
-    def reinitializationPC_inplace(self, level_set, step_reinit):
-        """Reinitialize in-place (modifies level_set directly).
+            ksp.solve(b_correct, phi_sol.x.petsc_vec)
+            phi_sol.x.scatter_forward()
+            b_correct.destroy()
 
-        :param fem.Function level_set: The level-set function to reinitialize.
-        :param int step_reinit: Ignored (kept for API compatibility).
-        """
-        reinitialize(level_set)
+            self.level_set.x.array[:] = phi_sol.x.array
+            self.level_set.x.scatter_forward()
+
+        # Cleanup
+        A.destroy()
+        ksp.destroy()
+
+        return self.level_set
+
+    def reinitializationPC_inplace(self, level_set, step_reinit=5):
+        """Reinitialize in-place (modifies level_set directly)."""
+        res = self.reinitializationPC(level_set, step_reinit)
+        level_set.x.array[:] = res.x.array
         level_set.x.scatter_forward()

@@ -121,6 +121,7 @@ def descent_direction(
     # ------------------------------------------------------------------
     # CutFEMx 0.2: create CutData and retrieve geometry/quadrature
     # ------------------------------------------------------------------
+    level_set.name = "phi"
     cut_data = cutfemx.cut(level_set)
 
     inside_entities = cutfemx.locate_entities(cut_data, "phi<0")

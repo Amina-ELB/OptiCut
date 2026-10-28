@@ -33,5 +33,5 @@ jobs:
     - name: Run automated tests
       shell: bash -l {0}
       run: |
-        pytest tests/
+        pytest -v -s --tb=short tests/
 

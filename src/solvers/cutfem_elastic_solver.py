@@ -33,7 +33,7 @@
 #     def __init__(self, level_set, level_set_space, space_displacement, ds, bc,
 #                  bc_velocity, parameters, problem_topo, shift):
 
-#         self.level_set = fem.Function(level_set_space)
+#         self.level_set = fem.Function(level_set_space, name="phi")
 #         self.level_set.x.array[:] = level_set.x.array
 #         self.level_set.x.scatter_forward()
 
@@ -314,7 +314,7 @@
 #     def __init__(self, level_set, level_set_space, space_displacement, ds, bc,
 #                  bc_velocity, parameters, problem_topo, shift):
 
-#         self.level_set = fem.Function(level_set_space)
+#         self.level_set = fem.Function(level_set_space, name="phi")
 #         self.level_set.x.array[:] = level_set.x.array
 #         self.level_set.x.scatter_forward()
 
@@ -622,7 +622,7 @@
 #     def __init__(self, level_set, level_set_space, space_displacement, ds, bc,
 #                  bc_velocity, parameters, problem_topo, shift):
 
-#         self.level_set = fem.Function(level_set_space)
+#         self.level_set = fem.Function(level_set_space, name="phi")
 #         self.level_set.x.array[:] = level_set.x.array
 #         self.level_set.x.scatter_forward()
 
@@ -898,7 +898,7 @@ class CutFEMElasticSolver:
         shift,
     ):
 
-        self.level_set = fem.Function(level_set_space)
+        self.level_set = fem.Function(level_set_space, name="phi")
         self.level_set.x.array[:] = level_set.x.array
         self.level_set.x.scatter_forward()
 
