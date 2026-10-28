@@ -10,6 +10,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      OMPI_MCA_pml: "ob1"
+      OMPI_MCA_btl: "self,tcp"
+      OMPI_MCA_btl_vader_single_copy_mechanism: "none"
+      UCX_TLS: "tcp,self"
     
     steps:
     - name: Checkout repository
